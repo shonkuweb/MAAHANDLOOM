@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - Mobile E-commerce</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Admin specific simple styles */
+        .admin-container {
+            padding: 1rem;
+        }
+
+        .admin-card {
+            background-color: var(--color-light-grey);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Setup a simpler navbar for Admin or keep same? User asked for "Admin Panel" link, implies separate area 
+         But often on mobile it shares the shell. I'll keep the shell for consistency. -->
+    <nav class="navbar">
+        <button id="menu-btn" class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <div style="flex:1; text-align: center; color: white; font-weight: bold;">ADMIN</div>
+        <!-- No Cart in Admin usually -->
+        <div class="nav-icon" style="opacity: 0; pointer-events: none;"></div>
+    </nav>
+
+    <div id="overlay" class="overlay"></div>
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <button id="close-sidebar" class="sidebar-close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-menu">
+            <a href="categories.html" class="menu-item">Categories</a>
+            <a href="about.html" class="menu-item">About Us</a>
+            <a href="contact.html" class="menu-item">Contact Us</a>
+            <a href="refund.html" class="menu-item">Refund & Return</a>
+            <a href="track-order.html" class="menu-item">Track Your Order</a>
+            <a href="index.html" class="menu-item">Home</a>
+        </div>
+        <div class="admin-link-container">
+            <a href="admin.html" class="admin-link">
+                Admin Panel
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+            </a>
+        </div>
+    </aside>
+
+    <main style="padding: 1rem; padding-top: 2rem;">
+        <div class="admin-header-title">ADMIN PANEL</div>
+
+        <!-- Toggle (Products / Orders) -->
+        <div class="admin-toggle-container">
+            <div class="toggle-wrapper">
+                <button id="btn-products" class="toggle-btn active">products</button>
+                <button id="btn-orders" class="toggle-btn">orders</button>
+            </div>
+        </div>
+
+        <!-- Filters (New, In-Process, Completed) -->
+        <div id="admin-filters" class="admin-filters" style="display: none;">
+            <button class="filter-chip active" data-filter="new">NEW</button>
+            <button class="filter-chip" data-filter="in-process">IN-PROCESS</button>
+            <button class="filter-chip" data-filter="completed">COMPLETED</button>
+        </div>
+
+        <!-- List Container -->
+        <div id="admin-list" class="admin-list">
+            <!-- JS renders items here -->
+        </div>
+
+    </main>
+
+    <script type="module" src="/main.js"></script>
+    <script type="module" src="/admin.js"></script>
+</body>
+
+</html>

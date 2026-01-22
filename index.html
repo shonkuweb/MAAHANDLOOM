@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile E-commerce</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <button id="menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+
+    <!-- Logo or Spacer -->
+    <div style="flex:1;"></div>
+
+    <button id="cart-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="21" r="1"></circle>
+        <circle cx="20" cy="21" r="1"></circle>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Sidebar & Overlay -->
+  <div id="overlay" class="overlay"></div>
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <button id="close-sidebar" class="sidebar-close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="sidebar-menu">
+      <a href="categories.html" class="menu-item">Categories</a>
+      <a href="about.html" class="menu-item">About Us</a>
+      <a href="contact.html" class="menu-item">Contact Us</a>
+      <a href="refund.html" class="menu-item">Refund & Return</a>
+      <a href="track-order.html" class="menu-item">Track Your Order</a>
+    </div>
+    <div class="admin-link-container">
+      <a href="admin.html" class="admin-link">
+        Admin Panel
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="7" y1="17" x2="17" y2="7"></line>
+          <polyline points="7 7 17 7 17 17"></polyline>
+        </svg>
+      </a>
+    </div>
+  </aside>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <h2 class="text-red">#here will be an image , keep this a placeholder</h2>
+    </section>
+
+    <!-- Filter Section -->
+    <section class="filter-section">
+      <button class="filter-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14"></line>
+          <line x1="4" y1="10" x2="4" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12" y2="3"></line>
+          <line x1="20" y1="21" x2="20" y2="16"></line>
+          <line x1="20" y1="12" x2="20" y2="3"></line>
+          <line x1="1" y1="14" x2="7" y2="14"></line>
+          <line x1="9" y1="8" x2="15" y2="8"></line>
+          <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        Filter and Sort
+      </button>
+    </section>
+
+    <!-- Categories -->
+    <section class="category-list">
+      <!-- Repeated items -->
+      <div class="category-item">
+        <div class="cat-circle"></div>
+        <span class="cat-label">#Category1</span>
+      </div>
+      <div class="category-item">
+        <div class="cat-circle"></div>
+        <span class="cat-label">#Category2</span>
+      </div>
+      <div class="category-item">
+        <div class="cat-circle"></div>
+        <span class="cat-label">#Category3</span>
+      </div>
+      <div class="category-item">
+        <div class="cat-circle"></div>
+        <span class="cat-label">#Category4</span>
+      </div>
+      <div class="category-item">
+        <div class="cat-circle"></div>
+        <span class="cat-label">#Category5</span>
+      </div>
+      <div class="category-item">
+        <div class="cat-circle"></div>
+        <span class="cat-label">#Category6</span>
+      </div>
+    </section>
+
+    <!-- Product Grid -->
+    <section id="product-grid" class="product-grid">
+      <!-- Rendered by JS -->
+    </section>
+
+  </main>
+
+  <script type="module" src="/main.js"></script>
+</body>
+
+</html>
