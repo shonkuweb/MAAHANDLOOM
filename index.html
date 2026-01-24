@@ -7,7 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mobile E-commerce</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Great+Vibes&display=swap"
+    rel="stylesheet">
 </head>
 
 <body>
@@ -24,7 +25,7 @@
     </button>
 
     <!-- Logo or Spacer -->
-    <div style="flex:1;"></div>
+    <div class="nav-logo">Maa Handloom</div>
 
     <button id="cart-btn" class="nav-icon">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -69,8 +70,12 @@
 
   <main>
     <!-- Hero Section -->
-    <section class="hero">
-      <h2 class="text-red">#here will be an image , keep this a placeholder</h2>
+    <section class="hero-carousel">
+      <div class="carousel-track">
+        <img src="/hero/slide1.jpg" alt="Handloom Heritage" class="hero-slide">
+        <img src="/hero/slide2.jpg" alt="Handloom Collection" class="hero-slide">
+        <img src="/hero/slide3.jpg" alt="Timeless Weaves" class="hero-slide">
+      </div>
     </section>
 
     <!-- Filter Section -->
@@ -88,37 +93,28 @@
           <line x1="9" y1="8" x2="15" y2="8"></line>
           <line x1="17" y1="16" x2="23" y2="16"></line>
         </svg>
-        Filter and Sort
+        FILTER & SHORTING
       </button>
     </section>
 
     <!-- Categories -->
     <section class="category-list">
-      <!-- Repeated items -->
-      <div class="category-item">
-        <div class="cat-circle"></div>
-        <span class="cat-label">#Category1</span>
-      </div>
-      <div class="category-item">
-        <div class="cat-circle"></div>
-        <span class="cat-label">#Category2</span>
-      </div>
-      <div class="category-item">
-        <div class="cat-circle"></div>
-        <span class="cat-label">#Category3</span>
-      </div>
-      <div class="category-item">
-        <div class="cat-circle"></div>
-        <span class="cat-label">#Category4</span>
-      </div>
-      <div class="category-item">
-        <div class="cat-circle"></div>
-        <span class="cat-label">#Category5</span>
-      </div>
-      <div class="category-item">
-        <div class="cat-circle"></div>
-        <span class="cat-label">#Category6</span>
-      </div>
+      <a href="category.html?cat=Surat Silk Special" class="category-item" style="text-decoration: none;">
+        <div class="cat-circle">S</div>
+        <span class="cat-label">Surat Silk<br>Special</span>
+      </a>
+      <a href="category.html?cat=Handloom Special" class="category-item" style="text-decoration: none;">
+        <div class="cat-circle">H</div>
+        <span class="cat-label">Handloom<br>Special</span>
+      </a>
+      <a href="category.html?cat=Shantipuri Special" class="category-item" style="text-decoration: none;">
+        <div class="cat-circle">S</div>
+        <span class="cat-label">Shantipuri<br>Special</span>
+      </a>
+      <a href="category.html?cat=Cotton Varieties" class="category-item" style="text-decoration: none;">
+        <div class="cat-circle">C</div>
+        <span class="cat-label">Cotton<br>Varieties</span>
+      </a>
     </section>
 
     <!-- Product Grid -->
@@ -164,6 +160,61 @@
       Maa Handloom. All rights reserved.
     </div>
   </footer>
+
+  <!-- Filter Modal -->
+  <div id="filter-modal" class="auth-overlay">
+    <div class="auth-card" style="max-width: 90%; width: 100%; text-align: left; align-items: start;">
+      <div
+        style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-size: 1.2rem;">FILTER & SORT</h2>
+        <button id="close-filter"
+          style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <!-- Sort Section -->
+      <div class="filter-group" style="width: 100%; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #666; text-transform: uppercase;">Sort By Price</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="radio" name="sortPrice" value="default" checked>
+            Default
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="radio" name="sortPrice" value="lowHigh">
+            Price: Low to High
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="radio" name="sortPrice" value="highLow">
+            Price: High to Low
+          </label>
+        </div>
+      </div>
+
+      <!-- Categories Section -->
+      <div class="filter-group" style="width: 100%; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #666; text-transform: uppercase;">Category</h3>
+        <div id="filter-categories"
+          style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 150px; overflow-y: auto;">
+          <!-- JS Populated -->
+        </div>
+      </div>
+
+      <!-- Availability Section -->
+      <div class="filter-group" style="width: 100%; margin-bottom: 2rem;">
+        <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #666; text-transform: uppercase;">Availability</h3>
+        <label style="display: flex; align-items: center; gap: 0.5rem;">
+          <input type="checkbox" id="filter-stock">
+          In Stock Only
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 1rem; width: 100%;">
+        <button id="reset-filter" class="auth-btn"
+          style="background: transparent; border: 2px solid #2C1B10; color: #2C1B10;">RESET</button>
+        <button id="apply-filter" class="auth-btn">APPLY</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="/main.js"></script>
 </body>

@@ -7,7 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Categories - Mobile E-commerce</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Great+Vibes&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
@@ -20,7 +21,7 @@
                 <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
         </button>
-        <div style="flex:1;"></div>
+        <div class="nav-logo">Maa Handloom</div>
         <button id="cart-btn" class="nav-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -63,8 +64,37 @@
     </aside>
 
     <main style="padding: 1rem;">
-        <h1 class="text-red">Categories</h1>
-        <p>Category listing content goes here.</p>
+        <h1 class="text-red" style="text-align: center; margin-bottom: 2rem;">CATEGORIES</h1>
+
+        <div class="category-grid-page" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <!-- Category 1 -->
+            <a href="categories.html?cat=Surat Silk Special" class="cat-page-card">
+                <div class="cat-page-circle">S</div>
+                <div class="cat-page-label">Surat Silk<br>Special</div>
+            </a>
+            <!-- Category 2 -->
+            <a href="categories.html?cat=Handloom Special" class="cat-page-card">
+                <div class="cat-page-circle">H</div>
+                <div class="cat-page-label">Handloom<br>Special</div>
+            </a>
+            <!-- Category 3 -->
+            <a href="categories.html?cat=Shantipuri Special" class="cat-page-card">
+                <div class="cat-page-circle">S</div>
+                <div class="cat-page-label">Shantipuri<br>Special</div>
+            </a>
+            <!-- Category 4 -->
+            <a href="categories.html?cat=Cotton Varieties" class="cat-page-card">
+                <div class="cat-page-circle">C</div>
+                <div class="cat-page-label">Cotton<br>Varieties</div>
+            </a>
+        </div>
+
+        <div id="category-products-container" style="margin-top: 3rem;">
+            <h2 id="selected-cat-title" style="text-align:center; margin-bottom: 1rem; text-transform:uppercase;"></h2>
+            <div id="category-grid" class="product-grid">
+                <!-- JS Populates this if URL param exists -->
+            </div>
+        </div>
     </main>
 
 

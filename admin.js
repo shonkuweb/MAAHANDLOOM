@@ -1,11 +1,47 @@
-// State
-let products = JSON.parse(localStorage.getItem('products')) || [
-    { id: 'P001', name: 'Product Name 1', image: '', qty: 10, price: '$100' },
-    { id: 'P002', name: 'Product Name 2', image: '', qty: 5, price: '$50' },
-    { id: 'P003', name: 'Product Name 3', image: '', qty: 0, price: '$120' },
-];
+// Authentication
+function checkAuth() {
+    // Always require authentication on load
 
-let orders = [
+    // Show Modal
+    const modal = document.getElementById('auth-modal');
+    const form = document.getElementById('auth-form');
+    const input = document.getElementById('auth-pass');
+    const errorMsg = document.getElementById('auth-error');
+
+    if (modal) {
+        modal.classList.add('active');
+        input.focus();
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pass = input.value;
+
+            if (pass === '1234') {
+                // Successfully authenticated for this session (in-memory only)
+                modal.classList.remove('active');
+            } else {
+                errorMsg.textContent = 'Incorrect Passcode';
+                input.value = '';
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 400);
+            }
+        });
+    } else {
+        // Fallback checks
+        const pass = prompt('Enter Admin Passcode:');
+        if (pass === '1234') {
+            // Valid
+        } else {
+            alert('Incorrect Passcode');
+            window.location.href = 'index.html';
+        }
+    }
+}
+
+// State
+let products = JSON.parse(localStorage.getItem('products')) || [];
+
+let orders = JSON.parse(localStorage.getItem('orders')) || [
     { id: 'ORD-001', name: 'Customer A', image: '', qty: 2, status: 'new' },
     { id: 'ORD-002', name: 'Customer B', image: '', qty: 1, status: 'in-process' },
     { id: 'ORD-003', name: 'Customer C', image: '', qty: 5, status: 'completed' },
@@ -36,10 +72,17 @@ let currentImages = [];
 
 // Initialize
 function init() {
+    checkAuth();
+
     // Save initial default products if nothing in storage (first run)
     if (!localStorage.getItem('products')) {
         saveProductsToStorage();
     }
+    // Save initial default orders if nothing in storage
+    if (!localStorage.getItem('orders')) {
+        saveOrdersToStorage();
+    }
+
     render();
     setupListeners();
     checkAddButtonVisibility();
@@ -86,6 +129,19 @@ function setupListeners() {
         console.error('Product images input not found');
     }
 
+    // Reset DB
+    const resetBtn = document.getElementById('reset-db-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            showConfirm('WARNING: This will delete ALL products permanently. Are you sure?', () => {
+                products = [];
+                saveProductsToStorage();
+                render();
+                alert('All products deleted.');
+            });
+        });
+    }
+
     // Event Delegation for List Actions (Edit, Delete, Cycle Status)
     listContainer.addEventListener('click', (e) => {
         const target = e.target;
@@ -106,6 +162,36 @@ function setupListeners() {
             cycleOrderStatus(id);
         }
     });
+}
+
+// Confirmation helper
+function showConfirm(msg, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    const msgEl = document.getElementById('confirm-msg');
+    const yesBtn = document.getElementById('confirm-yes');
+    const cancelBtn = document.getElementById('confirm-cancel');
+
+    if (!modal) {
+        if (confirm(msg)) onConfirm();
+        return;
+    }
+
+    msgEl.textContent = msg;
+    modal.classList.add('active');
+
+    const close = () => {
+        modal.classList.remove('active');
+        yesBtn.removeEventListener('click', handleYes);
+        cancelBtn.removeEventListener('click', close);
+    };
+
+    const handleYes = () => {
+        onConfirm();
+        close();
+    };
+
+    yesBtn.addEventListener('click', handleYes);
+    cancelBtn.addEventListener('click', close);
 }
 
 function handleImageUpload(e) {
@@ -187,13 +273,17 @@ function saveProductsToStorage() {
     localStorage.setItem('products', JSON.stringify(products));
 }
 
+function saveOrdersToStorage() {
+    localStorage.setItem('orders', JSON.stringify(orders));
+}
+
 // CRUD Operations
 function deleteProduct(id) {
-    if (confirm('Are you sure you want to delete this product?')) {
+    showConfirm('Are you sure you want to delete this product?', () => {
         products = products.filter(p => p.id !== id);
         saveProductsToStorage();
         render();
-    }
+    });
 }
 
 function openModal(id = null) {
@@ -208,7 +298,9 @@ function openModal(id = null) {
         const product = products.find(p => p.id === id);
         modalTitle.textContent = 'EDIT PRODUCT';
         document.getElementById('product-name').value = product.name;
+        document.getElementById('product-desc').value = product.description || '';
         document.getElementById('product-price').value = product.price;
+        document.getElementById('product-category').value = product.category || '';
         document.getElementById('product-qty').value = product.qty;
         currentImages = product.images || (product.image ? [product.image] : []);
     } else {
@@ -228,7 +320,9 @@ function closeModal() {
 
 function saveProduct() {
     const name = document.getElementById('product-name').value;
+    const description = document.getElementById('product-desc').value;
     const price = document.getElementById('product-price').value;
+    const category = document.getElementById('product-category').value;
     const qty = document.getElementById('product-qty').value;
     // Use first image as main, store all in images array
     const image = currentImages.length > 0 ? currentImages[0] : '';
@@ -238,12 +332,12 @@ function saveProduct() {
         // Update
         const index = products.findIndex(p => p.id === editingId);
         if (index !== -1) {
-            products[index] = { ...products[index], name, price, qty, image, images };
+            products[index] = { ...products[index], name, description, price, category, qty, image, images };
         }
     } else {
         // Create
         const newId = 'P' + String(Date.now()).slice(-4);
-        products.push({ id: newId, name, price, qty, image, images });
+        products.push({ id: newId, name, description, price, category, qty, image, images });
     }
 
     saveProductsToStorage();
@@ -258,6 +352,7 @@ function cycleOrderStatus(id) {
         let nextIndex = (statuses.indexOf(order.status) + 1) % statuses.length;
         // If filters are active, item might disappear from view. That's expected behavior.
         order.status = statuses[nextIndex];
+        saveOrdersToStorage();
         render();
     }
 }
