@@ -24,10 +24,16 @@ body {
   background-color: var(--color-white);
   color: var(--color-black);
   line-height: 1.5;
-  padding-top: var(--header-height);
+  padding-top: 60px;
+  /* Explicitly set to fixed header height */
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+main {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* Typography Utility */
@@ -1774,4 +1780,263 @@ footer {
     left: 27px;
     /* Adjusted for smaller icon */
   }
+
+  /* Order Badge Theming */
+  .order-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: bold;
+
+    /* Default: Button is WHITE (Inactive), so Badge is BLACK */
+    background-color: #2C1B10;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  /* Active: Button is DARK (Active), so Badge is WHITE */
+  .toggle-btn.active .order-counter {
+    background-color: white;
+    color: #2C1B10;
+  }
+}
+
+
+
+/* --- PREMIUM SEARCH OVERLAY --- */
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(44, 27, 16, 0.98);
+  /* Deep Brown premium dark */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 10000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 10vh;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.search-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+
+.close-search-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.8rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-search-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg) scale(1.1);
+}
+
+.search-content {
+  width: 90%;
+  max-width: 800px;
+  text-align: center;
+  animation: slideUp 0.5s ease backwards;
+  animation-delay: 0.1s;
+}
+
+#search-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  /* Subtle glass bg */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  /* Smaller than 2.5rem for mobile */
+  font-weight: 400;
+  color: white;
+  padding: 1rem 1.5rem;
+  outline: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+#search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 300;
+}
+
+#search-input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-bottom: 2rem;
+  /* Scrollbar hide */
+  scrollbar-width: none;
+}
+
+.search-results-grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* Search Result Card */
+.search-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: left;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  animation: fadeIn 0.4s ease;
+}
+
+.search-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.search-card-img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  background: #f0f0f0;
+}
+
+.search-card-info {
+  padding: 1rem;
+}
+
+.search-card-title {
+  font-weight: 700;
+  color: #2C1B10;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-card-price {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* --- NAVBAR SEARCH TRANSFORMATION --- */
+.search-bar-container {
+  display: none;
+  flex: 1;
+  /* Take available space */
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 1rem;
+}
+
+#navbar-search-input {
+  width: 100%;
+  background: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  color: #2C1B10;
+  outline: none;
+}
+
+#close-navbar-search {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* State: Search Active */
+.navbar.search-active .nav-logo,
+.navbar.search-active .nav-actions,
+.navbar.search-active #menu-btn {
+  display: none;
+  /* Hide standard elements */
+}
+
+/* Specific override for nav-actions if needed, checking HTML structure */
+.navbar.search-active .nav-icon {
+  display: none;
+}
+
+.navbar.search-active .search-bar-container {
+  display: flex;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Ensure Search Results still show - modified from overlay logic */
+.search-results-dropdown {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  width: 100%;
+  background: white;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  display: none;
+  z-index: 9000;
+  /* Below navbar but high */
+  padding: 1rem;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.search-results-dropdown.active {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.search-results-dropdown .search-card {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eee;
 }

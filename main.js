@@ -289,6 +289,104 @@ function injectCart() {
 // 3. PAGE SPECIFIC LOGIC
 // =========================================
 
+// --- ADVANCED SEARCH ---
+// --- NAVBAR SEARCH TRANSFORMATION LOGIC ---
+function initSearch() {
+  const toggleBtn = document.getElementById('search-toggle');
+  const closeBtn = document.getElementById('close-navbar-search');
+  const navbar = document.querySelector('.navbar');
+  const input = document.getElementById('navbar-search-input');
+
+  // Results Container - Create dynamic dropdown if not exists
+  let resultsGrid = document.getElementById('search-results-dropdown');
+  if (!resultsGrid) {
+    resultsGrid = document.createElement('div');
+    resultsGrid.id = 'search-results-dropdown';
+    resultsGrid.className = 'search-results-dropdown';
+    document.body.appendChild(resultsGrid);
+  }
+
+  if (!toggleBtn || !navbar || !input) return;
+
+  // Open Search
+  toggleBtn.onclick = () => {
+    navbar.classList.add('search-active');
+    setTimeout(() => input.focus(), 100);
+  };
+
+  // Close Search
+  const closeSearch = () => {
+    navbar.classList.remove('search-active');
+    resultsGrid.classList.remove('active');
+    input.value = '';
+    resultsGrid.innerHTML = '';
+  };
+
+  if (closeBtn) closeBtn.onclick = closeSearch;
+
+  // Close on Escape or click outside
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navbar.classList.contains('search-active')) {
+      closeSearch();
+    }
+  });
+
+  // Search Logic (Real-time)
+  input.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+
+    if (query.length < 1) {
+      resultsGrid.classList.remove('active');
+      resultsGrid.innerHTML = '';
+      return;
+    }
+
+    resultsGrid.classList.add('active');
+
+    // Filter Logic
+    const matches = products.filter(p => {
+      const nameMatch = p.name.toLowerCase().includes(query);
+      const catMatch = getCategory(p).toLowerCase().includes(query);
+      const priceMatch = String(getPrice(p)).includes(query);
+      return nameMatch || catMatch || priceMatch;
+    });
+
+    renderSearchResults(matches, resultsGrid);
+  });
+}
+
+function renderSearchResults(items, container) {
+  container.innerHTML = '';
+  if (items.length === 0) {
+    container.innerHTML = '<p style="text-align:center;width:100%;grid-column:1/-1;">No results found.</p>';
+    return;
+  }
+
+  items.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'search-card';
+    card.onclick = () => window.location.href = `product_details.html?id=${p.id}`;
+
+    const img = (p.images && p.images.length) ? p.images[0] : (p.image || 'https://via.placeholder.com/200');
+
+    card.innerHTML = `
+      <img src="${img}" class="search-card-img" alt="${p.name}">
+      <div class="search-card-info">
+        <div class="search-card-title">${p.name}</div>
+        <div class="search-card-price">₹${getPrice(p)}</div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// --- HOME PAGE & CATEGORY (Grid) ---
+// Initialize search on load
+document.addEventListener('DOMContentLoaded', () => {
+  // Other init functions called at bottom of file, but this one needs to register if elements exist
+  // We'll call it from the main listener at the bottom.
+});
+
 // --- HOME PAGE & CATEGORY (Grid) ---
 function initProductGrid(filters = {}) {
   const grid = document.getElementById('product-grid');
@@ -698,7 +796,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initTrackOrder();
   } else if (path.includes('index.html') || path.includes('categories') || path.includes('special') || path.includes('varieties') || path.includes('silk') || path === '/') {
     initProductGrid();
-    injectCart(); // Only inject cart on browsing pages
+    initSearch(); // Initialize Search on Home/Browsing pages
+    injectCart();
   } else {
     injectCart();
   }

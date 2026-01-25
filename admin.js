@@ -353,6 +353,17 @@ function cycleOrderStatus(id) {
 function render() {
     listContainer.innerHTML = '';
 
+    // Inject Count Badge logic
+    const btnOrders = document.getElementById('btn-orders');
+    if (btnOrders) {
+        btnOrders.innerHTML = `ORDERS <span class="order-counter">${orders.length}</span>`;
+    }
+
+    const btnProducts = document.getElementById('btn-products');
+    if (btnProducts) {
+        btnProducts.innerHTML = `PRODUCTS <span class="order-counter">${products.length}</span>`;
+    }
+
     let itemsToRender = [];
 
     if (currentView === 'products') {
