@@ -433,7 +433,10 @@ function initProductDetails() {
                 </div>
 
                 <div class="sticky-action-bar">
-                    <button id="detail-add-btn" class="btn-action btn-secondary">Add to Cart</button>
+                    <button id="detail-add-btn" class="btn-action btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        ADD TO CART
+                    </button>
                     <button id="detail-buy-btn" class="btn-action btn-primary">Buy Now</button>
                 </div>
             </div>
@@ -636,6 +639,51 @@ function initCheckout() {
 
 
 // --- MAIN ENTRY POINT ---
+// --- TRACK ORDER PAGE ---
+function initTrackOrder() {
+  const btn = document.getElementById('track-btn');
+  const input = document.getElementById('track-id');
+  const resultContainer = document.getElementById('tracking-result');
+
+  if (!btn || !input || !resultContainer) return;
+
+  btn.onclick = () => {
+    const id = input.value.trim();
+    if (!id) return alert('Please enter an Order ID');
+
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const order = orders.find(o => o.id === id);
+
+    if (!order) {
+      alert('Order ID not found.');
+      resultContainer.style.display = 'none';
+      return;
+    }
+
+    // Render Status
+    resultContainer.style.display = 'block';
+    resultContainer.style.opacity = '1'; /* Ensure visibility */
+    document.getElementById('display-order-id').textContent = '#' + order.id;
+    document.getElementById('display-status').textContent = 'PREPARING'; // Default status for demo
+    document.getElementById('display-date').textContent = new Date(order.date).toLocaleDateString();
+    document.getElementById('display-total').textContent = '₹' + order.total;
+
+    // Reset Steps
+    ['step-1', 'step-2', 'step-3', 'step-4'].forEach(s => {
+      document.getElementById(s).classList.remove('active');
+    });
+    ['line-1', 'line-2', 'line-3'].forEach(l => {
+      document.getElementById(l).classList.remove('active');
+    });
+
+    // Simple Status Logic (Mockup)
+    // For now, freshly placed orders are just "Placed" -> "Processing"
+    document.getElementById('step-1').classList.add('active');
+    document.getElementById('step-2').classList.add('active'); // Assume processing immediately
+    document.getElementById('line-1').classList.add('active');
+  };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initData();
   initGlobalUI();
@@ -646,6 +694,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initProductDetails();
   } else if (path.includes('checkout.html')) {
     initCheckout();
+  } else if (path.includes('track-order.html')) {
+    initTrackOrder();
   } else if (path.includes('index.html') || path.includes('categories') || path.includes('special') || path.includes('varieties') || path === '/') {
     initProductGrid();
     injectCart(); // Only inject cart on browsing pages

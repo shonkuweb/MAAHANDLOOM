@@ -1600,3 +1600,178 @@ footer {
     opacity: 1;
   }
 }
+
+/* Product Details Premium Mockup Match */
+.product-detail-page {
+  background-color: #FFF8F0;
+  /* Cream background */
+  min-height: 100vh;
+}
+
+.product-detail-wrapper {
+  padding-bottom: 100px;
+  /* Space for footer */
+  background-color: #FFF8F0;
+}
+
+.detail-gallery {
+  width: 95%;
+  margin: 1rem auto;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  background: #ccc;
+  /* Placeholder grey */
+  aspect-ratio: 1/1;
+}
+
+.detail-content {
+  padding: 0 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.detail-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: #2C1B10;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.detail-desc {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.detail-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.detail-price {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #2C1B10;
+}
+
+.sticky-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #FFF8F0;
+  /* Blend with page */
+  padding: 1rem 1.5rem 2rem 1.5rem;
+  /* Extra padding bottom for iPhone home bar */
+  display: flex;
+  gap: 1rem;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  z-index: 90;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 1rem;
+  border-radius: 50px;
+  /* Fully rounded */
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 0.2s;
+}
+
+.btn-secondary {
+  background: white;
+  border: 2px solid #2C1B10;
+  color: #2C1B10;
+}
+
+.btn-primary {
+  background: #2C1B10;
+  border: 2px solid #2C1B10;
+  color: white;
+}
+
+.btn-action:active {
+  transform: scale(0.95);
+}
+
+/* Mobile Optimization for Track Order */
+@media (max-width: 600px) {
+  .tracking-hero {
+    padding: 2.5rem 1rem;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .tracking-title {
+    font-size: 1.4rem;
+  }
+
+  .tracking-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .search-container {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .tracking-input {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+    font-size: 1.4rem;
+  }
+
+  .tracking-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .search-container {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .tracking-input {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .tracking-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .tracking-result-container {
+    padding: 1rem;
+  }
+
+  .timeline-step {
+    gap: 1rem;
+  }
+
+  .timeline-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .timeline-line {
+    left: 27px;
+    /* Adjusted for smaller icon */
+  }
+}
