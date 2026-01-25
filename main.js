@@ -851,7 +851,22 @@ function initTrackOrder() {
     // Render Status
     resultContainer.style.display = 'block';
     resultContainer.style.opacity = '1'; /* Ensure visibility */
-    document.getElementById('display-order-id').textContent = '#' + order.id;
+
+    const displayId = document.getElementById('display-order-id');
+    if (displayId) {
+      displayId.textContent = '#' + order.id;
+      displayId.style.cursor = 'pointer';
+      displayId.title = 'Click to Copy';
+      displayId.onclick = () => {
+        navigator.clipboard.writeText(order.id).then(() => {
+          alert('Order ID Copied: ' + order.id);
+        }).catch(err => {
+          console.error('Failed to copy', err);
+          prompt("Copy Order ID:", order.id);
+        });
+      };
+    }
+
     document.getElementById('display-status').textContent = 'PREPARING'; // Default status for demo
     document.getElementById('display-date').textContent = new Date(order.date).toLocaleDateString();
     document.getElementById('display-total').textContent = '₹' + order.total;

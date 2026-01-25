@@ -229,16 +229,47 @@ function handleImageUpload(e) {
     files.forEach(file => {
         if (!file.type.startsWith('image/')) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            currentImages.push(event.target.result);
+        compressImage(file, 800, 0.7).then(compressedDataUrl => {
+            currentImages.push(compressedDataUrl);
             renderPreviews();
-        };
-        reader.readAsDataURL(file);
+        }).catch(err => {
+            console.error('Compression failed', err);
+            alert('Failed to process image');
+        });
     });
 
-    // Reset inputs so same file can be selected again if valid logic allows (simple reset)
     e.target.value = '';
+}
+
+// Helper: Compress Image using Canvas
+function compressImage(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
 }
 
 function renderPreviews() {
