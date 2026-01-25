@@ -121,7 +121,13 @@ function setupListeners() {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             console.log('Form submitted');
-            saveProduct();
+            try {
+                saveProduct();
+                // alert('Product Saved Successfully!');
+            } catch (err) {
+                console.error(err);
+                alert('Error capturing product: ' + err.message);
+            }
         });
     } else {
         console.error('Product form not found');
@@ -495,42 +501,65 @@ function render() {
         el.className = 'admin-list-item';
 
         let actionButtons = '';
+        let detailsHtml = '';
 
         if (currentView === 'products') {
+            // PRODUCT SPECIFIC UI
             actionButtons = `
             <div class="view-btn-container" style="flex-direction:row; gap:0.5rem;">
-                <button class="view-btn edit-btn" data-id="${item.id}" style="background:#333; font-size: 0.7rem;">EDIT</button>
-                <button class="view-btn delete-btn" data-id="${item.id}" style="background:red; font-size: 0.7rem;">DEL</button>
+                <button class="view-btn edit-btn" data-id="${item.id}">EDIT</button>
+                <button class="view-btn delete-btn" data-id="${item.id}">DEL</button>
             </div>
-        `;
+            `;
+
+            detailsHtml = `
+                <div class="admin-item-details">
+                    <p class="item-id">#${item.id}</p>
+                    <h3 class="item-name">${item.name}</h3>
+                    <div class="item-meta">
+                        <span>Qty: ${item.qty}</span>
+                        <span>₹${item.price}</span>
+                    </div>
+                </div>
+            `;
         } else {
-            // View Button replacement
+            // ORDER SPECIFIC UI
             actionButtons = `
             <div class="view-btn-container">
-                <button class="view-btn view-order-btn" data-id="${item.id}" style="background: #2C1B10;">VIEW</button>
+                <button class="view-btn view-order-btn" data-id="${item.id}">VIEW</button>
             </div>
-         `;
+            `;
+
+            // Calculate total items for order
+            const totalItems = (item.items || []).reduce((sum, i) => sum + Number(i.qty), 0);
+
+            detailsHtml = `
+                <div class="admin-item-details">
+                    <p class="item-id">ORD #${item.id}</p>
+                    <h3 class="item-name">${item.name || 'Guest'}</h3>
+                    <div class="item-meta">
+                        <span>Items: ${totalItems}</span>
+                        <span>₹${item.total || 0}</span>
+                    </div>
+                    <div class="status-badge status-${item.status}">${item.status}</div>
+                </div>
+            `;
         }
 
         let imageHtml = '';
         if (item.image) {
-            imageHtml = `<img src="${item.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            imageHtml = `<img src="${item.image}" alt="Product">`;
         } else {
-            imageHtml = `<span class="text-xs text-red">#IMAGE</span>`;
+            imageHtml = `<div class="no-image">IMG</div>`;
         }
 
         el.innerHTML = `
-      <div class="admin-item-image">
-        ${imageHtml}
-      </div>
-      <div class="admin-item-details">
-        <p><strong>${currentView === 'products' ? 'ID' : 'ORD'} :</strong> ${item.id}</p>
-        <p><strong>NAME :</strong> ${item.name}</p>
-        <p><strong>QTY :</strong> ${item.qty}</p>
-        ${currentView === 'products' ? `<p><strong>PRICE :</strong> ${item.price}</p>` : ''}
-      </div>
-      ${actionButtons}
-    `;
+            <div class="admin-item-image">
+                ${imageHtml}
+            </div>
+            ${detailsHtml}
+            ${actionButtons}
+        `;
         listContainer.appendChild(el);
     });
 
