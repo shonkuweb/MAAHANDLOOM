@@ -563,6 +563,12 @@ function initProductDetails() {
                     <p class="detail-desc">${product.description || 'Authentic handloom product.'}</p>
                     
 
+                    <div style="background:#fff8f0; border-left:4px solid #8B6F47; padding:1rem; margin:1.5rem 0; border-radius:4px;">
+                        <h4 style="color:#2C1B10; margin-bottom:0.5rem; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; font-weight:800;">MAA HANDLOOM</h4>
+                        <p style="font-size:0.85rem; color:#555; line-height:1.6; font-style:italic;">
+                            "Experience the timeless elegance of authentic handloom craftsmanship. Each piece is woven with passion and heritage, bringing you the finest textures and traditional artistry directly from our weavers."
+                        </p>
+                    </div>
 
                     <div style="margin-top:2rem; padding:1rem; background:#FAF7F5; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:0.5rem; text-align:center;">
                         <div style="display:flex; align-items:center; gap:0.5rem; color:#2C1B10; font-weight:bold; font-size:0.9rem;">
@@ -780,27 +786,37 @@ function initCheckout() {
 
       const successModal = document.getElementById('success-modal');
       if (successModal) {
-        const idSpan = document.getElementById('success-order-id');
-        if (idSpan) idSpan.textContent = orderId;
-        successModal.style.display = 'flex';
-        successModal.style.opacity = '1'; // Force visibility
+        // Copy Logic Helper
+        const copyToClipboard = () => {
+          navigator.clipboard.writeText(orderId).then(() => {
+            alert('Order ID Copied: ' + orderId);
+          }).catch(err => {
+            console.error('Failed to copy', err);
+            prompt("Copy Order ID:", orderId);
+          });
+        };
 
-        // Copy Logic
         const copyBtn = document.getElementById('btn-copy-id');
-        if (copyBtn) {
-          copyBtn.onclick = () => {
-            navigator.clipboard.writeText(orderId).then(() => {
-              alert('Order ID Copied!');
-            }).catch(err => {
-              console.error('Failed to copy', err);
-              // Fallback
-              prompt("Copy Order ID:", orderId);
-            });
-          };
+        if (copyBtn) copyBtn.onclick = copyToClipboard;
+
+        const idSpan = document.getElementById('success-order-id');
+        if (idSpan) {
+          idSpan.textContent = orderId;
+          idSpan.style.cursor = 'pointer';
+          idSpan.title = 'Click to Copy';
+          idSpan.onclick = copyToClipboard;
         }
 
+        successModal.style.display = 'flex';
+        successModal.style.opacity = '1';
+
         const contBtn = document.getElementById('success-continue-btn');
-        if (contBtn) contBtn.onclick = () => window.location.href = 'index.html';
+        if (contBtn) {
+          contBtn.onclick = (e) => {
+            e.preventDefault();
+            window.location.href = 'index.html';
+          };
+        }
       } else {
         alert('Order Placed: ' + orderId);
         window.location.href = 'index.html';
