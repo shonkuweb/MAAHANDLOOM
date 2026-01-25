@@ -26,7 +26,8 @@
         .admin-list-item {
             background: white;
             border-radius: 12px;
-            padding: 1rem;
+            padding: 1.5rem;
+            /* Increased padding */
             margin-bottom: 1rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             display: flex;
@@ -34,6 +35,32 @@
             gap: 1rem;
             border: 1px solid #eee;
             transition: transform 0.2s, box-shadow 0.2s;
+            flex-wrap: wrap;
+            /* Mobile friendly wrapping */
+        }
+
+        @media (max-width: 600px) {
+            .admin-list-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1rem;
+            }
+
+            .admin-item-image {
+                width: 100%;
+                height: 150px;
+                margin-bottom: 0.5rem;
+            }
+
+            .view-btn-container {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 0.5rem;
+            }
+
+            .admin-item-details {
+                width: 100%;
+            }
         }
 
         .admin-list-item:hover {

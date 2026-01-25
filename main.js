@@ -56,6 +56,22 @@ function updateCartBadge() {
     badge.className = 'cart-badge';
     badge.textContent = count > 99 ? '99+' : count;
     btn.appendChild(badge);
+    btn.appendChild(badge);
+  }
+
+  // Also update Cart Sidebar Total if it exists
+  const total = cart.reduce((acc, item) => {
+    const p = products.find(prod => prod.id == item.id) || item;
+    return acc + (getPrice(p) * item.qty);
+  }, 0);
+
+  const checkoutBtn = document.getElementById('cart-checkout-btn');
+  if (checkoutBtn) {
+    if (total > 0) {
+      checkoutBtn.textContent = `CHECKOUT - ₹${total}`;
+    } else {
+      checkoutBtn.textContent = `CHECKOUT`;
+    }
   }
 }
 
@@ -263,7 +279,7 @@ function injectCart() {
       </div>
       <div class="cart-items"></div>
       <div class="cart-footer" style="padding:1rem;border-top:1px solid #ddd;">
-        <button id="checkout-btn" class="btn-buy-now-large" style="width:100%;">CHECKOUT</button>
+        <button id="cart-checkout-btn" class="btn-buy-now-large" style="width:100%;">CHECKOUT</button>
       </div>
     </aside>
     `;
@@ -277,7 +293,7 @@ function injectCart() {
     document.getElementById('overlay').classList.remove('active');
   };
 
-  const checkoutBtn = document.getElementById('checkout-btn');
+  const checkoutBtn = document.getElementById('cart-checkout-btn');
   if (checkoutBtn) checkoutBtn.onclick = () => window.location.href = 'checkout.html';
 
   const cartIconBtn = document.getElementById('cart-btn');
@@ -314,50 +330,67 @@ function initSearch() {
   if (!toggleBtn || !navbar || !input) return;
 
   // Open Search
+  // Open Search (modified for Full Screen)
   toggleBtn.onclick = () => {
-    navbar.classList.add('search-active');
-    setTimeout(() => input.focus(), 100);
+    // navbar.classList.add('search-active'); // Disable old navbar search
+    // setTimeout(() => input.focus(), 100);
+
+    // Enable Full Screen Overlay
+    const fullOverlay = document.getElementById('search-overlay');
+    const fullInput = document.getElementById('search-input');
+    if (fullOverlay) {
+      fullOverlay.classList.add('active');
+      if (fullInput) setTimeout(() => fullInput.focus(), 100);
+    }
   };
 
   // Close Search
   const closeSearch = () => {
     navbar.classList.remove('search-active');
-    resultsGrid.classList.remove('active');
-    input.value = '';
-    resultsGrid.innerHTML = '';
+    // Also close full screen
+    const fullOverlay = document.getElementById('search-overlay');
+    if (fullOverlay) fullOverlay.classList.remove('active');
+
+    // Clear old dropdowns
+    if (resultsGrid) {
+      resultsGrid.classList.remove('active');
+      resultsGrid.innerHTML = '';
+    }
   };
 
   if (closeBtn) closeBtn.onclick = closeSearch;
 
   // Close on Escape or click outside
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && navbar.classList.contains('search-active')) {
+    if (e.key === 'Escape') {
       closeSearch();
     }
   });
 
-  // Search Logic (Real-time)
-  input.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
+  // Search Logic (Real-time) - Updated for Full Screen Overlay
+  const fullScreenInput = document.getElementById('search-input');
+  const fullScreenResults = document.getElementById('search-results');
 
-    if (query.length < 1) {
-      resultsGrid.classList.remove('active');
-      resultsGrid.innerHTML = '';
-      return;
-    }
+  if (fullScreenInput && fullScreenResults) {
+    fullScreenInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
 
-    resultsGrid.classList.add('active');
+      if (query.length < 1) {
+        fullScreenResults.innerHTML = '';
+        return;
+      }
 
-    // Filter Logic
-    const matches = products.filter(p => {
-      const nameMatch = p.name.toLowerCase().includes(query);
-      const catMatch = getCategory(p).toLowerCase().includes(query);
-      const priceMatch = String(getPrice(p)).includes(query);
-      return nameMatch || catMatch || priceMatch;
+      // Filter Logic
+      const matches = products.filter(p => {
+        const nameMatch = p.name.toLowerCase().includes(query);
+        const catMatch = getCategory(p).toLowerCase().includes(query);
+        const priceMatch = String(getPrice(p)).includes(query);
+        return nameMatch || catMatch || priceMatch;
+      });
+
+      renderSearchResults(matches, fullScreenResults);
     });
-
-    renderSearchResults(matches, resultsGrid);
-  });
+  }
 }
 
 function renderSearchResults(items, container) {
