@@ -123,13 +123,14 @@ function setupListeners() {
             console.log('Form submitted');
             try {
                 saveProduct();
-                // alert('Product Saved Successfully!');
+                alert('Product Saved Successfully!');
             } catch (err) {
                 console.error(err);
                 alert('Error capturing product: ' + err.message);
             }
         });
     } else {
+        alert('Internal Error: Product Form Missing');
         console.error('Product form not found');
     }
 
