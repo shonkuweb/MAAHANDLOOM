@@ -48,6 +48,9 @@ let currentOrderFilter = 'new';
 let currentProductFilter = 'all';
 let editingId = null;
 
+// Order Status Flow
+const STATUS_FLOW = ['new', 'in-process', 'in-transit', 'completed'];
+
 // Elements
 const viewToggle = document.getElementById('view-toggle');
 const productsBtn = document.getElementById('btn-products');
@@ -62,6 +65,8 @@ const productModal = document.getElementById('product-modal');
 const closeModalBtn = document.getElementById('close-modal');
 const productForm = document.getElementById('product-form');
 const modalTitle = document.getElementById('modal-title');
+const resetDbBtn = document.getElementById('reset-db-btn');
+const delCompletedBtn = document.getElementById('delete-completed-btn');
 const productImagesInput = document.getElementById('product-images');
 const imagePreviewContainer = document.getElementById('image-preview-container');
 // Order Modal Elements
@@ -105,6 +110,35 @@ function setupListeners() {
             render();
         });
     });
+
+    // Danger Zone Listeners
+    if (resetDbBtn) {
+        resetDbBtn.addEventListener('click', () => {
+            showConfirm('WARNING: This will delete ALL products. Are you sure?', () => {
+                localStorage.removeItem('products');
+                products = [];
+                render();
+                alert('Database Reset Complete');
+            });
+        });
+    }
+
+    if (delCompletedBtn) {
+        delCompletedBtn.addEventListener('click', () => {
+            const completedCount = orders.filter(o => o.status === 'completed').length;
+            if (completedCount === 0) {
+                alert('No completed orders found.');
+                return;
+            }
+
+            showConfirm(`Delete ${completedCount} completed orders? This cannot be undone.`, () => {
+                orders = orders.filter(o => o.status !== 'completed');
+                saveOrdersToStorage();
+                render();
+                alert('Completed history deleted.');
+            });
+        });
+    }
 
     // Modal Handlers
     addProductBtn.addEventListener('click', () => openModal());
@@ -461,7 +495,19 @@ function openOrderModal(id) {
     document.getElementById('view-order-total').textContent = '₹' + (order.total || 0);
 
     // Set Status Dropdown
-    document.getElementById('modal-status-select').value = order.status;
+    const select = document.getElementById('modal-status-select');
+    select.value = order.status;
+
+    // Disable options that are backward in the flow
+    const currentIdx = STATUS_FLOW.indexOf(order.status);
+    Array.from(select.options).forEach(option => {
+        const optionIdx = STATUS_FLOW.indexOf(option.value);
+        if (optionIdx < currentIdx) {
+            option.disabled = true;
+        } else {
+            option.disabled = false;
+        }
+    });
 }
 
 function closeOrderModal() {
@@ -491,8 +537,8 @@ function updateOrderStatus() {
         // Also re-render background list (it might disappear if filtered)
         render();
 
-        // Optional: Alert or small feedback
-        alert('Order status updated');
+        // Close modal automatically (no popup)
+        closeOrderModal();
     }
 }
 
