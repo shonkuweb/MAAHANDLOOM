@@ -563,6 +563,22 @@ function initProductDetails() {
                     <p class="detail-desc">${product.description || 'Authentic handloom product.'}</p>
                     
 
+
+                    <div style="margin-top:2rem; padding:1rem; background:#FAF7F5; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:0.5rem; text-align:center;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; color:#2C1B10; font-weight:bold; font-size:0.9rem;">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#10b981;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                             Secured by Razorpay
+                        </div>
+                        <p style="font-size:0.75rem; color:#666; margin:0;">
+                            100% Secure Payments. Trusted by millions.
+                        </p>
+                        <div style="display:flex; gap:0.5rem; opacity:0.6; margin-top:0.2rem;">
+                            <!-- Simple visual representations of cards -->
+                             <span style="font-size:0.7rem; font-weight:bold; border:1px solid #ccc; padding:2px 4px; border-radius:4px;">UPI</span>
+                             <span style="font-size:0.7rem; font-weight:bold; border:1px solid #ccc; padding:2px 4px; border-radius:4px;">VISA</span>
+                             <span style="font-size:0.7rem; font-weight:bold; border:1px solid #ccc; padding:2px 4px; border-radius:4px;">RuPay</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="sticky-action-bar">

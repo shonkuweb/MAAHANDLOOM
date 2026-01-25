@@ -516,6 +516,7 @@ function render() {
             detailsHtml = `
                 <div class="admin-item-details">
                     <p class="item-id">#${item.id}</p>
+                    <p style="font-size:0.75rem; color:#8B6F47; font-weight:bold; text-transform:uppercase; margin-bottom:2px;">${item.category || 'Uncategorized'}</p>
                     <h3 class="item-name">${item.name}</h3>
                     <div class="item-meta">
                         <span>Qty: ${item.qty}</span>
