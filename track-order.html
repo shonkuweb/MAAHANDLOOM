@@ -22,14 +22,41 @@
             </svg>
         </button>
         <div class="nav-logo">Maa Handloom</div>
-        <button id="cart-btn" class="nav-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
-        </button>
+
+        <!-- Search Bar (Hidden by default) -->
+        <div class="search-bar-container">
+            <div class="search-input-wrapper">
+                <input type="text" id="navbar-search-input" placeholder="Search products, category, or price..."
+                    autocomplete="off">
+                <div class="search-underline"></div>
+            </div>
+            <button id="close-navbar-search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="nav-actions" style="display:flex; gap:0.5rem;">
+            <button id="search-toggle" class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+
+            <button id="cart-btn" class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+            </button>
+        </div>
     </nav>
 
     <div id="overlay" class="overlay"></div>
@@ -183,7 +210,8 @@
     <footer>
         <div class="footer-links">
             <a href="#" class="footer-link">terms & condition</a>
-            <a href="https://wa.me/918972076182?text=Hi%20Maa%20Handloom,%20I%20have%20a%20query%20regarding%20products" target="_blank" class="footer-link">contact no.</a>
+            <a href="https://wa.me/918972076182?text=Hi%20Maa%20Handloom,%20I%20have%20a%20query%20regarding%20products"
+                target="_blank" class="footer-link">contact no.</a>
             <a href="#" class="footer-link">location by maps</a>
         </div>
         <div class="social-icons">
@@ -216,7 +244,7 @@
         </div>
     </footer>
 
-    <script type="module" src="/main.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 
 </html>

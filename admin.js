@@ -27,14 +27,9 @@ function checkAuth() {
             }
         });
     } else {
-        // Fallback checks
-        const pass = prompt('Enter Admin Passcode:');
-        if (pass === '1234') {
-            // Valid
-        } else {
-            alert('Incorrect Passcode');
-            window.location.href = 'index.html';
-        }
+        // Enforce the custom modal instead of a generic prompt fallback
+        const modal = document.getElementById('auth-modal');
+        if (modal) modal.classList.add('active');
     }
 }
 
@@ -80,15 +75,8 @@ let currentImages = [];
 // Initialize
 function init() {
     checkAuth();
-
-    // Save initial default products if nothing in storage (first run)
-    // Initial seeded data check removed.
-    // if (!localStorage.getItem('products')) { ... }
-    // if (!localStorage.getItem('orders')) { ... }
-
-    render();
     setupListeners();
-    checkAddButtonVisibility();
+    switchView(currentView);
 }
 
 function setupListeners() {
@@ -118,7 +106,7 @@ function setupListeners() {
                 localStorage.removeItem('products');
                 products = [];
                 render();
-                alert('Database Reset Complete');
+                window.showToast('Database Reset Complete', 'success');
             });
         });
     }
@@ -127,7 +115,7 @@ function setupListeners() {
         delCompletedBtn.addEventListener('click', () => {
             const completedCount = orders.filter(o => o.status === 'completed').length;
             if (completedCount === 0) {
-                alert('No completed orders found.');
+                window.showToast('No completed orders found.', 'info');
                 return;
             }
 
@@ -135,7 +123,7 @@ function setupListeners() {
                 orders = orders.filter(o => o.status !== 'completed');
                 saveOrdersToStorage();
                 render();
-                alert('Completed history deleted.');
+                window.showToast('Completed history deleted.', 'success');
             });
         });
     }
@@ -157,19 +145,18 @@ function setupListeners() {
             console.log('Form submitted');
             try {
                 saveProduct();
-                alert('Product Saved Successfully!');
+                window.showToast('Product Saved Successfully!');
             } catch (err) {
                 console.error(err);
-                alert('Error capturing product: ' + err.message);
+                window.showToast('Error capturing product', 'error');
             }
         });
     } else {
-        alert('Internal Error: Product Form Missing');
+        window.showToast('Internal Error: Product Form Missing', 'error');
         console.error('Product form not found');
     }
 
     // Image Upload
-    const productImagesInput = document.getElementById('product-images');
     if (productImagesInput) {
         productImagesInput.addEventListener('change', handleImageUpload);
     }
@@ -256,7 +243,7 @@ function handleImageUpload(e) {
     const files = Array.from(e.target.files);
 
     if (files.length + currentImages.length > 3) {
-        alert('You can only upload up to 3 images.');
+        window.showToast('You can only upload up to 3 images.', 'error');
         return;
     }
 
@@ -268,7 +255,7 @@ function handleImageUpload(e) {
             renderPreviews();
         }).catch(err => {
             console.error('Compression failed', err);
-            alert('Failed to process image');
+            window.showToast('Failed to process image', 'error');
         });
     });
 
@@ -334,11 +321,15 @@ function switchView(view) {
         ordersBtn.classList.remove('active');
         productFilterSection.style.display = 'flex';
         orderFilterSection.style.display = 'none';
+        if (resetDbBtn) resetDbBtn.style.display = 'block';
+        if (delCompletedBtn) delCompletedBtn.style.display = 'none';
     } else {
         productsBtn.classList.remove('active');
         ordersBtn.classList.add('active');
         productFilterSection.style.display = 'none';
         orderFilterSection.style.display = 'flex';
+        if (resetDbBtn) resetDbBtn.style.display = 'none';
+        if (delCompletedBtn) delCompletedBtn.style.display = 'block';
     }
 
     checkAddButtonVisibility();
