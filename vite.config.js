@@ -1,24 +1,18 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig({
+    plugins: [react()],
     build: {
-        rollupOptions: {
-            input: {
-                main: resolve(__dirname, 'index.html'),
-                about: resolve(__dirname, 'about.html'),
-                admin: resolve(__dirname, 'admin.html'),
-                categories: resolve(__dirname, 'categories.html'),
-                category: resolve(__dirname, 'category.html'),
-                checkout: resolve(__dirname, 'checkout.html'),
-                contact: resolve(__dirname, 'contact.html'),
-                cotton: resolve(__dirname, 'cotton-varieties.html'),
-                handloom: resolve(__dirname, 'handloom-special.html'),
-                product: resolve(__dirname, 'product_details.html'),
-                refund: resolve(__dirname, 'refund.html'),
-                shantipuri: resolve(__dirname, 'shantipuri-special.html'),
-                surat: resolve(__dirname, 'surat-silk.html'),
-                track: resolve(__dirname, 'track-order.html'),
+        // Build to dist, but we rely on default entry usually or explicit
+    },
+    server: {
+        proxy: {
+            '/api': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+                secure: false,
             },
         },
     },

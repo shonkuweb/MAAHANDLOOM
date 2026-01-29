@@ -55,11 +55,17 @@ window.showToast = function (message, type = 'success') {
 let products = [];
 let cart = [];
 
-function initData() {
+async function initData() {
   try {
-    // Products
-    products = JSON.parse(localStorage.getItem('products')) || [];
-    // Data seeding removed per user request
+    // Products - Fetch from API
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('API Error');
+      products = await res.json();
+    } catch (err) {
+      console.error('API Fetch Failed, falling back to empty', err);
+      products = [];
+    }
 
     // Quantity Check normalize
     products = products.map(p => ({
@@ -67,10 +73,20 @@ function initData() {
       qty: p.qty !== undefined ? p.qty : 100
     }));
 
-    // Cart
+    // Cart (Client Side Only)
     cart = JSON.parse(localStorage.getItem('cart')) || [];
 
     console.log('[DATA] Loaded', products.length, 'products and', cart.length, 'cart items.');
+
+    // Trigger UI updates that depend on data
+    if (typeof initProductGrid === 'function') initProductGrid();
+    if (typeof initSearch === 'function') initSearch();
+    updateCartBadge();
+
+    // If on details page
+    if (window.location.pathname.includes('product_details.html')) {
+      if (typeof initProductDetails === 'function') initProductDetails();
+    }
   } catch (e) {
     console.error('[DATA] Init Error:', e);
   }
@@ -268,7 +284,7 @@ if (!document.querySelector('footer') && !window.location.pathname.includes('adm
             <a href="https://wa.me/918972076182?text=Hi" target="_blank" class="footer-link">contact no.</a>
             <a href="#" class="footer-link">location by maps</a>
             </div>
-            <div class="copyright">Maa Handloom. All rights reserved.</div>
+            <div class="copyright">Indrita Fabrics. All rights reserved.</div>
            `;
     document.body.appendChild(footer);
   };
@@ -662,7 +678,7 @@ function initProductDetails() {
                     
 
                     <div style="background:#fff8f0; border-left:4px solid #8B6F47; padding:1rem; margin:1.5rem 0; border-radius:4px;">
-                        <h4 style="color:#2C1B10; margin-bottom:0.5rem; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; font-weight:800;">MAA HANDLOOM</h4>
+                        <h4 style="color:#2C1B10; margin-bottom:0.5rem; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; font-weight:800;">INDRITA FABRICS</h4>
                         <p style="font-size:0.85rem; color:#555; line-height:1.6; font-style:italic;">
                             "Experience the timeless elegance of authentic handloom craftsmanship. Each piece is woven with passion and heritage, bringing you the finest textures and traditional artistry directly from our weavers."
                         </p>
@@ -812,7 +828,7 @@ function initCheckout() {
 
   renderCheckoutList();
 
-  form.onsubmit = (e) => {
+  form.onsubmit = async (e) => {
     console.log('Checkout Form Submitting...');
     e.preventDefault();
 
@@ -821,7 +837,7 @@ function initCheckout() {
       return;
     }
 
-    // Deduct Stock Logic Check
+    // Client side basic check
     const stockIssues = cart.filter(item => {
       const product = products.find(p => p.id === item.id);
       return !product || product.qty < item.qty;
@@ -841,104 +857,106 @@ function initCheckout() {
     const city = document.getElementById('city') ? document.getElementById('city').value : '';
     const zip = document.getElementById('zip') ? document.getElementById('zip').value : '';
 
-    setTimeout(() => {
-      // 1. Create Order
-      const orderId = 'ORD-' + Date.now().toString().slice(-6);
-      const newOrder = {
-        id: orderId,
-        name: name,
-        phone: phone,
-        address: address,
-        city: city,
-        zip: zip,
-        items: [...cart], // clone
-        total: cart.reduce((acc, item) => {
-          const product = products.find(p => p.id == item.id) || item;
-          return acc + (getPrice(product) * item.qty);
-        }, 0),
-        status: 'new',
-        date: new Date().toISOString()
-      };
+    const payload = {
+      name, phone, address, city, zip, items: cart,
+      total: cart.reduce((acc, item) => {
+        const product = products.find(p => p.id == item.id) || item;
+        return acc + (getPrice(product) * item.qty);
+      }, 0)
+    };
 
-      // 2. Save Order
-      let currentOrders = JSON.parse(localStorage.getItem('orders')) || [];
-      currentOrders.unshift(newOrder);
-      localStorage.setItem('orders', JSON.stringify(currentOrders));
-
-      // 3. Update Stock
-      cart.forEach(item => {
-        const pIdx = products.findIndex(p => p.id === item.id);
-        if (pIdx !== -1) {
-          products[pIdx].qty -= item.qty;
-        }
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      localStorage.setItem('products', JSON.stringify(products));
 
-      // 4. Clear Cart
-      cart = [];
-      saveCart();
-
-      console.log('Order Placed:', orderId);
+      const data = await res.json();
 
       if (overlay) overlay.style.display = 'none';
 
-      const successModal = document.getElementById('success-modal');
-      if (successModal) {
-        // Copy Logic Helper
-        const copyToClipboard = () => {
-          navigator.clipboard.writeText(orderId).then(() => {
-            window.showToast('Order ID Copied: ' + orderId);
-          }).catch(err => {
-            console.error('Failed to copy', err);
-            window.showToast('Copy failed. Please copy manually.', 'error');
-          });
-        };
+      if (res.ok) {
+        cart = [];
+        saveCart();
 
-        const copyBtn = document.getElementById('btn-copy-id');
-        if (copyBtn) copyBtn.onclick = copyToClipboard;
-
-        const idSpan = document.getElementById('success-order-id');
-        if (idSpan) {
-          idSpan.textContent = orderId;
-          idSpan.style.cursor = 'pointer';
-          idSpan.title = 'Click to Copy';
-          idSpan.onclick = copyToClipboard;
-        }
-
-        successModal.style.display = 'flex';
-        successModal.style.opacity = '1';
-
-        const contBtn = document.getElementById('success-continue-btn');
-        if (contBtn) {
-          contBtn.onclick = (e) => {
-            e.preventDefault();
-            window.location.href = 'index.html';
+        const successModal = document.getElementById('success-modal');
+        if (successModal) {
+          // Copy Logic Helper
+          const copyToClipboard = () => {
+            navigator.clipboard.writeText(data.id).then(() => {
+              window.showToast('Order ID Copied: ' + data.id);
+            }).catch(err => {
+              console.error('Failed to copy', err);
+              window.showToast('Copy failed. Please copy manually.', 'error');
+            });
           };
+
+          const copyBtn = document.getElementById('btn-copy-id');
+          if (copyBtn) copyBtn.onclick = copyToClipboard;
+
+          const idSpan = document.getElementById('success-order-id');
+          if (idSpan) {
+            idSpan.textContent = data.id;
+            idSpan.style.cursor = 'pointer';
+            idSpan.title = 'Click to Copy';
+            idSpan.onclick = copyToClipboard;
+          }
+
+          successModal.style.display = 'flex';
+          successModal.style.opacity = '1';
+
+          const contBtn = document.getElementById('success-continue-btn');
+          if (contBtn) {
+            contBtn.onclick = (ev) => {
+              ev.preventDefault();
+              window.location.href = 'index.html';
+            };
+          }
+        } else {
+          window.showToast('Order Placed: ' + data.id);
+          setTimeout(() => window.location.href = 'index.html', 1000);
         }
       } else {
-        window.showToast('Order Placed: ' + orderId);
-        window.location.href = 'index.html';
+        throw new Error(data.message || data.error || 'Payment Failed');
       }
-    }, 2000);
+
+    } catch (err) {
+      if (overlay) overlay.style.display = 'none';
+      console.error('Checkout Error:', err);
+      window.showToast(err.message, 'error');
+    }
   };
 }
 
 
+
+
+
 // --- MAIN ENTRY POINT ---
 // --- TRACK ORDER PAGE ---
-function initTrackOrder() {
+async function initTrackOrder() {
   const btn = document.getElementById('track-btn');
   const input = document.getElementById('track-id');
   const resultContainer = document.getElementById('tracking-result');
 
   if (!btn || !input || !resultContainer) return;
 
-  btn.onclick = () => {
+  btn.onclick = async () => {
     const id = input.value.trim();
     if (!id) return window.showToast('Please enter an Order ID', 'error');
 
-    const orders = JSON.parse(localStorage.getItem('orders')) || [];
-    const order = orders.find(o => o.id === id);
+    let order = null;
+    try {
+      const res = await fetch('/api/orders'); // Ideally we should have a get-by-id api but this works for demo
+      const allOrders = await res.json();
+      order = allOrders.find(o => o.id === id);
+    } catch (e) {
+      console.error('Fetch error', e);
+      // fallback
+      const orders = JSON.parse(localStorage.getItem('orders')) || [];
+      order = orders.find(o => o.id === id);
+    }
 
     if (!order) {
       window.showToast('Order ID not found.', 'error');

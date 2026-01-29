@@ -12,31 +12,62 @@ function checkAuth() {
         modal.classList.add('active');
         input.focus();
 
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const pass = input.value;
 
-            if (pass === '1234') {
-                // Successfully authenticated for this session (in-memory only)
-                modal.classList.remove('active');
-            } else {
-                errorMsg.textContent = 'Incorrect Passcode';
-                input.value = '';
-                input.classList.add('shake');
-                setTimeout(() => input.classList.remove('shake'), 400);
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    modal.classList.remove('active');
+                    // Fetch initial data after auth
+                    fetchData();
+                } else {
+                    errorMsg.textContent = 'Incorrect Passcode';
+                    input.value = '';
+                    input.classList.add('shake');
+                    setTimeout(() => input.classList.remove('shake'), 400);
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Server Check Failed: ' + err.message;
             }
         });
-    } else {
-        // Enforce the custom modal instead of a generic prompt fallback
-        const modal = document.getElementById('auth-modal');
-        if (modal) modal.classList.add('active');
     }
 }
 
 // State
-let products = JSON.parse(localStorage.getItem('products')) || [];
+let products = [];
+let orders = [];
 
-let orders = JSON.parse(localStorage.getItem('orders')) || [];
+async function fetchData() {
+    try {
+        const [pRes, oRes] = await Promise.all([
+            fetch('/api/products'),
+            fetch('/api/orders')
+        ]);
+        products = await pRes.json();
+        orders = await oRes.json();
+        render(); // Re-render after fetch
+
+        // Update counts in buttons
+        const btnOrders = document.getElementById('btn-orders');
+        if (btnOrders) btnOrders.innerHTML = `ORDERS <span class="order-counter">${orders.length}</span>`;
+        const btnProducts = document.getElementById('btn-products');
+        if (btnProducts) btnProducts.innerHTML = `PRODUCTS <span class="order-counter">${products.length}</span>`;
+
+    } catch (e) {
+        console.error('Admin Fetch Failed', e);
+        window.showToast('Failed to load data from server', 'error');
+    }
+}
 
 let currentView = 'products';
 let currentOrderFilter = 'new';
@@ -76,7 +107,8 @@ let currentImages = [];
 function init() {
     checkAuth();
     setupListeners();
-    switchView(currentView);
+    // switchView called after data load or defaults
+    switchView('products');
 }
 
 function setupListeners() {
@@ -355,30 +387,30 @@ function updateFilterUI() {
     });
 }
 
-// Persist Helper
-function saveProductsToStorage() {
-    localStorage.setItem('products', JSON.stringify(products));
-}
-
-function saveOrdersToStorage() {
-    localStorage.setItem('orders', JSON.stringify(orders));
-}
+// Persist Helper - API handles this now
+// function saveProductsToStorage() ... 
+// function saveOrdersToStorage() ...
 
 // CRUD Operations
 function deleteProduct(id) {
-    showConfirm('Are you sure you want to delete this product?', () => {
-        products = products.filter(p => p.id !== id);
-        saveProductsToStorage();
-        render();
+    showConfirm('Are you sure you want to delete this product?', async () => {
+        try {
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchData();
+            } else {
+                window.showToast('Failed to delete', 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            window.showToast('Error deleting product', 'error');
+        }
     });
 }
 
 function openModal(id = null) {
     productModal.style.display = 'flex';
-    // Small delay to allow display:flex to apply before adding class for potential transition (if any), 
-    // but mainly to ensure opacity rule takes effect if active class is added.
-    // Actually, simply adding the class is enough if display:flex is set.
-    productModal.classList.add('active'); // Ensure opacity is 1
+    productModal.classList.add('active');
     editingId = id;
 
     if (id) {
@@ -405,31 +437,46 @@ function closeModal() {
     currentImages = [];
 }
 
-function saveProduct() {
+async function saveProduct() {
     const name = document.getElementById('product-name').value;
     const description = document.getElementById('product-desc').value;
     const price = document.getElementById('product-price').value;
     const category = document.getElementById('product-category').value;
     const qty = document.getElementById('product-qty').value;
-    // Use first image as main, store all in images array
     const image = currentImages.length > 0 ? currentImages[0] : '';
     const images = currentImages;
 
-    if (editingId) {
-        // Update
-        const index = products.findIndex(p => p.id === editingId);
-        if (index !== -1) {
-            products[index] = { ...products[index], name, description, price, category, qty, image, images };
-        }
-    } else {
-        // Create
-        const newId = 'P' + String(Date.now()).slice(-4);
-        products.push({ id: newId, name, description, price, category, qty, image, images });
-    }
+    const payload = { name, description, price, category, qty, image, images };
 
-    saveProductsToStorage();
-    closeModal();
-    render();
+    try {
+        let res;
+        if (editingId) {
+            // Update
+            res = await fetch(`/api/products/${editingId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            // Create
+            res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        if (res.ok) {
+            closeModal();
+            fetchData();
+        } else {
+            const data = await res.json();
+            window.showToast(data.error || 'Failed to save', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        window.showToast('Error saving product', 'error');
+    }
 }
 
 // Order Modal Functions
@@ -460,15 +507,16 @@ function openOrderModal(id) {
     const loc = [order.address, order.city, order.zip].filter(Boolean).join(', ');
     document.getElementById('view-customer-location').textContent = loc || 'N/A';
 
+    // Transaction ID if available
+    const tid = order.transaction_id || 'N/A';
+    // Add logic to show it if UI supports it, otherwise log
+    console.log('Transaction ID:', tid);
+
     // Items
     const itemsContainer = document.getElementById('view-order-items');
     itemsContainer.innerHTML = (order.items || []).map(item => {
         // Find product details if possible, or use item data
-        // item usually has name, qty, id. 
-        // We can look up current product description if needed, but item snapshot is safer if product changed.
-        // For "About product", we'll check the product list for match.
         const productRef = products.find(p => p.id == item.id);
-        const description = productRef ? (productRef.description || '') : '';
         const category = productRef ? (productRef.category || '') : '';
 
         return `
@@ -499,6 +547,12 @@ function openOrderModal(id) {
             option.disabled = false;
         }
     });
+
+    const delBtn = document.getElementById('delete-order-btn');
+    // Ensure we handle delete button event properly if it exists in modal
+    if (delBtn) {
+        delBtn.onclick = () => deleteOrder(order.id);
+    }
 }
 
 function closeOrderModal() {
@@ -507,30 +561,51 @@ function closeOrderModal() {
     editingId = null;
 }
 
-function updateOrderStatus() {
+async function updateOrderStatus() {
     if (!editingId) return;
 
     const newStatus = document.getElementById('modal-status-select').value;
-    const orderIndex = orders.findIndex(o => o.id === editingId);
 
-    if (orderIndex !== -1) {
-        orders[orderIndex].status = newStatus;
-        saveOrdersToStorage();
+    try {
+        const res = await fetch(`/api/orders/${editingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
 
-        // Reflect change in modal UI instantly?
-        const statusEl = document.getElementById('view-order-status');
-        statusEl.textContent = newStatus;
-        if (newStatus === 'new') statusEl.style.color = 'blue';
-        else if (newStatus === 'in-process') statusEl.style.color = 'orange';
-        else if (newStatus === 'in-transit') statusEl.style.color = '#8B4513';
-        else if (newStatus === 'completed') statusEl.style.color = 'green';
+        if (res.ok) {
+            const statusEl = document.getElementById('view-order-status');
+            if (statusEl) {
+                statusEl.textContent = newStatus;
+                // color update logic...
+            }
+            closeOrderModal();
+            fetchData();
+        } else {
+            window.showToast('Failed to update status', 'error');
+        }
 
-        // Also re-render background list (it might disappear if filtered)
-        render();
-
-        // Close modal automatically (no popup)
-        closeOrderModal();
+    } catch (e) {
+        console.error(e);
+        window.showToast('Error updating status', 'error');
     }
+}
+
+function deleteOrder(id) {
+    showConfirm('Delete this order?', async () => {
+        try {
+            const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                closeOrderModal();
+                fetchData();
+            } else {
+                window.showToast('Failed to delete order', 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            window.showToast('Error deleting order', 'error');
+        }
+    });
 }
 
 function render() {
