@@ -1,10 +1,41 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import ProductCard from '../components/ProductCard';
 import { Link } from 'react-router-dom';
+import FilterModal from '../components/FilterModal';
 
 const Home = () => {
     const { products } = useShop();
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+    // Default show all
+    useEffect(() => {
+        setFilteredProducts(products);
+    }, [products]);
+
+    const handleApplyFilter = (filters) => {
+        let result = [...products];
+
+        // Stock
+        if (filters.stock) {
+            result = result.filter(p => p.qty > 0);
+        }
+
+        // Categories
+        if (filters.categories && filters.categories.length > 0) {
+            result = result.filter(p => filters.categories.includes(p.category));
+        }
+
+        // Sort
+        if (filters.sort === 'lowHigh') {
+            result.sort((a, b) => a.price - b.price);
+        } else if (filters.sort === 'highLow') {
+            result.sort((a, b) => b.price - a.price);
+        }
+
+        setFilteredProducts(result);
+    };
 
     return (
         <main className="home-main">
@@ -20,7 +51,7 @@ const Home = () => {
 
             {/* Filter Section */}
             <section className="filter-section">
-                <button id="filter-btn" className="filter-btn" onClick={() => alert('Filter coming soon!')}>
+                <button id="filter-btn" className="filter-btn" onClick={() => setIsFilterOpen(true)}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -74,9 +105,19 @@ const Home = () => {
                 {products.length === 0 ? (
                     <p style={{ gridColumn: '1/-1', textAlign: 'center' }}>Loading products...</p>
                 ) : (
-                    products.map(p => <ProductCard key={p.id} product={p} />)
+                    filteredProducts.length > 0 ? (
+                        filteredProducts.map(p => <ProductCard key={p.id} product={p} />)
+                    ) : (
+                        <p style={{ gridColumn: '1/-1', textAlign: 'center' }}>No products match your filters.</p>
+                    )
                 )}
             </section>
+
+            <FilterModal
+                isOpen={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                onApply={handleApplyFilter}
+            />
         </main>
     );
 };

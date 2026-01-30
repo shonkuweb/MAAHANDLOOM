@@ -8,6 +8,8 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 
 import ProductDetails from './pages/ProductDetails';
+import CategoryPage from './pages/CategoryPage';
+import Checkout from './pages/Checkout';
 
 // Placeholder Pages
 const PagePlaceholder = ({ title }) => (
@@ -59,9 +61,9 @@ function AppContent() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/categories" element={<PagePlaceholder title="Categories" />} />
-                <Route path="/category/:slug" element={<PagePlaceholder title="Category Page" />} />
+                <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
-                <Route path="/checkout" element={<PagePlaceholder title="Checkout" />} />
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/track-order" element={<PagePlaceholder title="Track Order" />} />
                 <Route path="/admin" element={<PagePlaceholder title="Admin Panel" />} />
                 <Route path="/about" element={<PagePlaceholder title="About Us" />} />

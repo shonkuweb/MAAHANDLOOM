@@ -1,0 +1,41 @@
+services:
+  app:
+    build: .
+    image: maahandloom-app
+    container_name: maahandloom_app
+    restart: always
+    ports:
+      - "80:3000" # Expose on port 80 (HTTP)
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_TYPE=postgres
+      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/ecommerce
+      # Add PhonePe keys here or in .env file
+      - PHONEPE_MERCHANT_ID=${PHONEPE_MERCHANT_ID}
+      - PHONEPE_SALT_KEY=${PHONEPE_SALT_KEY}
+      - APP_BE_URL=http://your-domain.com
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: maahandloom_db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgrespassword
+      - POSTGRES_DB=ecommerce
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
