@@ -12,7 +12,7 @@ let pool;
 if (connectionString) {
     pool = new Pool({
         connectionString,
-        ssl: isProduction ? { rejectUnauthorized: false } : false
+        ssl: false
     });
     console.log('Connected to PostgreSQL database.');
     initDb();
