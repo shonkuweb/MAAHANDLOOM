@@ -11,13 +11,14 @@ import ProductDetails from './pages/ProductDetails';
 import CategoryPage from './pages/CategoryPage';
 import Checkout from './pages/Checkout';
 
-// Placeholder Pages
-const PagePlaceholder = ({ title }) => (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h2>{title}</h2>
-        <p>Coming Soon...</p>
-    </div>
-);
+// New Pages
+import Categories from './pages/Categories';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Refund from './pages/Refund';
+import TrackOrder from './pages/TrackOrder';
+
+
 
 const ScrollToTop = () => {
     const { pathname } = useLocation();
@@ -60,17 +61,15 @@ function AppContent() {
 
             <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/categories" element={<PagePlaceholder title="Categories" />} />
+                <Route path="/categories" element={<Categories />} />
                 <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/checkout" element={<Checkout />} />
-                <Route path="/track-order" element={<PagePlaceholder title="Track Order" />} />
-                <Route path="/track-order" element={<PagePlaceholder title="Track Order" />} />
+                <Route path="/track-order" element={<TrackOrder />} />
                 {/* Admin is handled by server */}
-                <Route path="/about" element={<PagePlaceholder title="About Us" />} />
-                <Route path="/about" element={<PagePlaceholder title="About Us" />} />
-                <Route path="/contact" element={<PagePlaceholder title="Contact Us" />} />
-                <Route path="/refund" element={<PagePlaceholder title="Refund Policy" />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/refund" element={<Refund />} />
             </Routes>
 
             {showFooter && <Footer />}

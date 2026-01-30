@@ -1,43 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const Contact = () => {
+    const [status, setStatus] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        // In a real app, send to backend. For demo, just show success.
+        setStatus('success');
+        e.target.reset();
+        window.showToast('Message Sent Successfully!', 'success');
+
+        setTimeout(() => setStatus(''), 3000);
+    };
+
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '3rem 1.5rem' }}>
-            <h1 style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '2.5rem', fontWeight: '300' }}>Contact Us</h1>
+        <main style={{ padding: '2rem 1.5rem', maxWidth: '600px', margin: '0 auto' }}>
+            <h1 className="text-red"
+                style={{ textAlign: 'center', marginBottom: '0.5rem', fontFamily: 'Great Vibes, cursive', fontSize: '3rem' }}>
+                Contact Us
+            </h1>
+            <p style={{ textAlign: 'center', marginBottom: '2rem', color: '#666' }}>
+                We'd love to hear from you. Send us a message!
+            </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginTop: '2rem' }}>
-                <div>
-                    <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Get in Touch</h2>
-                    <p style={{ marginBottom: '1rem' }}>
-                        Have questions about our products or your order? We're here to help.
-                    </p>
-                    <div style={{ marginBottom: '2rem' }}>
-                        <p><strong>Email:</strong> support@indritafabrics.com</p>
-                        <p><strong>Phone:</strong> +91 98765 43210</p>
-                        <p><strong>Address:</strong> 123 Weavers Lane, Textile Hub, WB, India</p>
-                    </div>
+            <form onSubmit={handleSubmit} className="contact-form-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="input-group">
+                    <input type="text" className="modern-input" placeholder="Your Name" required />
+                </div>
+                <div className="input-group">
+                    <input type="email" className="modern-input" placeholder="Your Email" required />
+                </div>
+                <div className="input-group">
+                    <input type="tel" className="modern-input" placeholder="Your Phone (Optional)" />
+                </div>
+                <div className="input-group">
+                    <textarea className="modern-input" placeholder="Your Message" rows="5"
+                        style={{ resize: 'none' }} required></textarea>
                 </div>
 
-                <div style={{ background: '#f9f9f9', padding: '2rem', borderRadius: '8px' }}>
-                    <h2 style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>Send a Message</h2>
-                    <form onSubmit={(e) => { e.preventDefault(); alert('Message sent!'); }}>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Name</label>
-                            <input type="text" style={{ width: '100%', padding: '0.8rem', border: '1px solid #ddd', borderRadius: '4px' }} required />
-                        </div>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email</label>
-                            <input type="email" style={{ width: '100%', padding: '0.8rem', border: '1px solid #ddd', borderRadius: '4px' }} required />
-                        </div>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Message</label>
-                            <textarea rows="4" style={{ width: '100%', padding: '0.8rem', border: '1px solid #ddd', borderRadius: '4px' }} required></textarea>
-                        </div>
-                        <button type="submit" style={{ width: '100%', padding: '1rem', background: 'black', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>SEND MESSAGE</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+                <button type="submit" className="btn-save-modern" style={{ marginTop: '1rem' }}>
+                    {status === 'success' ? 'SENT!' : 'SEND MESSAGE'}
+                </button>
+            </form>
+        </main>
     );
 };
 

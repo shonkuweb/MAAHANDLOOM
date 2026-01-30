@@ -2,91 +2,135 @@ import React, { useState } from 'react';
 
 const TrackOrder = () => {
     const [orderId, setOrderId] = useState('');
-    const [order, setOrder] = useState(null);
-    const [error, setError] = useState('');
+    const [orderData, setOrderData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const handleTrack = async (e) => {
-        e.preventDefault();
-        if (!orderId) return;
+    const handleTrack = async () => {
+        if (!orderId) {
+            window.showToast('Please enter an Order ID', 'error');
+            return;
+        }
 
         setLoading(true);
-        setError('');
-        setOrder(null);
+        setError(null);
+        setOrderData(null);
 
         try {
             const res = await fetch(`/api/orders/${orderId}`);
-            if (res.ok) {
-                const data = await res.json();
-                setOrder(data);
-            } else {
-                setError('Order not found. Please check your Order ID.');
+            if (!res.ok) {
+                throw new Error('Order not found or Error fetching status');
             }
+            const data = await res.json();
+            setOrderData(data);
         } catch (err) {
-            setError('Failed to fetch order details.');
+            setError('Order Not Found. Please check the ID.');
+            window.showToast(err.message, 'error');
         } finally {
             setLoading(false);
         }
     };
 
+    const getTimelineStatus = (currentStatus) => {
+        // Simple helper to decide which steps are 'active'
+        const steps = ['new', 'in-process', 'in-transit', 'completed'];
+        const currentIndex = steps.indexOf(currentStatus);
+
+        // Map display steps: Order Placed -> Processing -> Shipped -> Delivered
+        // 'new' -> Order Placed (idx 0)
+        // 'in-process' -> Processing (idx 1)
+        // 'in-transit' -> Shipped (idx 2)
+        // 'completed' -> Delivered (idx 3)
+
+        return (stepIndex) => {
+            if (currentIndex === -1) return false; // Unknown status
+            return stepIndex <= currentIndex;
+        };
+    };
+
     return (
-        <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <h2>Track Your Order</h2>
-            <form onSubmit={handleTrack} style={{ display: 'flex', gap: '1rem', marginTop: '1rem', marginBottom: '2rem' }}>
-                <input
-                    type="text"
-                    placeholder="Enter Order ID (e.g., ORD-123...)"
-                    value={orderId}
-                    onChange={(e) => setOrderId(e.target.value)}
-                    style={{ flex: 1, padding: '0.8rem', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
-                <button type="submit" disabled={loading} style={{ background: 'black', color: 'white', border: 'none', padding: '0 2rem', borderRadius: '4px' }}>
-                    {loading ? 'Checking...' : 'TRACK'}
-                </button>
-            </form>
+        <main style={{ padding: '0', paddingBottom: '2rem' }}>
+            <div className="tracking-hero">
+                <h1 className="tracking-title">TRACK YOUR ODER</h1>
+                <p className="tracking-subtitle">Enter your Order ID to see the current status</p>
 
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+                <div className="search-container">
+                    <input
+                        type="text"
+                        value={orderId}
+                        onChange={(e) => setOrderId(e.target.value)}
+                        className="tracking-input"
+                        placeholder="ORD-XXXXXX"
+                    />
+                    <button onClick={handleTrack} className="tracking-btn" disabled={loading}>
+                        {loading ? '...' : 'TRACK'}
+                    </button>
+                </div>
+            </div>
 
-            {order && (
-                <div style={{ border: '1px solid #eee', padding: '1.5rem', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                        <div>
-                            <h3>Order #{order.id}</h3>
-                            <p style={{ color: '#666', fontSize: '0.9rem' }}>Placed on {new Date(order.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{
-                                display: 'inline-block', padding: '0.4rem 0.8rem', borderRadius: '4px',
-                                background: order.status === 'completed' ? '#d4edda' : '#fff3cd',
-                                color: order.status === 'completed' ? '#155724' : '#856404',
-                                fontWeight: 'bold', textTransform: 'uppercase'
-                            }}>
-                                {order.status}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style={{ marginBottom: '1rem' }}>
-                        <h4>Items</h4>
-                        {order.items.map((item, idx) => (
-                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px dashed #eee' }}>
-                                <span>{item.name} <small style={{ color: '#666' }}>(x{item.qty})</small></span>
-                                <span>₹{item.price * item.qty}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '1rem', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                        <span>Total Amount</span>
-                        <span>₹{order.total}</span>
-                    </div>
-
-                    {order.transaction_id && (
-                        <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#888' }}>Transaction ID: {order.transaction_id}</p>
-                    )}
+            {error && (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>
+                    {error}
                 </div>
             )}
-        </div>
+
+            {orderData && (
+                <div className="tracking-result-container" style={{ display: 'block' }}>
+                    <div className="order-summary-card">
+                        <div className="order-header-row">
+                            <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                ORDER <span id="display-order-id">#{orderData.id}</span>
+                            </span>
+                            <span className="status-pill">{orderData.status.toUpperCase()}</span>
+                        </div>
+                        <div className="order-info-row">
+                            <span style={{ color: '#666', fontSize: '0.85rem' }}>
+                                {new Date(orderData.created_at || Date.now()).toLocaleDateString()}
+                            </span>
+                            <span style={{ fontWeight: 'bold' }}>₹{orderData.total}</span>
+                        </div>
+                    </div>
+
+                    <div className="timeline-wrapper">
+                        {/* Step 1 */}
+                        <div className={`timeline-step ${getTimelineStatus(orderData.status)(0) ? 'active' : ''}`}>
+                            <div className="timeline-icon">📝</div>
+                            <div className="timeline-content">
+                                <h3>Order Placed</h3>
+                                <p>We have received your order.</p>
+                            </div>
+                        </div>
+
+                        {/* Step 2 */}
+                        <div className={`timeline-step ${getTimelineStatus(orderData.status)(1) ? 'active' : ''}`}>
+                            <div className="timeline-icon">⚙️</div>
+                            <div className="timeline-content">
+                                <h3>Processing</h3>
+                                <p>We are preparing your order.</p>
+                            </div>
+                        </div>
+
+                        {/* Step 3 */}
+                        <div className={`timeline-step ${getTimelineStatus(orderData.status)(2) ? 'active' : ''}`}>
+                            <div className="timeline-icon">🚚</div>
+                            <div className="timeline-content">
+                                <h3>Shipped</h3>
+                                <p>Your order is on the way.</p>
+                            </div>
+                        </div>
+
+                        {/* Step 4 */}
+                        <div className={`timeline-step ${getTimelineStatus(orderData.status)(3) ? 'active' : ''}`}>
+                            <div className="timeline-icon">🏠</div>
+                            <div className="timeline-content">
+                                <h3>Delivered</h3>
+                                <p>Order has been delivered.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </main>
     );
 };
 
