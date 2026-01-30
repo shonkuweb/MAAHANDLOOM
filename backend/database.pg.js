@@ -9,25 +9,15 @@ const connectionString = process.env.DATABASE_URL;
 
 let pool;
 
-if (isProduction && connectionString) {
-    if (connectionString) {
-        pool = new Pool({
-            connectionString,
-            ssl: {
-                rejectUnauthorized: false
-            }
-        });
-        console.log('Connected to PostgreSQL database.');
-        initDb();
-    } else {
-        console.error('DATABASE_URL not set for production.');
-    }
+if (connectionString) {
+    pool = new Pool({
+        connectionString,
+        ssl: isProduction ? { rejectUnauthorized: false } : false
+    });
+    console.log('Connected to PostgreSQL database.');
+    initDb();
 } else {
-    // Only used if explicitly testing PG in dev, mostly wont be hit if server.js switches logic
-    // But good to have if we switch manual testing
-    if (connectionString) {
-        pool = new Pool({ connectionString });
-    }
+    console.error('DATABASE_URL not set.');
 }
 
 // Wrapper to mimic SQLite interface
