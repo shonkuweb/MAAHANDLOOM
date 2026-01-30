@@ -28,7 +28,9 @@ function initDb() {
             image TEXT,
             images TEXT, -- JSON string
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`);
+        )`, (err) => {
+            if (err) console.error("Error creating products table:", err);
+        });
 
         // Orders Table
         db.run(`CREATE TABLE IF NOT EXISTS orders (
@@ -44,7 +46,9 @@ function initDb() {
             payment_status TEXT DEFAULT 'pending',
             transaction_id TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`);
+        )`, (err) => {
+            if (err) console.error("Error creating orders table:", err);
+        });
 
         console.log('Database tables initialized.');
     });

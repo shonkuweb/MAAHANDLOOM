@@ -53,11 +53,31 @@ async function fetchData() {
             fetch('/api/products'),
             fetch('/api/orders')
         ]);
-        products = await pRes.json();
-        orders = await oRes.json();
+
+        // Safe Parsing
+        const pData = await pRes.json();
+        const oData = await oRes.json();
+
+        // Check if array
+        if (Array.isArray(pData)) {
+            products = pData;
+        } else {
+            console.error('Products API Error:', pData);
+            window.showToast('Error loading Products', 'error');
+            products = [];
+        }
+
+        if (Array.isArray(oData)) {
+            orders = oData;
+        } else {
+            console.error('Orders API Error:', oData);
+            window.showToast('Error loading Orders', 'error');
+            orders = [];
+        }
+
         render(); // Re-render after fetch
 
-        // Update counts in buttons
+        // Update counts in buttons (Safely)
         const btnOrders = document.getElementById('btn-orders');
         if (btnOrders) btnOrders.innerHTML = `ORDERS <span class="order-counter">${orders.length}</span>`;
         const btnProducts = document.getElementById('btn-products');
