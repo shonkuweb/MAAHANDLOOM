@@ -112,6 +112,31 @@ function init() {
 }
 
 function setupListeners() {
+    // Sidebar Logic
+    const menuBtn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    const overlay = document.getElementById('overlay');
+
+    if (menuBtn && sidebar && overlay) {
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+        });
+    }
+
+    function closeSidebar() {
+        if (sidebar) sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    if (closeSidebarBtn) {
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
+
     productsBtn.addEventListener('click', () => switchView('products'));
     ordersBtn.addEventListener('click', () => switchView('orders'));
 
