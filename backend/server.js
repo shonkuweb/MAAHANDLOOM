@@ -87,9 +87,19 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Note: Vite build will put them in dist, but for dev or direct access:
 app.use(express.static(path.join(__dirname, '../pages')));
 
+// Explicitly route /admin-login to the login page
+app.get('/admin-login', (req, res) => {
+    res.sendFile(path.join(__dirname, '../pages/admin-login.html'));
+});
+
 // Explicitly route /admin to the legacy admin.html
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '../pages/admin.html'));
+});
+
+// Token verification endpoint
+app.get('/api/auth/verify', requireAuth, (req, res) => {
+    res.json({ valid: true, role: req.admin.role });
 });
 
 

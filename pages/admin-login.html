@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Indrita Fabrics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: 2px;
+        }
+
+        .logo p {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            -webkit-text-security: disc;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1a1a2e;
+            box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .login-btn {
+            padding: 16px;
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .login-btn:hover {
+            background: #16213e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(26, 26, 46, 0.3);
+        }
+
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-msg {
+            background: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #666;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            color: #1a1a2e;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>INDRITA FABRICS</h1>
+            <p>Admin Panel</p>
+        </div>
+
+        <form class="login-form" id="login-form">
+            <div class="error-msg" id="error-msg">Incorrect passcode. Please try again.</div>
+
+            <div class="form-group">
+                <label for="passcode">Admin Passcode</label>
+                <input type="password" id="passcode" name="passcode" placeholder="Enter your passcode"
+                    autocomplete="off" required>
+            </div>
+
+            <button type="submit" class="login-btn" id="login-btn">
+                LOGIN
+            </button>
+        </form>
+
+        <div class="back-link">
+            <a href="/">← Back to Store</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const input = document.getElementById('passcode');
+        const errorMsg = document.getElementById('error-msg');
+        const loginBtn = document.getElementById('login-btn');
+
+        // Check if already logged in
+        const existingToken = sessionStorage.getItem('adminToken');
+        if (existingToken) {
+            // Verify token is still valid
+            fetch('/api/auth/verify', {
+                headers: { 'Authorization': `Bearer ${existingToken}` }
+            }).then(res => {
+                if (res.ok) {
+                    window.location.href = '/admin';
+                }
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const passcode = input.value.trim();
+            if (!passcode) return;
+
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="spinner"></span> LOGGING IN...';
+            errorMsg.classList.remove('show');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: passcode })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    sessionStorage.setItem('adminToken', data.token);
+                    window.location.href = '/admin';
+                } else {
+                    errorMsg.textContent = 'Incorrect passcode. Please try again.';
+                    errorMsg.classList.add('show');
+                    input.value = '';
+                    input.classList.add('shake');
+                    setTimeout(() => input.classList.remove('shake'), 300);
+                    input.focus();
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Server error. Please try again later.';
+                errorMsg.classList.add('show');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'LOGIN';
+            }
+        });
+
+        // Focus input on load
+        input.focus();
+    </script>
+</body>
+
+</html>

@@ -1,47 +1,31 @@
-// Authentication
-function checkAuth() {
-    // Always require authentication on load
+// Authentication - Redirect to login page if not authenticated
+async function checkAuth() {
+    const token = sessionStorage.getItem('adminToken');
 
-    // Show Modal
-    const modal = document.getElementById('auth-modal');
-    const form = document.getElementById('auth-form');
-    const input = document.getElementById('auth-pass');
-    const errorMsg = document.getElementById('auth-error');
+    if (!token) {
+        // No token, redirect to login
+        window.location.href = '/admin-login';
+        return;
+    }
 
-    if (modal) {
-        modal.classList.add('active');
-        input.focus();
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const pass = input.value;
-
-            try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pass })
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    // Store JWT token
-                    sessionStorage.setItem('adminToken', data.token);
-                    modal.classList.remove('active');
-                    // Fetch initial data after auth
-                    fetchData();
-                } else {
-                    errorMsg.textContent = 'Incorrect Passcode';
-                    input.value = '';
-                    input.classList.add('shake');
-                    setTimeout(() => input.classList.remove('shake'), 400);
-                }
-            } catch (err) {
-                console.error(err);
-                errorMsg.textContent = 'Server Check Failed: ' + err.message;
-            }
+    // Verify token with server
+    try {
+        const res = await fetch('/api/auth/verify', {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (res.ok) {
+            // Token is valid, fetch data
+            fetchData();
+        } else {
+            // Token invalid, clear and redirect
+            sessionStorage.removeItem('adminToken');
+            window.location.href = '/admin-login';
+        }
+    } catch (err) {
+        console.error('Auth verification failed:', err);
+        sessionStorage.removeItem('adminToken');
+        window.location.href = '/admin-login';
     }
 }
 
