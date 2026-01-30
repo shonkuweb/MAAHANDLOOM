@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import axios from 'axios';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import jwt from 'jsonwebtoken';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '../.env') }); // Load .env from root
 
@@ -51,6 +52,27 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth', authLimiter);
 
+// --- JWT SECRET ---
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+
+// --- AUTH MIDDLEWARE ---
+const requireAuth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.admin = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+};
 
 app.use(cors()); // In production, restrict this to your domain: { origin: 'https://yourdomain.com' }
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -110,7 +132,7 @@ app.get('/api/products', (req, res) => {
     });
 });
 
-app.post('/api/products', (req, res) => {
+app.post('/api/products', requireAuth, (req, res) => {
     const { id, name, description, price, category, qty, image, images } = req.body;
     const finalId = id || 'P' + Date.now();
     const imagesStr = JSON.stringify(images || []);
@@ -132,7 +154,7 @@ app.post('/api/products', (req, res) => {
     });
 });
 
-app.put('/api/products/:id', (req, res) => {
+app.put('/api/products/:id', requireAuth, (req, res) => {
     const { name, description, price, category, qty, image, images } = req.body;
     const finalId = req.params.id;
     const imagesStr = JSON.stringify(images || []);
@@ -297,7 +319,7 @@ app.get('/api/orders/:id', (req, res) => {
 });
 
 
-app.put('/api/orders/:id', (req, res) => {
+app.put('/api/orders/:id', requireAuth, (req, res) => {
     const { status } = req.body;
     db.run("UPDATE orders SET status = ? WHERE id = ?", [status, req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
@@ -310,22 +332,27 @@ app.post('/api/auth/login', (req, res) => {
     // SECURE: Use Environment Variable
     const adminPass = process.env.ADMIN_PASSCODE || '1234';
 
-    // Constant time comparison roughly (although for string equality it's not perfect against timing, but better than inline)
     if (password === adminPass) {
-        res.json({ success: true, token: 'mock-jwt-token' });
+        // Generate real JWT token
+        const token = jwt.sign(
+            { role: 'admin', loginTime: Date.now() },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+        res.json({ success: true, token });
     } else {
         res.status(401).json({ success: false, message: 'Invalid Credentials' });
     }
 });
 
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', requireAuth, (req, res) => {
     db.run("DELETE FROM products WHERE id = ?", [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Deleted' });
     });
 });
 
-app.delete('/api/orders/:id', (req, res) => {
+app.delete('/api/orders/:id', requireAuth, (req, res) => {
     db.run("DELETE FROM orders WHERE id = ?", [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Deleted' });

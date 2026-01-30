@@ -26,6 +26,8 @@ function checkAuth() {
                 const data = await res.json();
 
                 if (data.success) {
+                    // Store JWT token
+                    sessionStorage.setItem('adminToken', data.token);
                     modal.classList.remove('active');
                     // Fetch initial data after auth
                     fetchData();
@@ -46,6 +48,15 @@ function checkAuth() {
 // State
 let products = [];
 let orders = [];
+
+// Helper function to get auth headers
+function getAuthHeaders() {
+    const token = sessionStorage.getItem('adminToken');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+    };
+}
 
 async function fetchData() {
     try {
@@ -440,7 +451,7 @@ function updateFilterUI() {
 function deleteProduct(id) {
     showConfirm('Are you sure you want to delete this product?', async () => {
         try {
-            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
             if (res.ok) {
                 fetchData();
             } else {
@@ -506,14 +517,14 @@ async function saveProduct() {
             // Update
             res = await fetch(`/api/products/${editingId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(payload)
             });
         } else {
             // Create
             res = await fetch('/api/products', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(payload)
             });
         }
@@ -630,7 +641,7 @@ async function updateOrderStatus() {
     try {
         const res = await fetch(`/api/orders/${editingId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ status: newStatus })
         });
 
@@ -655,7 +666,7 @@ async function updateOrderStatus() {
 function deleteOrder(id) {
     showConfirm('Delete this order?', async () => {
         try {
-            const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/orders/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
             if (res.ok) {
                 closeOrderModal();
                 fetchData();
