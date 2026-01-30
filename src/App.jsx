@@ -65,7 +65,9 @@ function AppContent() {
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/track-order" element={<PagePlaceholder title="Track Order" />} />
-                <Route path="/admin" element={<PagePlaceholder title="Admin Panel" />} />
+                <Route path="/track-order" element={<PagePlaceholder title="Track Order" />} />
+                {/* Admin is handled by server */}
+                <Route path="/about" element={<PagePlaceholder title="About Us" />} />
                 <Route path="/about" element={<PagePlaceholder title="About Us" />} />
                 <Route path="/contact" element={<PagePlaceholder title="Contact Us" />} />
                 <Route path="/refund" element={<PagePlaceholder title="Refund Policy" />} />
