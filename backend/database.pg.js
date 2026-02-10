@@ -103,6 +103,9 @@ function initDb() {
             items TEXT,
             payment_status TEXT DEFAULT 'pending',
             transaction_id TEXT,
+            razorpay_order_id TEXT,
+            razorpay_payment_id TEXT,
+            razorpay_signature TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`
     ];

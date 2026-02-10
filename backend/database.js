@@ -45,6 +45,9 @@ function initDb() {
             items TEXT, -- JSON string
             payment_status TEXT DEFAULT 'pending',
             transaction_id TEXT,
+            razorpay_order_id TEXT,
+            razorpay_payment_id TEXT,
+            razorpay_signature TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`, (err) => {
             if (err) console.error("Error creating orders table:", err);
