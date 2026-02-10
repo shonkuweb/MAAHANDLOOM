@@ -235,102 +235,130 @@ app.post('/api/orders', async (req, res) => {
             return;
         }
 
-        // REAL PHONEPE FLOW (Initial Order Creation)
-        const sql = `INSERT INTO orders (id, name, phone, address, city, zip, total, items, status, payment_status, transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        // REAL PHONEPE FLOW - DO NOT store in database until payment succeeds!
+        // Encode order data to pass through callback
+        const orderData = {
+            orderId,
+            name,
+            phone,
+            address,
+            city,
+            zip,
+            total: calculatedTotal,
+            items: verifiedItems
+        };
+        const orderDataEncoded = Buffer.from(JSON.stringify(orderData)).toString('base64');
 
-        db.run(sql, [orderId, name, phone, address, city, zip, calculatedTotal, itemsStr, 'pending_payment', 'pending', null], async function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-
-            // Initiate PhonePe
-            try {
-                const payload = {
-                    merchantId: PHONEPE_MERCHANT_ID,
-                    merchantTransactionId: orderId,
-                    merchantUserId: 'U' + Date.now(),
-                    amount: calculatedTotal * 100, // in paise (VERIFIED from database)
-                    redirectUrl: `${APP_BE_URL}/api/phonepe/callback`,
-                    redirectMode: "POST",
-                    callbackUrl: `${APP_BE_URL}/api/phonepe/callback`,
-                    mobileNumber: phone,
-                    paymentInstrument: {
-                        type: "PAY_PAGE"
-                    }
-                };
-
-                const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64');
-                const checksum = generatePhonePeChecksum(payloadBase64, "/pg/v1/pay");
-
-                const response = await axios.post(`${PHONEPE_HOST_URL}/pg/v1/pay`, {
-                    request: payloadBase64
-                }, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-VERIFY': checksum
-                    }
-                });
-
-                const data = response.data;
-                if (data.success) {
-                    res.json({
-                        success: true,
-                        message: 'Payment Initiated',
-                        payment_url: data.data.instrumentResponse.redirectInfo.url,
-                        orderId: orderId
-                    });
-                } else {
-                    res.status(500).json({ error: 'PhonePe Error', details: data });
+        // Initiate PhonePe (no database insert here!)
+        try {
+            const payload = {
+                merchantId: PHONEPE_MERCHANT_ID,
+                merchantTransactionId: orderId,
+                merchantUserId: 'U' + Date.now(),
+                amount: calculatedTotal * 100, // in paise (VERIFIED from database)
+                redirectUrl: `${APP_BE_URL}/api/phonepe/callback?data=${orderDataEncoded}`,
+                redirectMode: "POST",
+                callbackUrl: `${APP_BE_URL}/api/phonepe/callback?data=${orderDataEncoded}`,
+                mobileNumber: phone,
+                paymentInstrument: {
+                    type: "PAY_PAGE"
                 }
+            };
 
-            } catch (pgErr) {
-                console.error("PhonePe Init Error:", pgErr.response ? pgErr.response.data : pgErr);
-                res.status(500).json({ error: 'Payment Initiation Failed' });
+            const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64');
+            const checksum = generatePhonePeChecksum(payloadBase64, "/pg/v1/pay");
+
+            const response = await axios.post(`${PHONEPE_HOST_URL}/pg/v1/pay`, {
+                request: payloadBase64
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-VERIFY': checksum
+                }
+            });
+
+            const data = response.data;
+            if (data.success) {
+                res.json({
+                    success: true,
+                    message: 'Payment Initiated',
+                    payment_url: data.data.instrumentResponse.redirectInfo.url,
+                    orderId: orderId
+                });
+            } else {
+                res.status(500).json({ error: 'PhonePe Error', details: data });
             }
-        });
+
+        } catch (pgErr) {
+            console.error("PhonePe Init Error:", pgErr.response ? pgErr.response.data : pgErr);
+            res.status(500).json({ error: 'Payment Initiation Failed' });
+        }
     } catch (error) {
         console.error("Order Creation Error:", error);
         res.status(500).json({ error: 'Failed to process order' });
     }
 });
 
-// PhonePe Callback
+// PhonePe Callback - Creates order ONLY after successful payment
 app.post('/api/phonepe/callback', async (req, res) => {
     try {
         const { response } = req.body;
+        const orderDataEncoded = req.query.data;
 
         if (!response) {
             return res.status(400).send("Invalid Callback");
         }
 
+        // Decode order data
+        let orderData;
+        try {
+            orderData = JSON.parse(Buffer.from(orderDataEncoded, 'base64').toString('utf-8'));
+        } catch (decodeErr) {
+            console.error("Order data decode error:", decodeErr);
+            return res.status(400).send("Invalid order data");
+        }
+
         const decoded = JSON.parse(Buffer.from(response, 'base64').toString('utf-8'));
         const { success, code, data } = decoded;
-        const { merchantTransactionId, transactionId } = data; // merchantTransactionId is our orderId
+        const { merchantTransactionId, transactionId } = data;
 
         if (success && code === 'PAYMENT_SUCCESS') {
-            // Update Order - Payment Verified
-            db.run("UPDATE orders SET status = ?, payment_status = ?, transaction_id = ? WHERE id = ?",
-                ['new', 'success', transactionId, merchantTransactionId], // merchantTransactionId is the Order ID we sent
-                (err) => {
-                    if (err) console.error("DB Update Error", err);
+            // Payment verified! NOW create the order in database
+            const itemsStr = JSON.stringify(orderData.items);
+            const sql = `INSERT INTO orders (id, name, phone, address, city, zip, total, items, status, payment_status, transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-                    // Deduct Stock (Ideally verify amount too)
-                    // We need to fetch order items to deduct stock...
-                    db.get("SELECT items FROM orders WHERE id = ?", [merchantTransactionId], (err, row) => {
-                        if (row && row.items) {
-                            const items = JSON.parse(row.items);
-                            items.forEach(item => {
-                                db.run("UPDATE products SET qty = qty - ? WHERE id = ?", [item.qty, item.id], (err) => { });
-                            });
-                        }
-                    });
+            db.run(sql, [
+                orderData.orderId,
+                orderData.name,
+                orderData.phone,
+                orderData.address,
+                orderData.city,
+                orderData.zip,
+                orderData.total,
+                itemsStr,
+                'new',
+                'success',
+                transactionId
+            ], (err) => {
+                if (err) {
+                    console.error("DB Insert Error", err);
+                    return res.redirect('/?payment=error');
                 }
-            );
 
-            // Redirect User to Success Page
-            res.redirect('/?payment=success&order=' + merchantTransactionId);
+                // Deduct Stock
+                orderData.items.forEach(item => {
+                    db.run("UPDATE products SET qty = qty - ? WHERE id = ?", [item.qty, item.id], (err) => {
+                        if (err) console.error("Stock deduction error:", err);
+                    });
+                });
+
+                console.log(`✓ Order ${orderData.orderId} created after successful payment`);
+                res.redirect('/?payment=success&order=' + orderData.orderId);
+            });
         } else {
-            // Update Order Failed
-            db.run("UPDATE orders SET payment_status = ? WHERE id = ?", ['failed', merchantTransactionId]);
-            res.redirect('/?payment=failure&order=' + merchantTransactionId);
+            // Payment failed - DO NOT create order
+            console.log(`✗ Payment failed for order ${merchantTransactionId}`);
+            res.redirect('/?payment=failure');
         }
 
     } catch (err) {
