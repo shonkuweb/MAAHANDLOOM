@@ -20,6 +20,7 @@ import TermsAndConditions from './pages/TermsAndConditions';
 import ReturnPolicy from './pages/ReturnPolicy';
 import ShippingPolicy from './pages/ShippingPolicy';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import WhatsAppButton from './components/WhatsAppButton';
 
 
 
