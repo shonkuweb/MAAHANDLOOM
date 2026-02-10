@@ -2,34 +2,19 @@ import React, { useState } from 'react';
 
 const FilterModal = ({ isOpen, onClose, onApply }) => {
     const [sort, setSort] = useState('default');
-    const [categories, setCategories] = useState([]);
     const [stock, setStock] = useState(false);
 
     if (!isOpen) return null;
 
-    const handleCategoryChange = (cat) => {
-        setCategories(prev =>
-            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-        );
-    };
-
     const handleApply = () => {
-        onApply({ sort, categories, stock });
+        onApply({ sort, stock });
         onClose();
     };
 
     const handleReset = () => {
         setSort('default');
-        setCategories([]);
         setStock(false);
     };
-
-    const categoryOptions = [
-        'Surat Silk Special',
-        'Handloom Special',
-        'Shantipuri Special',
-        'Cotton Varieties'
-    ];
 
     return (
         <div style={{
@@ -74,22 +59,7 @@ const FilterModal = ({ isOpen, onClose, onApply }) => {
                     </div>
                 </div>
 
-                {/* Categories */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Categories</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {categoryOptions.map(cat => (
-                            <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={categories.includes(cat)}
-                                    onChange={() => handleCategoryChange(cat)}
-                                />
-                                {cat}
-                            </label>
-                        ))}
-                    </div>
-                </div>
+
 
                 {/* Stock */}
                 <div style={{ marginBottom: '1.5rem' }}>

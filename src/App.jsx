@@ -8,15 +8,17 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 
 import ProductDetails from './pages/ProductDetails';
-import CategoryPage from './pages/CategoryPage';
 import Checkout from './pages/Checkout';
 
-// New Pages
-import Categories from './pages/Categories';
+// Policy Pages
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Refund from './pages/Refund';
 import TrackOrder from './pages/TrackOrder';
+import TermsAndConditions from './pages/TermsAndConditions';
+import ReturnPolicy from './pages/ReturnPolicy';
+import ShippingPolicy from './pages/ShippingPolicy';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 
 
@@ -61,8 +63,6 @@ function AppContent() {
 
             <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/categories" element={<Categories />} />
-                <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/track-order" element={<TrackOrder />} />
@@ -70,6 +70,10 @@ function AppContent() {
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/refund" element={<Refund />} />
+                <Route path="/terms" element={<TermsAndConditions />} />
+                <Route path="/return-policy" element={<ReturnPolicy />} />
+                <Route path="/shipping-policy" element={<ShippingPolicy />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             </Routes>
 
             {showFooter && <Footer />}

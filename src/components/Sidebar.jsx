@@ -14,14 +14,28 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </svg>
                 </button>
             </div>
+
             <div className="sidebar-menu">
-                <Link to="/categories" className="menu-item" onClick={onClose}>Categories</Link>
-                <Link to="/about" className="menu-item" onClick={onClose}>About Us</Link>
-                <Link to="/contact" className="menu-item" onClick={onClose}>Contact Us</Link>
-                <Link to="/refund" className="menu-item" onClick={onClose}>Refund & Return</Link>
-                <Link to="/track-order" className="menu-item" onClick={onClose}>Track Your Order</Link>
-                <Link to="/" className="menu-item" onClick={onClose}>Home</Link>
+                {/* Main Navigation */}
+                <div className="menu-section">
+                    <h3 className="menu-section-title">Navigation</h3>
+                    <Link to="/" className="menu-item" onClick={onClose}>Home</Link>
+                    <Link to="/about" className="menu-item" onClick={onClose}>About Us</Link>
+                    <Link to="/contact" className="menu-item" onClick={onClose}>Contact Us</Link>
+                    <Link to="/track-order" className="menu-item" onClick={onClose}>Track Your Order</Link>
+                </div>
+
+                {/* Policies Section */}
+                <div className="menu-section">
+                    <h3 className="menu-section-title">Policies</h3>
+                    <Link to="/terms" className="menu-item menu-item-small" onClick={onClose}>Terms & Conditions</Link>
+                    <Link to="/refund" className="menu-item menu-item-small" onClick={onClose}>Refund Policy</Link>
+                    <Link to="/return-policy" className="menu-item menu-item-small" onClick={onClose}>Return Policy</Link>
+                    <Link to="/shipping-policy" className="menu-item menu-item-small" onClick={onClose}>Shipping Policy</Link>
+                    <Link to="/privacy-policy" className="menu-item menu-item-small" onClick={onClose}>Privacy Policy</Link>
+                </div>
             </div>
+
             <div className="admin-link-container">
                 <a href="/admin" className="admin-link" onClick={onClose}>
                     Admin Panel
