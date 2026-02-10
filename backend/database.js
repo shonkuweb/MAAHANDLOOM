@@ -23,6 +23,7 @@ function initDb() {
             name TEXT NOT NULL,
             description TEXT,
             price REAL NOT NULL,
+            category TEXT,
             qty INTEGER DEFAULT 0,
             image TEXT,
             images TEXT, -- JSON string

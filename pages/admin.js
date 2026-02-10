@@ -459,6 +459,7 @@ function openModal(id = null) {
         document.getElementById('product-name').value = product.name;
         document.getElementById('product-desc').value = product.description || '';
         document.getElementById('product-price').value = product.price;
+        document.getElementById('product-category').value = product.category || '';
         document.getElementById('product-qty').value = product.qty;
         currentImages = product.images || (product.image ? [product.image] : []);
     } else {
@@ -487,11 +488,12 @@ async function saveProduct() {
         const name = document.getElementById('product-name').value;
         const description = document.getElementById('product-desc').value;
         const price = parseFloat(document.getElementById('product-price').value) || 0;
+        const category = document.getElementById('product-category').value;
         const qty = parseInt(document.getElementById('product-qty').value) || 0;
         const image = currentImages.length > 0 ? currentImages[0] : '';
         const images = currentImages;
 
-        const payload = { name, description, price, qty, image, images };
+        const payload = { name, description, price, category, qty, image, images };
         console.log('Sending Payload:', payload);
 
         let res;
@@ -680,6 +682,9 @@ function render() {
             itemsToRender = [...products];
         } else if (currentProductFilter === 'out-of-stock') {
             itemsToRender = products.filter(p => Number(p.qty) <= 0);
+        } else {
+            // Category Match
+            itemsToRender = products.filter(p => (p.category || '').includes(currentProductFilter));
         }
     } else {
         itemsToRender = orders.filter(o => o.status === currentOrderFilter);
@@ -707,6 +712,7 @@ function render() {
             detailsHtml = `
                 <div class="admin-item-details">
                     <p class="item-id">#${item.id}</p>
+                    <p style="font-size:0.75rem; color:#8B6F47; font-weight:bold; text-transform:uppercase; margin-bottom:2px;">${item.category || 'Uncategorized'}</p>
                     <h3 class="item-name">${item.name}</h3>
                     <div class="item-meta">
                         <span>Qty: ${item.qty}</span>

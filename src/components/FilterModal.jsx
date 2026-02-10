@@ -1,13 +1,29 @@
 import React, { useState } from 'react';
 
-const FilterModal = ({ isOpen, onClose, onApply }) => {
-    const [sort, setSort] = useState('default');
-    const [stock, setStock] = useState(false);
+const FilterModal = ({ isOpen, onClose, onApply, initialFilters }) => {
+    const [sort, setSort] = useState(initialFilters?.sort || '');
+    const [categories, setCategories] = useState(initialFilters?.categories || []);
+    const [stock, setStock] = useState(initialFilters?.stock || 'all');
+
+    // 3 categories only (no Cotton)
+    const categoryOptions = [
+        'Surat Silk Special',
+        'Handloom Special',
+        'Shantipuri Special'
+    ];
 
     if (!isOpen) return null;
 
+    const handleCategoryChange = (cat) => {
+        if (categories.includes(cat)) {
+            setCategories(categories.filter(c => c !== cat));
+        } else {
+            setCategories([...categories, cat]);
+        }
+    };
+
     const handleApply = () => {
-        onApply({ sort, stock });
+        onApply({ sort, categories, stock });
         onClose();
     };
 
@@ -38,6 +54,21 @@ const FilterModal = ({ isOpen, onClose, onApply }) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>FILTER & SORT</h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Categories</h3>
+                    {categoryOptions.map(cat => (
+                        <label key={cat} style={{ display: 'flex', alignItems: 'center', padding: '0.5rem 0', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={categories.includes(cat)}
+                                onChange={() => handleCategoryChange(cat)}
+                                style={{ marginRight: '0.5rem', cursor: 'pointer', width: '18px', height: '18px' }}
+                            />
+                            <span style={{ fontSize: '0.9rem' }}>{cat}</span>
+                        </label>
+                    ))}
                 </div>
 
                 {/* Sort */}

@@ -72,6 +72,30 @@ const Home = () => {
                 </button>
             </section>
 
+            {/* Categories - 3 Only */}
+            <section className="category-list">
+                <Link to="/category/surat-silk" className="category-item" style={{ textDecoration: 'none' }}>
+                    <div className="cat-circle">
+                        <img src="/categories/surat-silk.jpg" alt="Surat Silk"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                    </div>
+                    <span className="cat-label">Surat Silk<br />Special</span>
+                </Link>
+                <Link to="/category/handloom" className="category-item" style={{ textDecoration: 'none' }}>
+                    <div className="cat-circle">
+                        <img src="/categories/handloom-special.png" alt="Handloom Special"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                    </div>
+                    <span className="cat-label">Handloom<br />Special</span>
+                </Link>
+                <Link to="/category/shantipuri" className="category-item" style={{ textDecoration: 'none' }}>
+                    <div className="cat-circle">
+                        <img src="/categories/shantipuri-special.png" alt="Shantipuri Special"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                    </div>
+                    <span className="cat-label">Shantipuri<br />Special</span>
+                </Link>
+            </section>
 
 
             {/* Product Grid */}
