@@ -79,6 +79,7 @@ function AppContent() {
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             </Routes>
 
+            <WhatsAppButton />
             {showFooter && <Footer />}
         </div>
     );

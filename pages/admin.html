@@ -292,7 +292,13 @@
                         class="modern-input"><textarea id="product-desc" placeholder="Product Description"
                         class="modern-input" rows="3" style="resize: none;"></textarea><input type="text"
                         id="product-price" placeholder="Price" required class="modern-input">
-
+                    <!-- Category Dropdown - 3 Options Only -->
+                    <select id="product-category" class="modern-input" required style="background: white;">
+                        <option value="" disabled selected>Select Category</option>
+                        <option value="Surat Silk Special">Surat Silk Special</option>
+                        <option value="Handloom Special">Handloom Special</option>
+                        <option value="Shantipuri Special">Shantipuri Special</option>
+                    </select>
                     <!-- Qty input with spinner can be styled but standard input is
                                                             fine for now, just apply class --><input type="number"
                         id="product-qty" placeholder="Quantity" required class="modern-input"><button type="submit"
