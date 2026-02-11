@@ -53,7 +53,7 @@ const Footer = () => {
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                                 <polyline points="22,6 12,13 2,6"></polyline>
                             </svg>
-                            <a href="mailto:info@inditrafabrics.com">info@inditrafabrics.com</a>
+                            <a href="mailto:subirchanda43@gmail.com">subirchanda43@gmail.com</a>
                         </li>
                     </ul>
 
