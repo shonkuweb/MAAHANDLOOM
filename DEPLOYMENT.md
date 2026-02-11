@@ -27,8 +27,8 @@ apt-get update
 # Install Docker
 apt-get install -y docker.io
 
-# Install Docker Compose
-apt-get install -y docker-compose
+# Install Docker Compose V2 (Plugin)
+apt-get install -y docker-compose-plugin
 
 # Start and enable Docker
 systemctl start docker
@@ -89,7 +89,7 @@ Press `Ctrl+O`, `Enter` to save, and `Ctrl+X` to exit.
 Build and start the containers:
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 - `--build`: Rebuilds the images.
@@ -103,8 +103,8 @@ You should see your website!
 
 ## Managing the App
 
-- **Stop App**: `docker-compose down`
-- **View Logs**: `docker-compose logs -f`
+- **Stop App**: `docker compose down`
+- **View Logs**: `docker compose logs -f`
 - **Update App**:
     1.  `git pull` (or re-upload files)
-    2.  `docker-compose up -d --build`
+    2.  `docker compose up -d --build`
