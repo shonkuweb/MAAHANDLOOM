@@ -55,6 +55,11 @@ const TermsAndConditions = () => {
                     charge of ₹100 will be applicable.
                 </p>
 
+                <h3 style={{ fontWeight: '700', marginTop: '2rem', marginBottom: '0.5rem' }}>Registered Office</h3>
+                <p style={{ marginBottom: '1rem' }}>
+                    Gaighata, Baikara, Bongaon, North 24 Parganas, West Bengal, 743245
+                </p>
+
                 <h3 style={{ fontWeight: '700', marginTop: '2rem', marginBottom: '0.5rem' }}>Agreement</h3>
                 <p style={{ marginBottom: '2rem' }}>
                     By placing an order with INDRITA FABRICS, the customer confirms that they have read, understood, and

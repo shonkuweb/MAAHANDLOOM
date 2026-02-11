@@ -27,6 +27,9 @@ const Refund = () => {
                     <strong> The refund amount will be credited to the customer's bank account within 7 days from the date
                         the returned saree reaches us.</strong>
                 </p>
+                <p style={{ marginBottom: '1rem' }}>
+                    <strong>In case of an exchange or replacement, the new product will be delivered within 7 to 10 working days.</strong>
+                </p>
 
                 <h3 style={{ fontWeight: '700', marginTop: '2rem', marginBottom: '0.5rem' }}>Refund Method</h3>
                 <p style={{ marginBottom: '1rem' }}>

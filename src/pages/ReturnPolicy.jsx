@@ -16,7 +16,7 @@ const ReturnPolicy = () => {
 
                 <h3 style={{ fontWeight: '700', marginTop: '2rem', marginBottom: '0.5rem' }}>Return Eligibility</h3>
                 <p style={{ marginBottom: '1rem' }}>
-                    Customers may request a return if they do not like the saree after delivery. The request must be made
+                    Customers may request a return if they do not like the saree after delivery. <strong>Return request must be made within 7 days of delivery.</strong> The request must be made
                     promptly and the saree must be returned in original, unused condition.
                 </p>
 
