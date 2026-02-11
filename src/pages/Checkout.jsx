@@ -94,7 +94,7 @@ const Checkout = () => {
 
     return (
         <main style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }}>
-            <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>CHECKOUT</h1>
+            <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>Secure Payment by PhonePe</h1>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 {/* Order Summary */}
@@ -172,7 +172,7 @@ const Checkout = () => {
                         {isSubmitting ? 'Processing...' : `PAY ₹${total}`}
                     </button>
                     <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#666' }}>
-                        Secure Payment via Razorpay (Mock)
+                        Secure Payment by PhonePe
                     </p>
                 </form>
             </div>
