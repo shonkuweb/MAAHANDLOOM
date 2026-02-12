@@ -5,10 +5,30 @@ const Contact = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // In a real app, send to backend. For demo, just show success.
+        const formData = new FormData(e.target);
+        const name = formData.get('name');
+        const email = formData.get('email');
+        const phone = formData.get('phone') || 'Not provided';
+        const message = formData.get('message');
+
+        const whatsappMessage = `✨ New Inquiry from Indrita Fabrics Website ✨
+---------------------------------
+👤 Name: ${name}
+📧 Email: ${email}
+📱 Phone: ${phone}
+💬 Message: ${message}
+---------------------------------`;
+
+        const encodedMessage = encodeURIComponent(whatsappMessage);
+        const whatsappUrl = `https://wa.me/919800131516?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
+
         setStatus('success');
         e.target.reset();
-        window.showToast('Message Sent Successfully!', 'success');
+        if (window.showToast) {
+            window.showToast('Redirecting to WhatsApp...', 'success');
+        }
 
         setTimeout(() => setStatus(''), 3000);
     };
@@ -25,21 +45,21 @@ const Contact = () => {
 
             <form onSubmit={handleSubmit} className="contact-form-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="input-group">
-                    <input type="text" className="modern-input" placeholder="Your Name" required />
+                    <input name="name" type="text" className="modern-input" placeholder="Your Name" required />
                 </div>
                 <div className="input-group">
-                    <input type="email" className="modern-input" placeholder="Your Email" required />
+                    <input name="email" type="email" className="modern-input" placeholder="Your Email" required />
                 </div>
                 <div className="input-group">
-                    <input type="tel" className="modern-input" placeholder="Your Phone (Optional)" />
+                    <input name="phone" type="tel" className="modern-input" placeholder="Your Phone (Optional)" />
                 </div>
                 <div className="input-group">
-                    <textarea className="modern-input" placeholder="Your Message" rows="5"
+                    <textarea name="message" className="modern-input" placeholder="Your Message" rows="5"
                         style={{ resize: 'none' }} required></textarea>
                 </div>
 
                 <button type="submit" className="btn-save-modern" style={{ marginTop: '1rem' }}>
-                    {status === 'success' ? 'SENT!' : 'SEND MESSAGE'}
+                    {status === 'success' ? 'REDIRECTING...' : 'SEND MESSAGE'}
                 </button>
             </form>
         </main>
