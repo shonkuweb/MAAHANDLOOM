@@ -30,14 +30,6 @@ const Categories = () => {
                     </div>
                     <div className="cat-page-label">Shantipuri<br />Special</div>
                 </Link>
-
-                <Link to="/category/cotton" className="cat-page-card">
-                    <div className="cat-page-circle" style={{ overflow: 'hidden', border: '3px solid #DFC186' }}>
-                        <img src="/categories/cotton-varieties.png" alt="Cotton Varieties"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <div className="cat-page-label">Cotton<br />Varieties</div>
-                </Link>
             </div>
         </main>
     );
