@@ -1,7 +1,7 @@
 import React from 'react';
 
 const WhatsAppButton = () => {
-    const phoneNumber = '919002536648'; // WhatsApp number (with country code, no + or spaces)
+    const phoneNumber = '919800131516'; // WhatsApp number (with country code, no + or spaces)
     const message = encodeURIComponent(
         'Hello INDRITA FABRICS! I am interested in your sarees. Can you please help me with more details?'
     );
