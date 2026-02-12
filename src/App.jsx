@@ -9,6 +9,7 @@ import Home from './pages/Home';
 
 import ProductDetails from './pages/ProductDetails';
 import CategoryPage from './pages/CategoryPage';
+import Categories from './pages/Categories';
 import Checkout from './pages/Checkout';
 
 // Policy Pages
@@ -66,6 +67,7 @@ function AppContent() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/category/:slug" element={<CategoryPage />} />
+                <Route path="/categories" element={<Categories />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/track-order" element={<TrackOrder />} />
