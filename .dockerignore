@@ -1,0 +1,16 @@
+node_modules
+.git
+.env
+dist
+dist-ssr
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.DS_Store
+logs
+*.log
+Dockerfile
+docker-compose.yml
+check_product.js
+test_phonepe.js
+curl_output.txt
