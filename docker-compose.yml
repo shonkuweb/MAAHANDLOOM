@@ -12,8 +12,14 @@ services:
       - DB_TYPE=postgres
       - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/ecommerce
       # Add PhonePe keys here or in .env file
-      - PHONEPE_MERCHANT_ID=${PHONEPE_MERCHANT_ID}
-      - PHONEPE_SALT_KEY=${PHONEPE_SALT_KEY}
+      # PhonePe V2 Credentials
+      - PHONEPE_CLIENT_ID=${PHONEPE_CLIENT_ID}
+      - PHONEPE_CLIENT_SECRET=${PHONEPE_CLIENT_SECRET}
+      - PHONEPE_CLIENT_VERSION=${PHONEPE_CLIENT_VERSION}
+      - PHONEPE_ENV=${PHONEPE_ENV}
+      - PHONEPE_HOST_URL=${PHONEPE_HOST_URL}
+      - PHONEPE_WEBHOOK_USERNAME=${PHONEPE_WEBHOOK_USERNAME}
+      - PHONEPE_WEBHOOK_PASSWORD=${PHONEPE_WEBHOOK_PASSWORD}
       - APP_BE_URL=http://your-domain.com
     depends_on:
       - db
