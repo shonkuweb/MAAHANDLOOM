@@ -110,6 +110,9 @@ const PHONEPE_CLIENT_ID = process.env.PHONEPE_CLIENT_ID;
 const PHONEPE_CLIENT_SECRET = process.env.PHONEPE_CLIENT_SECRET;
 const PHONEPE_CLIENT_VERSION = process.env.PHONEPE_CLIENT_VERSION || 1;
 const PHONEPE_ENV = process.env.PHONEPE_ENV || 'SANDBOX';
+const PHONEPE_HOST_URL = process.env.PHONEPE_HOST_URL || "https://api-preprod.phonepe.com/apis/pg-sandbox";
+const APP_BE_URL = process.env.APP_BE_URL || `http://localhost:${PORT}`;
+
 // Auth Token Cache
 let phonePeAccessToken = null;
 let phonePeTokenExpiry = null;
