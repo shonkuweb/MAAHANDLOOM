@@ -1,6 +1,6 @@
-import pkg from 'pg';
-const { Pool } = pkg;
-import dotenv from 'dotenv';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { Pool } = require('pg');
 
 dotenv.config();
 
