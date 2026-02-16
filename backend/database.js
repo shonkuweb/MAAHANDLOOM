@@ -53,6 +53,18 @@ function initDb() {
             if (err) console.error("Error creating orders table:", err);
         });
 
+        // Refunds Table
+        db.run(`CREATE TABLE IF NOT EXISTS refunds (
+            id TEXT PRIMARY KEY,
+            order_id TEXT NOT NULL,
+            refund_id TEXT NOT NULL,
+            amount REAL NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`, (err) => {
+            if (err) console.error("Error creating refunds table:", err);
+        });
+
         console.log('Database tables initialized.');
     });
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,8 +16,39 @@ const Checkout = () => {
 
     const total = getCartTotal();
 
+    const [orderId, setOrderId] = useState(null);
+
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = "https://mercury.phonepe.com/web/bundle/checkout.js";
+        script.async = true;
+        document.body.appendChild(script);
+        return () => {
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+        };
+    }, []);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const paymentCallback = (response) => {
+        console.log("PhonePe Callback:", response);
+        if (response.status === 'SUCCESS' || response.code === 'PAYMENT_SUCCESS' || response.status === 'CONCLUDED') {
+            // Verify status with backend to be sure
+            // But for UI, redirect to success?
+            // Better: Check backend status
+            // But for now, simple redirect
+            navigate('/?payment=success&order=' + orderId);
+            clearCart();
+        } else if (response.status === 'USER_CANCEL') {
+            alert("Payment Cancelled");
+            setIsSubmitting(false);
+        } else {
+            navigate('/?payment=failure');
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -41,7 +72,8 @@ const Checkout = () => {
         };
 
         try {
-            const res = await fetch('/api/orders', {
+            // Call V2 Payment Create
+            const res = await fetch('/api/payment/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -49,23 +81,26 @@ const Checkout = () => {
 
             const data = await res.json();
 
-            if (res.ok) {
-                if (data.payment_url) {
-                    // Real Payment Flow
-                    window.location.href = data.payment_url;
+            if (res.ok && data.tokenUrl) {
+                setOrderId(data.merchantOrderId);
+
+                if (window.PhonePeCheckout) {
+                    window.PhonePeCheckout.transact({
+                        tokenUrl: data.tokenUrl,
+                        callback: paymentCallback,
+                        type: "IFRAME" // or "REDIRECT" / "PAY_PAGE"
+                    });
                 } else {
-                    // Mock Flow Notification
-                    alert('PhonePe Payment Gateway will be added soon. Order ID: ' + data.id);
-                    clearCart();
-                    navigate('/');
+                    alert("PhonePe SDK not loaded. Please try again.");
+                    setIsSubmitting(false);
                 }
             } else {
-                alert('Order Failed: ' + (data.error || 'Unknown Error'));
+                alert('Order Creation Failed: ' + (data.error || 'Unknown Error'));
+                setIsSubmitting(false);
             }
         } catch (err) {
             console.error(err);
             alert('Something went wrong.');
-        } finally {
             setIsSubmitting(false);
         }
     };

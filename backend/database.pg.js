@@ -107,6 +107,14 @@ function initDb() {
             razorpay_payment_id TEXT,
             razorpay_signature TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS refunds (
+            id TEXT PRIMARY KEY,
+            order_id TEXT NOT NULL,
+            refund_id TEXT NOT NULL,
+            amount REAL NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`
     ];
 

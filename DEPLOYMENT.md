@@ -72,11 +72,17 @@ NODE_ENV=production
 # This matches the service name 'db' and password in docker-compose.yml
 DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/ecommerce
 
-# PhonePe Keys (Production)
-PHONEPE_MERCHANT_ID=YOUR_REAL_MERCHANT_ID
-PHONEPE_SALT_KEY=YOUR_REAL_SALT_KEY
+# PhonePe V2 Credentials (OAuth)
+PHONEPE_CLIENT_ID=YOUR_PRODUCTION_CLIENT_ID
+PHONEPE_CLIENT_SECRET=YOUR_PRODUCTION_CLIENT_SECRET
+PHONEPE_CLIENT_VERSION=1
+PHONEPE_ENV=PRODUCTION
 PHONEPE_HOST_URL=https://api.phonepe.com/apis/hermes
-APP_BE_URL=http://your_vps_ip_address
+APP_BE_URL=https://your-domain.com
+
+# Webhook Credentials
+PHONEPE_WEBHOOK_USERNAME=your_webhook_username
+PHONEPE_WEBHOOK_PASSWORD=your_webhook_password
 
 # Security
 ADMIN_PASSCODE=StrongPassword123!
