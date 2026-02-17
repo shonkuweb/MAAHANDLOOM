@@ -10,11 +10,58 @@ import Home from './pages/Home';
 import ProductDetails from './pages/ProductDetails';
 import CategoryPage from './pages/CategoryPage';
 import Categories from './pages/Categories';
+import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 
-// ... (existing imports)
+// Policy Pages
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Refund from './pages/Refund';
+import TrackOrder from './pages/TrackOrder';
+import TermsAndConditions from './pages/TermsAndConditions';
+import ReturnPolicy from './pages/ReturnPolicy';
+import ShippingPolicy from './pages/ShippingPolicy';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import WhatsAppButton from './components/WhatsAppButton';
 
-// ...
+const ScrollToTop = () => {
+    const { pathname } = useLocation();
+    React.useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
+    return null;
+};
+
+function AppContent() {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [cartOpen, setCartOpen] = useState(false);
+    const location = useLocation();
+
+    // Determine if Footer should be hidden (e.g. Admin?)
+    // Keeping it simple for now, show everywhere except maybe Checkout if desired.
+    const showFooter = !location.pathname.includes('/admin');
+
+    return (
+        <div className="app-container">
+            <ScrollToTop />
+            <Navbar
+                onMenuClick={() => setSidebarOpen(true)}
+                onCartClick={() => setCartOpen(true)}
+            />
+
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+
+            {/* Overlay for sidebars */}
+            {(sidebarOpen || cartOpen) && (
+                <div
+                    className="overlay active"
+                    onClick={() => {
+                        setSidebarOpen(false);
+                        setCartOpen(false);
+                    }}
+                ></div>
+            )}
 
             <Routes>
                 <Route path="/" element={<Home />} />
@@ -35,8 +82,8 @@ import OrderConfirmation from './pages/OrderConfirmation';
             </Routes>
 
             <WhatsAppButton />
-{ showFooter && <Footer /> }
-        </div >
+            {showFooter && <Footer />}
+        </div>
     );
 }
 
