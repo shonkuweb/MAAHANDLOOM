@@ -353,7 +353,8 @@ app.all('/api/payment/callback', async (req, res) => {
         const token = await getPhonePeToken();
 
         // CONSTRUCT STATUS URL
-        const statusUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/status/${merchantOrderId}`;
+        const statusUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/order/${merchantOrderId}/status`;
+
         console.log("PHONEPE FINAL STATUS URL:", statusUrl);
 
         const statusResponse = await axios.get(statusUrl, {
@@ -398,7 +399,8 @@ app.get('/api/payment/status/:merchantOrderId', async (req, res) => {
         const token = await getPhonePeToken();
 
         // CONSTRUCT STATUS URL
-        const statusUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/status/${merchantOrderId}`;
+        const statusUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/order/${merchantOrderId}/status`;
+
         console.log("PHONEPE FINAL STATUS URL (Manual Check):", statusUrl);
 
         const response = await axios.get(statusUrl, {
