@@ -139,9 +139,9 @@ async function getPhonePeToken() {
         params.append('client_secret', PHONEPE_CLIENT_SECRET);
         params.append('client_version', PHONEPE_CLIENT_VERSION);
 
-        // Token endpoint needs manual construction as it differs from /pg/v2 base
-        const tokenPath = PHONEPE_ENV === 'PRODUCTION' ? "/apis/pg/v1/oauth/token" : "/apis/pg-sandbox/v1/oauth/token";
-        const tokenUrl = `${PHONEPE_BASE_URL}${tokenPath}`;
+        // V2 OAuth Token Endpoint (must match PHONEPE_API_PATH)
+        const tokenUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/oauth/token`;
+
 
         console.log("Fetching Token from:", tokenUrl);
 
