@@ -269,7 +269,9 @@ app.post('/api/payment/create', async (req, res) => {
             redirectMode: "REDIRECT",
             callbackUrl: `${APP_BE_URL}/webhook/phonepe`,
             paymentInstrument: {
-                type: "UPI_QR"
+                // SANDBOX: Use UPI_QR to get a visual UI (PAY_PAGE simulates auto-redirect)
+                // PRODUCTION: Use PAY_PAGE for full checkout experience
+                type: PHONEPE_ENV === 'SANDBOX' ? "UPI_QR" : "PAY_PAGE"
             }
         };
 
@@ -287,16 +289,15 @@ app.post('/api/payment/create', async (req, res) => {
 
         let checkoutUrl = null;
 
-        // For UPI_QR, the response usually contains 'redirectUrl' directly in the data object
-        if (data.redirectUrl) {
-            checkoutUrl = data.redirectUrl;
-        } else if (data.data && data.data.instrumentResponse && data.data.instrumentResponse.redirectInfo) {
+        // Universal URL Extraction
+        if (data.data?.instrumentResponse?.redirectInfo?.url) {
             checkoutUrl = data.data.instrumentResponse.redirectInfo.url;
+        } else if (data.redirectUrl) {
+            checkoutUrl = data.redirectUrl;
         }
 
         if (!checkoutUrl) {
-            console.error("Failed to extract checkout URL from response");
-            // Fallback for debugging - check if constructed URL works for QRs? (Unlikely)
+            console.error("Failed to generate checkout URL. OrderId missing in response.");
         }
 
         console.log("Generated Checkout URL:", checkoutUrl);
