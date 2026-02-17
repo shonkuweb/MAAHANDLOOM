@@ -269,8 +269,7 @@ app.post('/api/payment/create', async (req, res) => {
             redirectMode: "REDIRECT",
             callbackUrl: `${APP_BE_URL}/webhook/phonepe`,
             paymentInstrument: {
-                type: "PAY_PAGE",
-                targetApp: "WEB"
+                type: "UPI_QR"
             }
         };
 
@@ -288,16 +287,16 @@ app.post('/api/payment/create', async (req, res) => {
 
         let checkoutUrl = null;
 
-        // V2: Construct URL manually using orderId
-        if (data.orderId) {
-            // https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/{orderId}
-            // Ensure PHONEPE_HOST_URL doesn't have trailing slash, or handle it.
-            // My config has: https://api-preprod.phonepe.com/apis/pg-sandbox
-            checkoutUrl = `${PHONEPE_HOST_URL}/checkout/v2/${data.orderId}`;
+        // For UPI_QR, the response usually contains 'redirectUrl' directly in the data object
+        if (data.redirectUrl) {
+            checkoutUrl = data.redirectUrl;
+        } else if (data.data && data.data.instrumentResponse && data.data.instrumentResponse.redirectInfo) {
+            checkoutUrl = data.data.instrumentResponse.redirectInfo.url;
         }
 
         if (!checkoutUrl) {
-            console.error("Failed to generate checkout URL. OrderId missing in response.");
+            console.error("Failed to extract checkout URL from response");
+            // Fallback for debugging - check if constructed URL works for QRs? (Unlikely)
         }
 
         console.log("Generated Checkout URL:", checkoutUrl);
