@@ -141,7 +141,10 @@ async function getPhonePeToken() {
         params.append('client_version', PHONEPE_CLIENT_VERSION);
 
         // V2 OAuth Token Endpoint (must match PHONEPE_API_PATH)
-        const tokenUrl = `${PHONEPE_BASE_URL}/apis/pg/v1/oauth/token`;
+        const tokenUrl = PHONEPE_ENV === 'PRODUCTION'
+            ? "https://api.phonepe.com/apis/identity-manager/v1/oauth/token"
+            : "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
+
 
 
 
