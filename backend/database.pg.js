@@ -15,41 +15,54 @@ if (connectionString) {
         connectionString,
         ssl: false
     });
-    console.log('Connected to PostgreSQL database.');
-    initDb();
+
+    // Attempt to connect with retry
+    connectWithRetry();
 } else {
     console.error('DATABASE_URL not set.');
+}
+
+function connectWithRetry(retries = 10, delay = 5000) {
+    console.log(`Attempting to connect to PostgreSQL (Retries left: ${retries})...`);
+    pool.connect()
+        .then(client => {
+            console.log('Connected to PostgreSQL database successfully.');
+            client.release();
+            initDb();
+        })
+        .catch(err => {
+            console.error('Database connection failed:', err.message);
+            if (retries > 0) {
+                console.log(`Retrying in ${delay / 1000} seconds...`);
+                setTimeout(() => connectWithRetry(retries - 1, delay), delay);
+            } else {
+                console.error('Could not connect to database after multiple attempts. Exiting.');
+                process.exit(1);
+            }
+        });
 }
 
 // Wrapper to mimic SQLite interface
 const db = {
     query: (text, params) => pool.query(text, params),
 
-    // SQLite: db.run(sql, [params], callback)
-    // callback(err) - distinct from result
     run: function (sql, params, callback) {
         if (!pool) return callback(new Error('Database not connected'));
 
-        // Convert ? to $1, $2, etc.
         let i = 1;
         const pgSql = sql.replace(/\?/g, () => `$${i++}`);
 
         pool.query(pgSql, params)
             .then(res => {
-                // Mimic 'this' context of sqlite run (lastID, changes) if possible, 
-                // but commonly we just check err. 
-                // PG doesn't return lastID easily without RETURNING clause.
-                // We might need to adjust queries in server.js to use RETURNING id.
-                // For now, call callback with null.
-                callback.call({ changes: res.rowCount }, null);
+                const mockContext = { changes: res.rowCount };
+                callback.call(mockContext, null);
             })
             .catch(err => {
-                console.error("DB Error:", err);
+                console.error("DB Run Error:", err.message);
                 callback(err);
             });
     },
 
-    // SQLite: db.all(sql, [params], callback)
     all: function (sql, params, callback) {
         if (!pool) return callback(new Error('Database not connected'));
 
@@ -61,7 +74,6 @@ const db = {
             .catch(err => callback(err));
     },
 
-    // SQLite: db.get(sql, [params], callback)
     get: function (sql, params, callback) {
         if (!pool) return callback(new Error('Database not connected'));
 
@@ -75,11 +87,6 @@ const db = {
 };
 
 function initDb() {
-    // PG specific compatible schema
-    // Note: TEXT PRIMARY KEY is fine.
-    // JSON in sqlite is TEXT, in PG it can be JSONB, but TEXT works for compatibility.
-    // DATETIME DEFAULT CURRENT_TIMESTAMP works in both usually, but PG prefers TIMESTAMP.
-
     const queries = [
         `CREATE TABLE IF NOT EXISTS products (
             id TEXT PRIMARY KEY,
@@ -119,9 +126,19 @@ function initDb() {
         )`
     ];
 
-    queries.forEach(q => {
-        pool.query(q).catch(err => console.error('Table creation error:', err));
-    });
+    const runQueries = async () => {
+        for (const q of queries) {
+            try {
+                await pool.query(q);
+                console.log("Table verified/created");
+            } catch (err) {
+                console.error('Table creation error:', err);
+            }
+        }
+        console.log("Database schema initialization complete.");
+    };
+
+    runQueries();
 }
 
 export default db;
