@@ -316,6 +316,56 @@ app.post('/api/payment/create', async (req, res) => {
     }
 });
 
+// CALLBACK HANDLER
+app.all('/api/payment/callback', async (req, res) => {
+    console.log("Payment Callback Received:", req.method, req.body, req.query);
+
+    // Checksum Validation (Optional but recommended)
+    // For now, valid status check via API is safer to ensure it's not spoofed.
+
+    // V2 Redirect comes with 'code', 'merchantId', 'transactionId' etc. in BODY (if POST) or QUERY (if REDIRECT/GET)
+    // The previous logs usually imply POST for 'redirectMode: "POST"'.
+    // Use req.body for POST, req.query for GET.
+
+    const data = req.method === 'POST' ? req.body : req.query;
+
+    const merchantOrderId = data.transactionId || data.merchantTransactionId || data.merchantOrderId;
+    const code = data.code;
+
+    if (code === 'PAYMENT_SUCCESS' && merchantOrderId) {
+        // Double check status with PhonePe API to be sure
+        try {
+            const token = await getPhonePeToken();
+            const statusResponse = await axios.get(`${PHONEPE_HOST_URL}/checkout/v2/order/${merchantOrderId}/status`, {
+                headers: {
+                    'Authorization': `O-Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (statusResponse.data.state === 'COMPLETED') {
+                // Update DB
+                db.run("UPDATE orders SET payment_status = 'success', status = 'new' WHERE id = ?", [merchantOrderId], (err) => {
+                    if (err) console.error("Callback DB Update Error", err);
+                });
+
+                // Deduct Stock (Reuse logic or call internal function)
+            }
+        } catch (e) {
+            console.error("Callback verification failed", e);
+        }
+
+        // Redirect to Frontend Success
+        return res.redirect(`/order-confirmation?status=success&orderId=${merchantOrderId}`);
+    } else if (code === 'PAYMENT_ERROR') {
+        db.run("UPDATE orders SET payment_status = 'failed', status = 'cancelled' WHERE id = ?", [merchantOrderId], () => { });
+        return res.redirect(`/order-confirmation?status=failed&orderId=${merchantOrderId}`);
+    }
+
+    // Fallback
+    res.redirect('/?payment=pending');
+});
+
 // PAYMENT STATUS CHECK
 app.get('/api/payment/status/:merchantOrderId', async (req, res) => {
     const { merchantOrderId } = req.params;

@@ -84,16 +84,9 @@ const Checkout = () => {
             if (res.ok && data.tokenUrl) {
                 setOrderId(data.merchantOrderId);
 
-                if (window.PhonePeCheckout) {
-                    window.PhonePeCheckout.transact({
-                        tokenUrl: data.tokenUrl,
-                        callback: paymentCallback,
-                        type: "IFRAME" // or "REDIRECT" / "PAY_PAGE"
-                    });
-                } else {
-                    alert("PhonePe SDK not loaded. Please try again.");
-                    setIsSubmitting(false);
-                }
+                // Direct redirect to PhonePe Payment Page (V2)
+                // SDK Iframe flow is blocked by X-Frame-Options header from PhonePe
+                window.location.href = data.tokenUrl;
             } else {
                 alert('Order Creation Failed: ' + (data.error || 'Unknown Error'));
                 setIsSubmitting(false);
