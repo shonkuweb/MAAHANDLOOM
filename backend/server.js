@@ -140,7 +140,8 @@ async function getPhonePeToken() {
         params.append('client_version', PHONEPE_CLIENT_VERSION);
 
         // V2 OAuth Token Endpoint (must match PHONEPE_API_PATH)
-        const tokenUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/oauth/token`;
+        const tokenUrl = `${PHONEPE_BASE_URL}/apis/pg/v1/oauth/token`;
+
 
 
         console.log("Fetching Token from:", tokenUrl);
