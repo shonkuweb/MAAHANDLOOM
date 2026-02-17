@@ -406,7 +406,8 @@ app.get('/api/payment/status/:merchantOrderId', async (req, res) => {
         const response = await axios.get(statusUrl, {
             headers: {
                 'Authorization': `O-Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-MERCHANT-ID': 'SU2602141521026654980820'
             }
         });
 
