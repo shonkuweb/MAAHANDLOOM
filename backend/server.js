@@ -288,26 +288,19 @@ app.post('/api/payment/create', async (req, res) => {
 
         let checkoutUrl = null;
 
-        // Check various possible locations for the URL
-        if (data.data && data.data.instrumentResponse && data.data.instrumentResponse.redirectInfo) {
-            checkoutUrl = data.data.instrumentResponse.redirectInfo.url;
-        } else if (data.instrumentResponse && data.instrumentResponse.redirectInfo) {
-            // Top level instrumentResponse?
-            checkoutUrl = data.instrumentResponse.redirectInfo.url;
-        } else if (data.data && data.data.checkoutUrl) {
-            checkoutUrl = data.data.checkoutUrl;
-        } else if (data.checkoutUrl) {
-            checkoutUrl = data.checkoutUrl; // Legacy fallback
-        } else if (data.redirectUrl && data.redirectUrl !== payload.redirectUrl) {
-            // If redirectUrl is distinct from our input, maybe it's the target? (Unlikely but possible)
-            checkoutUrl = data.redirectUrl;
+        // V2: Construct URL manually using orderId
+        if (data.orderId) {
+            // https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/{orderId}
+            // Ensure PHONEPE_HOST_URL doesn't have trailing slash, or handle it.
+            // My config has: https://api-preprod.phonepe.com/apis/pg-sandbox
+            checkoutUrl = `${PHONEPE_HOST_URL}/checkout/v2/${data.orderId}`;
         }
 
         if (!checkoutUrl) {
-            console.error("Failed to extract checkout URL from response");
-            // Fallback for debugging: if we got a valid orderId but no URL, maybe we can construct one? 
-            // (Not safely).
+            console.error("Failed to generate checkout URL. OrderId missing in response.");
         }
+
+        console.log("Generated Checkout URL:", checkoutUrl);
 
         res.json({
             merchantOrderId: merchantOrderId,
