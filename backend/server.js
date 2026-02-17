@@ -269,9 +269,7 @@ app.post('/api/payment/create', async (req, res) => {
             redirectMode: "REDIRECT",
             callbackUrl: `${APP_BE_URL}/webhook/phonepe`,
             paymentInstrument: {
-                // SANDBOX: Use UPI_QR to get a visual UI (PAY_PAGE simulates auto-redirect)
-                // PRODUCTION: Use PAY_PAGE for full checkout experience
-                type: PHONEPE_ENV === 'SANDBOX' ? "UPI_QR" : "PAY_PAGE"
+                type: "PAY_PAGE"
             }
         };
 
