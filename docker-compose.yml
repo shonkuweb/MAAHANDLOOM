@@ -20,7 +20,7 @@ services:
       - PHONEPE_HOST_URL=${PHONEPE_HOST_URL}
       - PHONEPE_WEBHOOK_USERNAME=${PHONEPE_WEBHOOK_USERNAME}
       - PHONEPE_WEBHOOK_PASSWORD=${PHONEPE_WEBHOOK_PASSWORD}
-      - APP_BE_URL=http://your-domain.com
+      - APP_BE_URL=https://indritafabrics.com
     depends_on:
       - db
     networks:

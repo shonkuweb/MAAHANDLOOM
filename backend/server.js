@@ -256,37 +256,23 @@ app.post('/api/payment/create', async (req, res) => {
         // 3. Initiate PhonePe Payment (V2)
         const token = await getPhonePeToken();
 
+        const merchantTransactionId = merchantOrderId; // Use the same ID
+        const merchantUserId = 'MUID-' + phone; // Unique user ID
+
         const payload = {
-            merchantOrderId: merchantOrderId,
-            amount: amountPaise,
-            paymentFlow: "PAGE", // or 'PRE_AUTH' / 'ONE_CLICK' - Use 'PAGE' for standard checkout? Allowed V2 flows... Check docs. 'checkout' type.
-            // Wait, V2 pay payload structure:
-            // { merchantOrderId, amount, paymentInstrument: { type: "PAY_PAGE" } ... } ? 
-            // Docs say:
-            // merchantOrderId, amount, merchantId (in header or payload?), 
-            // Actually usually: merchantId is not in body if using Auth?
-            // V2 Spec:
-            // POST /checkout/v2/pay
-            // Body: { merchantOrderId, amount, productType, mobileNumber, ... }
-            // Let's stick to the prompt structure if generic, or standard V2.
-            // Prompt: "merchantOrderId, amount, redirectUrl"
-            merchantOrderId: merchantOrderId,
+            merchantTransactionId: merchantTransactionId,
+            merchantUserId: merchantUserId,
             amount: amountPaise,
             mobileNumber: phone,
-            redirectUrl: `${APP_BE_URL}/api/payment/callback`, // Helper redirect? Or frontend handles it?
-            // "Frontend uses this to open PayPage." -> "return tokenUrl".
-            // So we need 'tokenUrl' from response.
-            // V2 Payload usually requires 'flowType' or similar. 
-            // Assume "PAY_PAGE" intent.
+            redirectUrl: `${APP_BE_URL}/api/payment/callback`,
+            redirectMode: "POST", // or "REDIRECT" - "POST" is better for handling checks
+            callbackUrl: `${APP_BE_URL}/webhook/phonepe`,
             paymentInstrument: {
                 type: "PAY_PAGE"
             }
         };
 
-        // Note: redirectUrl might be part of paymentInstrument in some versions or top level.
-        // For 'PAY_PAGE', redirectUrl is usually top level.
-        payload.redirectUrl = `${APP_BE_URL}/api/payment/callback`; // We might not need this if using iframe callback?
-        // Prompt says: "redirectUrl (PHONEPE_REDIRECT_URL)"
+        console.log("PhonePe Payment Payload:", JSON.stringify(payload, null, 2));
 
         const response = await axios.post(`${PHONEPE_HOST_URL}/checkout/v2/pay`, payload, {
             headers: {
@@ -296,17 +282,28 @@ app.post('/api/payment/create', async (req, res) => {
         });
 
         const data = response.data;
-        // Verify response structure
-        // Expect: { checkoutUrl: "...", ... } or { tokenUrl: "..." }
-        // Prompt says "Return { merchantOrderId, tokenUrl }"
+        // PhonePe V2 response usually wraps url in 'data'
+        // { code: 'PAYMENT_INITIATED', data: { instrumentResponse: { type: 'PAY_PAGE', redirectInfo: { url: '...' } } } }
+
+        console.log("PhonePe Payment Response:", JSON.stringify(data, null, 2));
+
+        let checkoutUrl = null;
+        if (data.data && data.data.instrumentResponse && data.data.instrumentResponse.redirectInfo) {
+            checkoutUrl = data.data.instrumentResponse.redirectInfo.url;
+        } else if (data.data && data.data.checkoutUrl) {
+            checkoutUrl = data.data.checkoutUrl; // Legacy fallback
+        }
 
         res.json({
             merchantOrderId: merchantOrderId,
-            tokenUrl: data.tokenUrl || data.checkoutUrl // Adjust based on actual response
+            tokenUrl: checkoutUrl // Frontend expects 'tokenUrl' as the redirect link
         });
 
     } catch (error) {
         console.error("Payment Create Error:", error.response?.data || error);
+        if (error.response?.data) {
+            console.error("Error Data Payload:", JSON.stringify(error.response.data));
+        }
         res.status(500).json({ error: 'Payment creation failed', details: error.response?.data || error.message });
     }
 });
