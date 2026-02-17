@@ -266,10 +266,11 @@ app.post('/api/payment/create', async (req, res) => {
             amount: amountPaise,
             mobileNumber: phone,
             redirectUrl: `${APP_BE_URL}/api/payment/callback`,
-            redirectMode: "POST",
+            redirectMode: "REDIRECT",
             callbackUrl: `${APP_BE_URL}/webhook/phonepe`,
             paymentInstrument: {
-                type: "PAY_PAGE"
+                type: "PAY_PAGE",
+                targetApp: "WEB"
             }
         };
 
@@ -283,21 +284,34 @@ app.post('/api/payment/create', async (req, res) => {
         });
 
         const data = response.data;
-        // PhonePe V2 response usually wraps url in 'data'
-        // { code: 'PAYMENT_INITIATED', data: { instrumentResponse: { type: 'PAY_PAGE', redirectInfo: { url: '...' } } } }
-
         console.log("PhonePe Payment Response:", JSON.stringify(data, null, 2));
 
         let checkoutUrl = null;
+
+        // Check various possible locations for the URL
         if (data.data && data.data.instrumentResponse && data.data.instrumentResponse.redirectInfo) {
             checkoutUrl = data.data.instrumentResponse.redirectInfo.url;
+        } else if (data.instrumentResponse && data.instrumentResponse.redirectInfo) {
+            // Top level instrumentResponse?
+            checkoutUrl = data.instrumentResponse.redirectInfo.url;
         } else if (data.data && data.data.checkoutUrl) {
-            checkoutUrl = data.data.checkoutUrl; // Legacy fallback
+            checkoutUrl = data.data.checkoutUrl;
+        } else if (data.checkoutUrl) {
+            checkoutUrl = data.checkoutUrl; // Legacy fallback
+        } else if (data.redirectUrl && data.redirectUrl !== payload.redirectUrl) {
+            // If redirectUrl is distinct from our input, maybe it's the target? (Unlikely but possible)
+            checkoutUrl = data.redirectUrl;
+        }
+
+        if (!checkoutUrl) {
+            console.error("Failed to extract checkout URL from response");
+            // Fallback for debugging: if we got a valid orderId but no URL, maybe we can construct one? 
+            // (Not safely).
         }
 
         res.json({
             merchantOrderId: merchantOrderId,
-            tokenUrl: checkoutUrl // Frontend expects 'tokenUrl' as the redirect link
+            tokenUrl: checkoutUrl
         });
 
     } catch (error) {
