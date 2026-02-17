@@ -117,8 +117,9 @@ const PHONEPE_BASE_URL = PHONEPE_ENV === 'PRODUCTION'
     : "https://api-preprod.phonepe.com";
 
 const PHONEPE_API_PATH = PHONEPE_ENV === 'PRODUCTION'
-    ? "/apis/pg/pg/v2"
-    : "/apis/pg-sandbox/pg/v2";
+    ? "/apis/pg/checkout/v2"
+    : "/apis/pg-sandbox/checkout/v2";
+
 
 const APP_BE_URL = process.env.APP_BE_URL || `http://localhost:${PORT}`;
 
@@ -276,18 +277,16 @@ app.post('/api/payment/create', async (req, res) => {
         const merchantUserId = 'MUID-' + phone;
 
         const payload = {
-            merchantOrderId: merchantTransactionId,
-            merchantTransactionId: merchantTransactionId,
-            merchantUserId: merchantUserId,
+            merchantOrderId: merchantOrderId,
             amount: amountPaise,
-            mobileNumber: phone,
-            redirectUrl: `${APP_BE_URL}/api/payment/callback?orderId=${merchantOrderId}`,
-            redirectMode: "REDIRECT",
-            callbackUrl: `${APP_BE_URL}/webhook/phonepe`,
-            paymentInstrument: {
-                type: "PAY_PAGE"
+            paymentFlow: {
+                type: "PG_CHECKOUT",
+                merchantUrls: {
+                    redirectUrl: `${APP_BE_URL}/order-confirmation?orderId=${merchantOrderId}`
+                }
             }
         };
+
 
         console.log("PhonePe Payment Payload:", JSON.stringify(payload, null, 2));
 
@@ -307,7 +306,8 @@ app.post('/api/payment/create', async (req, res) => {
         console.log("FULL PHONEPE CREATE ORDER RESPONSE:", JSON.stringify(data, null, 2));
 
         // STRICT URL EXTRACTION
-        let checkoutUrl = data.data?.instrumentResponse?.redirectInfo?.url;
+        let checkoutUrl = data.redirectUrl;
+
 
         if (!checkoutUrl) {
             console.error("Failed to generate checkout URL. instrumentResponse.redirectInfo.url is missing.");
