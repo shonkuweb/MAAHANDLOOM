@@ -260,12 +260,13 @@ app.post('/api/payment/create', async (req, res) => {
         const merchantUserId = 'MUID-' + phone; // Unique user ID
 
         const payload = {
+            merchantOrderId: merchantTransactionId, // Required by API error
             merchantTransactionId: merchantTransactionId,
             merchantUserId: merchantUserId,
             amount: amountPaise,
             mobileNumber: phone,
             redirectUrl: `${APP_BE_URL}/api/payment/callback`,
-            redirectMode: "POST", // or "REDIRECT" - "POST" is better for handling checks
+            redirectMode: "POST",
             callbackUrl: `${APP_BE_URL}/webhook/phonepe`,
             paymentInstrument: {
                 type: "PAY_PAGE"
