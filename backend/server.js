@@ -110,10 +110,16 @@ const PHONEPE_CLIENT_ID = process.env.PHONEPE_CLIENT_ID;
 const PHONEPE_CLIENT_SECRET = process.env.PHONEPE_CLIENT_SECRET;
 const PHONEPE_CLIENT_VERSION = process.env.PHONEPE_CLIENT_VERSION || 1;
 const PHONEPE_ENV = process.env.PHONEPE_ENV || 'SANDBOX';
-// Host URL:
-// SANDBOX: https://api-preprod.phonepe.com/apis/pg-sandbox
-// PROD: https://api.phonepe.com/apis/pg
-const PHONEPE_HOST_URL = process.env.PHONEPE_HOST_URL || "https://api-preprod.phonepe.com/apis/pg-sandbox";
+
+// STRICT URL CONSTRUCTION LOGIC
+const PHONEPE_BASE_URL = PHONEPE_ENV === 'PRODUCTION'
+    ? "https://api.phonepe.com"
+    : "https://api-preprod.phonepe.com";
+
+const PHONEPE_API_PATH = PHONEPE_ENV === 'PRODUCTION'
+    ? "/apis/pg/pg/v2"
+    : "/apis/pg-sandbox/pg/v2";
+
 const APP_BE_URL = process.env.APP_BE_URL || `http://localhost:${PORT}`;
 
 // Auth Token Cache
@@ -133,9 +139,13 @@ async function getPhonePeToken() {
         params.append('client_secret', PHONEPE_CLIENT_SECRET);
         params.append('client_version', PHONEPE_CLIENT_VERSION);
 
-        // Token endpoint is usually /v1/oauth/token even for V2 API
-        // This seems stable.
-        const response = await axios.post(`${PHONEPE_HOST_URL}/v1/oauth/token`, params, {
+        // Token endpoint needs manual construction as it differs from /pg/v2 base
+        const tokenPath = PHONEPE_ENV === 'PRODUCTION' ? "/apis/pg/v1/oauth/token" : "/apis/pg-sandbox/v1/oauth/token";
+        const tokenUrl = `${PHONEPE_BASE_URL}${tokenPath}`;
+
+        console.log("Fetching Token from:", tokenUrl);
+
+        const response = await axios.post(tokenUrl, params, {
             headers: {
                 'Authorization': `Basic ${authHeader}`,
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -280,8 +290,11 @@ app.post('/api/payment/create', async (req, res) => {
 
         console.log("PhonePe Payment Payload:", JSON.stringify(payload, null, 2));
 
-        // CORRECT V2 ENDPOINT: /pg/v2/pay
-        const response = await axios.post(`${PHONEPE_HOST_URL}/pg/v2/pay`, payload, {
+        // CONSTRUCT FINAL URL
+        const paymentUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/pay`;
+        console.log("PHONEPE FINAL PAYMENT URL:", paymentUrl);
+
+        const response = await axios.post(paymentUrl, payload, {
             headers: {
                 'Authorization': `O-Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -293,8 +306,6 @@ app.post('/api/payment/create', async (req, res) => {
         console.log("FULL PHONEPE CREATE ORDER RESPONSE:", JSON.stringify(data, null, 2));
 
         // STRICT URL EXTRACTION
-        // We MUST use instrumentResponse.redirectInfo.url
-        // We MUST NOT use data.redirectUrl (that is just the callback)
         let checkoutUrl = data.data?.instrumentResponse?.redirectInfo?.url;
 
         if (!checkoutUrl) {
@@ -336,8 +347,12 @@ app.all('/api/payment/callback', async (req, res) => {
     // 2. Call PhonePe Status API (Source of Truth)
     try {
         const token = await getPhonePeToken();
-        // CORRECT V2 STATUS ENDPOINT: /pg/v2/status/{merchantTransactionId}
-        const statusResponse = await axios.get(`${PHONEPE_HOST_URL}/pg/v2/status/${merchantOrderId}`, {
+
+        // CONSTRUCT STATUS URL
+        const statusUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/status/${merchantOrderId}`;
+        console.log("PHONEPE FINAL STATUS URL:", statusUrl);
+
+        const statusResponse = await axios.get(statusUrl, {
             headers: {
                 'Authorization': `O-Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -377,7 +392,12 @@ app.get('/api/payment/status/:merchantOrderId', async (req, res) => {
 
     try {
         const token = await getPhonePeToken();
-        const response = await axios.get(`${PHONEPE_HOST_URL}/pg/v2/status/${merchantOrderId}`, {
+
+        // CONSTRUCT STATUS URL
+        const statusUrl = `${PHONEPE_BASE_URL}${PHONEPE_API_PATH}/status/${merchantOrderId}`;
+        console.log("PHONEPE FINAL STATUS URL (Manual Check):", statusUrl);
+
+        const response = await axios.get(statusUrl, {
             headers: {
                 'Authorization': `O-Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -402,8 +422,6 @@ app.get('/api/payment/status/:merchantOrderId', async (req, res) => {
             db.run("UPDATE orders SET payment_status = ?, status = ? WHERE id = ?", [paymentStatus, dbStatus, merchantOrderId], (err) => {
                 if (err) console.error("Status Update Error:", err);
             });
-
-            // Stock deduction removed for brevity in this snippet, logic remains in other parts if needed
         }
 
         res.json({
@@ -474,7 +492,7 @@ app.post('/api/payment/refund', requireAuth, async (req, res) => {
             message: reason || "User requested refund"
         };
 
-        const response = await axios.post(`${PHONEPE_HOST_URL}/payments/v2/refund`, payload, {
+        const response = await axios.post(`${PHONEPE_BASE_URL}/payments/v2/refund`, payload, {
             headers: {
                 'Authorization': `O-Bearer ${token}`,
                 'Content-Type': 'application/json'
