@@ -293,30 +293,32 @@ function setupListeners() {
 function showConfirm(msg, onConfirm) {
     const modal = document.getElementById('confirm-modal');
     const msgEl = document.getElementById('confirm-msg');
-    const yesBtn = document.getElementById('confirm-yes');
-    const cancelBtn = document.getElementById('confirm-cancel');
+    let yesBtn = document.getElementById('confirm-yes');
+    let cancelBtn = document.getElementById('confirm-cancel');
 
     if (!modal) {
         if (confirm(msg)) onConfirm();
         return;
     }
 
+    // Clone buttons to remove ALL old event listeners
+    const newYes = yesBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    yesBtn.parentNode.replaceChild(newYes, yesBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
     msgEl.textContent = msg;
     modal.classList.add('active');
 
     const close = () => {
         modal.classList.remove('active');
-        yesBtn.removeEventListener('click', handleYes);
-        cancelBtn.removeEventListener('click', close);
     };
 
-    const handleYes = () => {
+    newYes.addEventListener('click', () => {
         onConfirm();
         close();
-    };
-
-    yesBtn.addEventListener('click', handleYes);
-    cancelBtn.addEventListener('click', close);
+    });
+    newCancel.addEventListener('click', close);
 }
 
 function handleImageUpload(e) {
@@ -441,16 +443,24 @@ function updateFilterUI() {
 
 // CRUD Operations
 function deleteProduct(id) {
+    console.log('[DELETE] Product ID:', id);
     showConfirm('Are you sure you want to delete this product?', async () => {
         try {
-            const res = await fetch(`/api/products/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+            console.log('[DELETE] Sending DELETE request for product:', id);
+            const headers = getAuthHeaders();
+            console.log('[DELETE] Auth header present:', !!headers.Authorization);
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE', headers });
+            console.log('[DELETE] Response status:', res.status);
             if (res.ok) {
+                window.showToast('Product deleted successfully', 'success');
                 fetchData();
             } else {
-                window.showToast('Failed to delete', 'error');
+                const errData = await res.json().catch(() => ({}));
+                console.error('[DELETE] Failed:', errData);
+                window.showToast(errData.error || 'Failed to delete product', 'error');
             }
         } catch (e) {
-            console.error(e);
+            console.error('[DELETE] Error:', e);
             window.showToast('Error deleting product', 'error');
         }
     });
