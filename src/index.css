@@ -556,13 +556,16 @@ main.home-main {
   aspect-ratio: 3/4;
   background: #F8F6F3;
   overflow: hidden;
+  border-radius: 10px 10px 0 0;
 }
 
 .product-image-placeholder img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
   display: block;
+  border-radius: 10px 10px 0 0;
   transition: transform 0.4s ease;
 }
 
