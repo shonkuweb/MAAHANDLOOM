@@ -287,7 +287,7 @@ app.post('/api/payment/create', async (req, res) => {
             paymentFlow: {
                 type: "PG_CHECKOUT",
                 merchantUrls: {
-                    redirectUrl: `${APP_BE_URL}/order-confirmation?orderId=${merchantOrderId}`
+                    redirectUrl: `${APP_BE_URL}/api/payment/callback?orderId=${merchantOrderId}`
                 }
             }
         };
@@ -550,9 +550,9 @@ app.post('/api/payment/refund', requireAuth, async (req, res) => {
 });
 
 
-// ORDERS LIST (ADMIN) - Show all orders (payment_status visible as column)
+// ORDERS LIST (ADMIN) - Only show orders with confirmed payment
 app.get('/api/orders', (req, res) => {
-    db.all("SELECT * FROM orders ORDER BY created_at DESC", [], (err, rows) => {
+    db.all("SELECT * FROM orders WHERE payment_status = 'success' ORDER BY created_at DESC", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const orders = rows.map(o => ({
             ...o,
