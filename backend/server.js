@@ -550,9 +550,9 @@ app.post('/api/payment/refund', requireAuth, async (req, res) => {
 });
 
 
-// ORDERS LIST (ADMIN) - Only show successful payments
+// ORDERS LIST (ADMIN) - Show all orders (payment_status visible as column)
 app.get('/api/orders', (req, res) => {
-    db.all("SELECT * FROM orders WHERE payment_status IN ('success', 'paid') ORDER BY created_at DESC", [], (err, rows) => {
+    db.all("SELECT * FROM orders ORDER BY created_at DESC", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const orders = rows.map(o => ({
             ...o,
