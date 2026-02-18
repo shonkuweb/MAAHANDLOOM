@@ -191,11 +191,19 @@ function setupListeners() {
                 return;
             }
 
-            showConfirm(`Delete ${completedCount} completed orders? This cannot be undone.`, () => {
-                orders = orders.filter(o => o.status !== 'completed');
-                saveOrdersToStorage();
-                render();
-                window.showToast('Completed history deleted.', 'success');
+            showConfirm(`Delete ${completedCount} completed orders? This cannot be undone.`, async () => {
+                const completedOrders = orders.filter(o => o.status === 'completed');
+                let deleted = 0;
+                for (const order of completedOrders) {
+                    try {
+                        const res = await fetch(`/api/orders/${order.id}`, { method: 'DELETE', headers: getAuthHeaders() });
+                        if (res.ok) deleted++;
+                    } catch (e) {
+                        console.error(`Failed to delete order ${order.id}`, e);
+                    }
+                }
+                fetchData();
+                window.showToast(`${deleted} completed order(s) deleted.`, 'success');
             });
         });
     }
