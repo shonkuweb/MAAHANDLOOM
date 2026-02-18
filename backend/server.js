@@ -145,6 +145,12 @@ async function getPhonePeToken() {
             ? "https://api.phonepe.com/apis/identity-manager/v1/oauth/token"
             : "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
 
+
+        console.log("----------------------------------------------------");
+        console.log(`PHONEPE ENVIRONMENT: ${PHONEPE_ENV}`);
+        console.log(`Using Client ID: ${PHONEPE_CLIENT_ID}`);
+        console.log(`Using Token URL: ${tokenUrl}`);
+        console.log("----------------------------------------------------");
         console.log("Fetching Token from:", tokenUrl);
 
         const response = await axios.post(tokenUrl, params, {
