@@ -46,10 +46,7 @@ const Home = () => {
             {/* Hero Section */}
             <section className="hero-carousel">
                 <div className="carousel-track">
-                    {/* Assuming images are in public/hero/ */}
-                    <img src="/hero/slide1.jpg" alt="Handloom Heritage" className="hero-slide" />
-                    <img src="/hero/slide2.jpg" alt="Handloom Collection" className="hero-slide" />
-                    <img src="/hero/slide3.jpg" alt="Timeless Weaves" className="hero-slide" />
+                    <img src="/hero/slide1.jpg" alt="Exquisite Handloom Sarees - Timeless Elegance" className="hero-slide" style={{ opacity: 1, position: 'relative' }} />
                 </div>
             </section>
 

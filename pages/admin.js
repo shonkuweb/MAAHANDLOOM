@@ -171,6 +171,12 @@ function setupListeners() {
         });
     });
 
+    // Order search by ID
+    const orderSearchInput = document.getElementById('order-search-input');
+    if (orderSearchInput) {
+        orderSearchInput.addEventListener('input', () => render());
+    }
+
     // Danger Zone Listeners
     if (resetDbBtn) {
         resetDbBtn.addEventListener('click', () => {
@@ -561,17 +567,23 @@ function openOrderModal(id) {
     orderModal.classList.add('active');
 
     // Populate Data
-    document.getElementById('view-order-id').textContent = order.id;
-    document.getElementById('view-order-date').textContent = new Date(order.date).toLocaleString();
+    document.getElementById('view-order-id').textContent = 'ORD-' + order.id;
+    const d = new Date(order.date);
+    document.getElementById('view-order-date').textContent = isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-    // Status Badge Color
+    // Status Badge Color (pill-style)
     const statusEl = document.getElementById('view-order-status');
-    statusEl.textContent = order.status;
-    statusEl.className = ''; // reset
-    if (order.status === 'new') statusEl.style.color = 'blue';
-    else if (order.status === 'in-process') statusEl.style.color = 'orange';
-    else if (order.status === 'in-transit') statusEl.style.color = '#8B4513'; // SaddleBrown
-    else if (order.status === 'completed') statusEl.style.color = 'green';
+    statusEl.textContent = order.status.toUpperCase();
+    statusEl.style.cssText = 'padding:0.3rem 0.8rem;border-radius:50px;font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;';
+    const statusColors = {
+        'new': { bg: '#E8F0FE', color: '#1967D2' },
+        'in-process': { bg: '#FEF3E0', color: '#E37400' },
+        'in-transit': { bg: '#F3E8FD', color: '#8430CE' },
+        'completed': { bg: '#E6F4EA', color: '#137333' }
+    };
+    const sc = statusColors[order.status] || { bg: '#f0f0f0', color: '#333' };
+    statusEl.style.background = sc.bg;
+    statusEl.style.color = sc.color;
 
     // Customer Info (Handle missing data gracefully)
     document.getElementById('view-customer-name').textContent = order.name || 'Guest';
@@ -581,21 +593,18 @@ function openOrderModal(id) {
 
     // Transaction ID if available
     const tid = order.transaction_id || 'N/A';
-    // Add logic to show it if UI supports it, otherwise log
     console.log('Transaction ID:', tid);
 
     // Items
     const itemsContainer = document.getElementById('view-order-items');
     itemsContainer.innerHTML = (order.items || []).map(item => {
-        // Find product details if possible, or use item data
-        const productRef = products.find(p => p.id == item.id);
         return `
-            <div class="order-item-row">
-                <div style="flex: 1;">
-                    <div style="font-weight: 800; font-size: 0.95rem; color: #2C1B10; margin-bottom: 0.2rem;">${item.name}</div>
-                    <div style="font-size: 0.8rem; color: #666; font-weight: 600;">Qty: ${item.qty}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.65rem 0.8rem;border-bottom:1px solid #F0EDE8;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;font-size:0.85rem;color:#2C1B10;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+                    <div style="font-size:0.72rem;color:#A89680;font-weight:600;">Qty: ${item.qty}</div>
                 </div>
-                <div style="font-weight: 800; color: #2C1B10;">₹${item.price || 0}</div>
+                <div style="font-weight:800;color:#2C1B10;font-size:0.9rem;flex-shrink:0;margin-left:0.5rem;">₹${item.price || 0}</div>
             </div>
         `;
     }).join('');
@@ -705,7 +714,14 @@ function render() {
             itemsToRender = products.filter(p => (p.category || '').includes(currentProductFilter));
         }
     } else {
-        itemsToRender = orders.filter(o => o.status === currentOrderFilter);
+        let filtered = orders.filter(o => o.status === currentOrderFilter);
+        // Apply order search if active
+        const orderSearchInput = document.getElementById('order-search-input');
+        if (orderSearchInput && orderSearchInput.value.trim()) {
+            const q = orderSearchInput.value.trim().toLowerCase().replace('ord-', '');
+            filtered = filtered.filter(o => String(o.id).toLowerCase().includes(q));
+        }
+        itemsToRender = filtered;
     }
 
     // LIFO (Last In First Out) - Newest First
