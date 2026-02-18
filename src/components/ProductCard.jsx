@@ -7,30 +7,36 @@ const ProductCard = ({ product }) => {
 
     return (
         <div className="product-card">
-            <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className="product-image-placeholder">
                     {product.image ? (
-                        <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={product.image} alt={product.name} loading="lazy" />
                     ) : (
-                        <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>IMG</div>
+                        <div className="product-no-img">No Image</div>
                     )}
                 </div>
             </Link>
 
             <div className="product-info">
-                <h3>{product.name}</h3>
+                <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <h3 className="product-name">{product.name}</h3>
+                </Link>
                 <div className="product-row">
-                    <span className="product-price">₹{product.price}</span>
+                    <div className="product-price-wrap">
+                        <span className="product-price">₹{product.price}</span>
+                    </div>
                     <button className="add-cart-pill" onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         addToCart(product.id);
                     }}>
-                        Add
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                         </svg>
+                        ADD
                     </button>
                 </div>
             </div>
