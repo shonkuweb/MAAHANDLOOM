@@ -375,50 +375,8 @@ main.home-main {
   height: 100%;
   object-fit: contain;
   object-position: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  opacity: 0;
-  animation: fadeLoop 15s infinite ease-in-out;
-}
-
-.hero-slide:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.hero-slide:nth-child(2) {
-  animation-delay: 5s;
-}
-
-.hero-slide:nth-child(3) {
-  animation-delay: 10s;
-}
-
-@keyframes fadeLoop {
-  0% {
-    opacity: 0;
-    z-index: 1;
-  }
-
-  5% {
-    opacity: 1;
-    z-index: 2;
-  }
-
-  33.33% {
-    opacity: 1;
-    z-index: 2;
-  }
-
-  38.33% {
-    opacity: 0;
-    z-index: 1;
-  }
-
-  100% {
-    opacity: 0;
-    z-index: 0;
-  }
+  display: block;
+  opacity: 1;
 }
 
 /* Filter Button */
@@ -1984,8 +1942,8 @@ footer.footer::before {
 }
 
 .status-pill {
-  background: #e6f4ea;
-  color: #1e7e34;
+  background: #F5F0EB;
+  color: #2C1B10;
   padding: 0.4rem 1rem;
   border-radius: 20px;
   font-weight: 900;

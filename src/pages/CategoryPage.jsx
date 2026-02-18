@@ -62,7 +62,7 @@ const CategoryPage = () => {
                             No products found in this category yet.
                         </p>
                         <Link to="/" style={{
-                            color: '#c1ff72',
+                            color: '#2C1B10',
                             textDecoration: 'underline',
                             fontWeight: '600'
                         }}>

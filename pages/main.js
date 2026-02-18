@@ -1176,7 +1176,7 @@ async function initTrackOrder() {
     } else if (order.status === 'completed') {
       activeIndex = 3;
       statusText = 'DELIVERED';
-      document.getElementById('display-status').style.background = 'green';
+      document.getElementById('display-status').style.background = '#2C1B10';
       document.getElementById('display-status').style.color = 'white';
     }
 

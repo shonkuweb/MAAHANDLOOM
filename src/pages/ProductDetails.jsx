@@ -95,7 +95,7 @@ const ProductDetails = () => {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ color: '#666' }}>Availability</span>
-                        <span style={{ fontWeight: 'bold', color: product.qty > 0 ? 'green' : 'red' }}>
+                        <span style={{ fontWeight: 'bold', color: product.qty > 0 ? '#2C1B10' : 'red' }}>
                             {product.qty > 0 ? 'In Stock' : 'Out of Stock'}
                         </span>
                     </div>
