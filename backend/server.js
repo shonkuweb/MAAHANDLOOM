@@ -377,20 +377,20 @@ app.all('/api/payment/callback', async (req, res) => {
                 if (err) console.error("Callback DB Update Error", err);
             });
 
-            return res.redirect(`/pages/order-confirmation.html?status=success&orderId=${merchantOrderId}`);
+            return res.redirect(`/order-confirmation?status=success&orderId=${merchantOrderId}`);
         } else if (statusData.state === 'FAILED') {
             console.log("Payment FAILED. Updating DB...");
             db.run("UPDATE orders SET payment_status = 'failed', status = 'cancelled' WHERE id = ?", [merchantOrderId], () => { });
-            return res.redirect(`/pages/order-confirmation.html?status=failed&orderId=${merchantOrderId}`);
+            return res.redirect(`/order-confirmation?status=failed&orderId=${merchantOrderId}`);
         } else {
             // PENDING
             console.log(`Payment State: ${statusData.state}. Redirecting to pending.`);
-            return res.redirect(`/pages/order-confirmation.html?status=pending&orderId=${merchantOrderId}`);
+            return res.redirect(`/order-confirmation?status=pending&orderId=${merchantOrderId}`);
         }
 
     } catch (e) {
         console.error("Callback verification failed (Status API Error)", e.response?.data || e.message);
-        return res.redirect(`/pages/order-confirmation.html?status=pending&orderId=${merchantOrderId}&error=verification_failed`);
+        return res.redirect(`/order-confirmation?status=pending&orderId=${merchantOrderId}&error=verification_failed`);
     }
 });
 

@@ -1038,16 +1038,16 @@ function initCheckout() {
       if (data.status === 'COMPLETED' || data.status === 'SUCCEEDED') {
         cart = [];
         saveCart();
-        window.location.href = `/pages/order-confirmation.html?status=success&orderId=${orderId}`;
+        window.location.href = `/order-confirmation?status=success&orderId=${orderId}`;
       } else if (data.status === 'FAILED') {
-        window.location.href = `/pages/order-confirmation.html?status=failed&orderId=${orderId}`;
+        window.location.href = `/order-confirmation?status=failed&orderId=${orderId}`;
       } else {
-        window.location.href = `/pages/order-confirmation.html?status=pending&orderId=${orderId}`;
+        window.location.href = `/order-confirmation?status=pending&orderId=${orderId}`;
       }
     } catch (e) {
       if (overlay) overlay.style.display = 'none';
       console.error(e);
-      window.location.href = `/pages/order-confirmation.html?status=pending&orderId=${orderId}`;
+      window.location.href = `/order-confirmation?status=pending&orderId=${orderId}`;
     }
   }
 
