@@ -109,7 +109,7 @@ app.get('/api/auth/verify', requireAuth, (req, res) => {
 const PHONEPE_CLIENT_ID = process.env.PHONEPE_CLIENT_ID;
 const PHONEPE_CLIENT_SECRET = process.env.PHONEPE_CLIENT_SECRET;
 const PHONEPE_CLIENT_VERSION = process.env.PHONEPE_CLIENT_VERSION || 1;
-const PHONEPE_ENV = process.env.PHONEPE_ENV || 'SANDBOX';
+const PHONEPE_ENV = (process.env.PHONEPE_ENV || 'SANDBOX').trim();
 
 // STRICT URL CONSTRUCTION LOGIC
 const PHONEPE_BASE_URL = PHONEPE_ENV === 'PRODUCTION'
@@ -451,17 +451,17 @@ app.post('/webhook/phonepe', async (req, res) => {
     // Construct expected hash: SHA256(username:password)
     const dataToHash = `${username}:${password}`;
     const expectedHash = crypto.createHash('sha256').update(dataToHash).digest('hex');
-    
+
     // User might send "Basic <hash>" or just "<hash>" or "Bearer <hash>"? 
     // The rule says "Verify Authorization header: SHA256(username:password)".
     // Usually this means the client sends the hash directly or with Basic.
     // I will assume it sends raw hash or I need to match strictly.
     // Let's check strict equality first, then try with 'Basic ' prefix if that fails.
-    
+
     // NOTE: If the user meant "Standard Basic Auth where the credentials are username:password", 
     // that would be base64. But they explicitly said SHA256. 
     // Let's implement flexible check to be safe: check if header *contains* the hash.
-    
+
     const isValid = authHeader === expectedHash || authHeader === `Basic ${expectedHash}` || authHeader === `Bearer ${expectedHash}`;
 
     if (!isValid) {
@@ -478,7 +478,7 @@ app.post('/webhook/phonepe', async (req, res) => {
             // V2 Docs usually say payload is base64 encoded string in 'response' field if using X-VERIFY.
             // BUT, if this is a custom webhook setup, it might be JSON.
             // User provided "Use payload.state (root-level)" => JSON.
-            
+
             const content = event.content || event; // Fallback
             const orderId = content.merchantOrderId || content.transactionId;
 
@@ -490,10 +490,10 @@ app.post('/webhook/phonepe', async (req, res) => {
                     }
                 });
             }
-        } 
+        }
         // Handle Refund etc.
         else if (event.type === 'pg.refund.completed' || (event.content && event.content.type === 'pg.refund.completed')) { // Defensive
-             // ...
+            // ...
         }
 
         res.status(200).send('OK');
@@ -583,14 +583,14 @@ app.post('/api/auth/login', (req, res) => {
     // SECURE: Use Constant Time Comparison to prevent timing attacks
     // If adminPass is not set, default to a secure random string to prevent '1234' access in prod if .env missing
     const adminPass = process.env.ADMIN_PASSCODE || crypto.randomBytes(16).toString('hex');
-    
+
     const bufferPass = Buffer.from(password);
     const bufferAdminPass = Buffer.from(adminPass);
 
     if (bufferPass.length !== bufferAdminPass.length) {
-         // Fail early but constant time regarding length usually not critical for this specific attack vector vs content
-         // But better to just return failure.
-         return res.status(401).json({ success: false, message: 'Invalid Credentials' });
+        // Fail early but constant time regarding length usually not critical for this specific attack vector vs content
+        // But better to just return failure.
+        return res.status(401).json({ success: false, message: 'Invalid Credentials' });
     }
 
     if (crypto.timingSafeEqual(bufferPass, bufferAdminPass)) {
