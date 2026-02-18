@@ -962,22 +962,35 @@ function initCheckout() {
         // Helper to load script
         const loadPhonePeSDK = (url) => {
           return new Promise((resolve, reject) => {
-            if (window.PhonePeCheckout) {
-              resolve(); // Already loaded
+            // Check if the script is already present
+            const existingScript = document.querySelector(`script[src^="${url}"]`);
+            if (window.PhonePeCheckout && existingScript) {
+              console.log("SDK already loaded for this environment.");
+              resolve();
               return;
             }
+
+            // If a DIFFERENT SDK is loaded, we might need to remove it or force reload? 
+            // PhonePe SDK doesn't support hot-swapping easily.
+            // But let's try to append the correct one.
+
+            console.log("Loading SDK from:", url);
             const script = document.createElement('script');
-            script.src = url;
+            script.src = url + "?v=" + Date.now(); // Cache Busting
             script.onload = () => resolve();
             script.onerror = () => reject(new Error('Failed to load PhonePe SDK'));
             document.head.appendChild(script);
           });
         };
 
+        if (window.PhonePeCheckout) {
+          console.warn("PhonePeCheckout already defined. This might cause issues if env mismatch exists. Recommend refresh if this fails.");
+        }
+
         await loadPhonePeSDK(sdkUrl);
 
         if (!window.PhonePeCheckout) {
-          window.showToast('PhonePe SDK failed to initialize', 'error');
+          window.showToast('PhonePe SDK failed to initialize. Please refresh.', 'error');
           return;
         }
 
