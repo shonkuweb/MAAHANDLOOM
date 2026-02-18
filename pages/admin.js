@@ -202,7 +202,9 @@ function setupListeners() {
                         console.error(`Failed to delete order ${order.id}`, e);
                     }
                 }
-                fetchData();
+                // Instantly remove from local state and re-render
+                orders = orders.filter(o => o.status !== 'completed');
+                render();
                 window.showToast(`${deleted} completed order(s) deleted.`, 'success');
             });
         });
@@ -443,20 +445,16 @@ function updateFilterUI() {
 
 // CRUD Operations
 function deleteProduct(id) {
-    console.log('[DELETE] Product ID:', id);
     showConfirm('Are you sure you want to delete this product?', async () => {
         try {
-            console.log('[DELETE] Sending DELETE request for product:', id);
-            const headers = getAuthHeaders();
-            console.log('[DELETE] Auth header present:', !!headers.Authorization);
-            const res = await fetch(`/api/products/${id}`, { method: 'DELETE', headers });
-            console.log('[DELETE] Response status:', res.status);
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
             if (res.ok) {
+                // Instantly remove from local array and re-render
+                products = products.filter(p => String(p.id) !== String(id));
+                render();
                 window.showToast('Product deleted successfully', 'success');
-                fetchData();
             } else {
                 const errData = await res.json().catch(() => ({}));
-                console.error('[DELETE] Failed:', errData);
                 window.showToast(errData.error || 'Failed to delete product', 'error');
             }
         } catch (e) {
@@ -645,13 +643,12 @@ async function updateOrderStatus() {
         });
 
         if (res.ok) {
-            const statusEl = document.getElementById('view-order-status');
-            if (statusEl) {
-                statusEl.textContent = newStatus;
-                // color update logic...
-            }
+            // Instantly update local state and re-render
+            const order = orders.find(o => String(o.id) === String(editingId));
+            if (order) order.status = newStatus;
             closeOrderModal();
-            fetchData();
+            render();
+            window.showToast('Order status updated', 'success');
         } else {
             window.showToast('Failed to update status', 'error');
         }
@@ -668,7 +665,10 @@ function deleteOrder(id) {
             const res = await fetch(`/api/orders/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
             if (res.ok) {
                 closeOrderModal();
-                fetchData();
+                // Instantly remove from local array and re-render
+                orders = orders.filter(o => String(o.id) !== String(id));
+                render();
+                window.showToast('Order deleted successfully', 'success');
             } else {
                 window.showToast('Failed to delete order', 'error');
             }
