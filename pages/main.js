@@ -943,15 +943,45 @@ function initCheckout() {
       if (overlay) overlay.style.display = 'none';
 
       if (res.ok && data.tokenUrl) {
-        // STRICT RULE: Invoke PayPage (IFrame Recommended)
-        // "window.PhonePeCheckout.transact({ tokenUrl: ..., callback, type: 'IFRAME' })"
+        console.log("Payment Init Success. Token URL:", data.tokenUrl);
+
+        // DYNAMIC SDK LOADING
+        // Determine environment based on the tokenUrl domain
+        // Prod: mercury.phonepe.com -> Prod SDK
+        // Sandbox/UAT: mercury-t2.phonepe.com, mercury-uat.phonepe.com -> Sandbox SDK
+
+        let sdkUrl = 'https://mercury.phonepe.com/web/bundle/checkout.js'; // Default to Prod
+
+        if (data.tokenUrl.includes('mercury-t2') || data.tokenUrl.includes('mercury-uat') || data.tokenUrl.includes('test')) {
+          console.log("Detected Sandbox/UAT Environment. Loading Sandbox SDK.");
+          sdkUrl = 'https://mercury-uat.phonepe.com/web/bundle/checkout.js';
+        } else {
+          console.log("Detected Production Environment. Loading Prod SDK.");
+        }
+
+        // Helper to load script
+        const loadPhonePeSDK = (url) => {
+          return new Promise((resolve, reject) => {
+            if (window.PhonePeCheckout) {
+              resolve(); // Already loaded
+              return;
+            }
+            const script = document.createElement('script');
+            script.src = url;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load PhonePe SDK'));
+            document.head.appendChild(script);
+          });
+        };
+
+        await loadPhonePeSDK(sdkUrl);
 
         if (!window.PhonePeCheckout) {
-          window.showToast('PhonePe SDK not loaded', 'error');
+          window.showToast('PhonePe SDK failed to initialize', 'error');
           return;
         }
 
-        console.log("Invoking PhonePe SDK with:", data.tokenUrl);
+        console.log("Invoking PhonePe SDK");
 
         window.PhonePeCheckout.transact({
           tokenUrl: data.tokenUrl,
@@ -960,15 +990,6 @@ function initCheckout() {
             if (response === 'USER_CANCEL') {
               window.showToast('Payment Cancelled', 'error');
             } else if (response === 'CONCLUDED') {
-              // Verify status from backend
-              // redirect or polling?
-              // Usually CONCLUDED means flow is done. We should check status.
-              // But the redirectUrl (callback) from backend might have already handled it?
-              // PhonePe V2 Iframe usually redirects the PARENT window or relies on callback?
-              // Docs say: "callback: function(response)"
-              // "response" can be 'USER_CANCEL', 'CONCLUDED', 'FAILURE' etc.
-              // If CONCLUDED, we should poll or show success.
-              // Let's poll /api/payment/status just to be sure.
               checkPaymentStatus(data.merchantOrderId);
             } else if (response === 'FAILURE') {
               window.showToast('Payment Failed', 'error');
