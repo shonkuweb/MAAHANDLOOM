@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Confirmation</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .confirmation-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: #f8f8f8;
+        }
+
+        .confirmation-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .status-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+        }
+
+        .status-icon.success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .status-icon.failed {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status-icon.pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .confirmation-card h2 {
+            color: #2C1B10;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .confirmation-card p {
+            color: #666;
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .order-id-display {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2C1B10;
+            margin: 1rem 0;
+            padding: 0.75rem;
+            background: #f3f4f6;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .order-id-display:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-action {
+            display: inline-block;
+            width: 100%;
+            padding: 0.9rem 1.5rem;
+            background: #2C1B10;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 1.5rem;
+            transition: background 0.2s;
+        }
+
+        .btn-action:hover {
+            background: #3d2a1c;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #2C1B10;
+            border: 2px solid #2C1B10;
+            margin-top: 0.75rem;
+        }
+
+        .btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        .copy-toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2C1B10;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar" style="justify-content: center; position: relative;">
+        <a href="index.html" style="position: absolute; left: 1rem; color: white;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </a>
+        <div style="font-weight: bold; font-size: 1.2rem; letter-spacing: 1px;">ORDER STATUS</div>
+    </nav>
+
+    <div class="confirmation-container">
+        <div class="confirmation-card" id="confirmation-card">
+            <!-- Dynamically populated by JS -->
+            <div class="status-icon pending">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h2>Loading...</h2>
+            <p>Checking your payment status.</p>
+        </div>
+    </div>
+
+    <div class="copy-toast" id="copy-toast">Order ID Copied!</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get('status');
+            const orderId = params.get('orderId');
+            const card = document.getElementById('confirmation-card');
+
+            if (status === 'success') {
+                card.innerHTML = `
+                    <div class="status-icon success">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <h2>ORDER PLACED!</h2>
+                    <p>Your payment was successful.</p>
+                    ${orderId ? `
+                        <div class="order-id-display" onclick="copyOrderId('${orderId}')">
+                            <span>${orderId}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </div>
+                        <p style="font-size: 0.8rem; color: #999;">Tap to copy Order ID</p>
+                    ` : ''}
+                    <a href="/pages/track-order.html" class="btn-action">TRACK ORDER</a>
+                    <a href="/" class="btn-action btn-secondary">CONTINUE SHOPPING</a>
+                `;
+                // Clear cart
+                localStorage.removeItem('cart');
+            } else if (status === 'failed') {
+                card.innerHTML = `
+                    <div class="status-icon failed">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </div>
+                    <h2>PAYMENT FAILED</h2>
+                    <p>Your payment could not be processed. Please try again.</p>
+                    ${orderId ? `<p style="font-size: 0.85rem; color: #999;">Reference: ${orderId}</p>` : ''}
+                    <a href="/pages/checkout.html" class="btn-action">TRY AGAIN</a>
+                    <a href="/" class="btn-action btn-secondary">GO HOME</a>
+                `;
+            } else {
+                // Pending or unknown
+                card.innerHTML = `
+                    <div class="status-icon pending">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <h2>PAYMENT PENDING</h2>
+                    <p>Your payment is being processed. This may take a few minutes.</p>
+                    ${orderId ? `
+                        <div class="order-id-display" onclick="copyOrderId('${orderId}')">
+                            <span>${orderId}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </div>
+                    ` : ''}
+                    <p style="font-size: 0.85rem; color: #999;">Save your Order ID and check back later.</p>
+                    <a href="/pages/track-order.html" class="btn-action">TRACK ORDER</a>
+                    <a href="/" class="btn-action btn-secondary">GO HOME</a>
+                `;
+            }
+        });
+
+        function copyOrderId(id) {
+            navigator.clipboard.writeText(id).then(() => {
+                const toast = document.getElementById('copy-toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            }).catch(() => {
+                // Fallback
+                const el = document.createElement('textarea');
+                el.value = id;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                const toast = document.getElementById('copy-toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>

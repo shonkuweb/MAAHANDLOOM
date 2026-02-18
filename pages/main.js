@@ -1038,16 +1038,16 @@ function initCheckout() {
       if (data.status === 'COMPLETED' || data.status === 'SUCCEEDED') {
         cart = [];
         saveCart();
-        showSuccessModal(orderId);
+        window.location.href = `/pages/order-confirmation.html?status=success&orderId=${orderId}`;
+      } else if (data.status === 'FAILED') {
+        window.location.href = `/pages/order-confirmation.html?status=failed&orderId=${orderId}`;
       } else {
-        window.showToast('Payment Status: ' + (data.status || 'Pending'), 'info');
-        // Maybe redirect to order confirmation anyway?
-        window.location.href = `index.html`;
+        window.location.href = `/pages/order-confirmation.html?status=pending&orderId=${orderId}`;
       }
     } catch (e) {
       if (overlay) overlay.style.display = 'none';
       console.error(e);
-      window.showToast('Verification failed', 'error');
+      window.location.href = `/pages/order-confirmation.html?status=pending&orderId=${orderId}`;
     }
   }
 
