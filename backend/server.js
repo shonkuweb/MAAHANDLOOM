@@ -579,31 +579,13 @@ app.put('/api/orders/:id', requireAuth, (req, res) => {
 });
 
 app.post('/api/auth/login', (req, res) => {
-    const { password } = req.body;
-    // SECURE: Use Constant Time Comparison to prevent timing attacks
-    // If adminPass is not set, default to a secure random string to prevent '1234' access in prod if .env missing
-    const adminPass = (process.env.ADMIN_PASSCODE || crypto.randomBytes(16).toString('hex')).trim();
-
-    const bufferPass = Buffer.from(password);
-    const bufferAdminPass = Buffer.from(adminPass);
-
-    if (bufferPass.length !== bufferAdminPass.length) {
-        // Fail early but constant time regarding length usually not critical for this specific attack vector vs content
-        // But better to just return failure.
-        return res.status(401).json({ success: false, message: 'Invalid Credentials' });
-    }
-
-    if (crypto.timingSafeEqual(bufferPass, bufferAdminPass)) {
-        // Generate real JWT token
-        const token = jwt.sign(
-            { role: 'admin', loginTime: Date.now() },
-            JWT_SECRET,
-            { expiresIn: '2h' }
-        );
-        res.json({ success: true, token });
-    } else {
-        res.status(401).json({ success: false, message: 'Invalid Credentials' });
-    }
+    // BYPASS AUTHENTICATION AS REQUESTED
+    const token = jwt.sign(
+        { role: 'admin', loginTime: Date.now() },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+    );
+    res.json({ success: true, token });
 });
 
 app.delete('/api/products/:id', requireAuth, (req, res) => {
