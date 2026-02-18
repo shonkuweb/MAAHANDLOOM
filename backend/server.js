@@ -582,7 +582,7 @@ app.post('/api/auth/login', (req, res) => {
     const { password } = req.body;
     // SECURE: Use Constant Time Comparison to prevent timing attacks
     // If adminPass is not set, default to a secure random string to prevent '1234' access in prod if .env missing
-    const adminPass = process.env.ADMIN_PASSCODE || crypto.randomBytes(16).toString('hex');
+    const adminPass = (process.env.ADMIN_PASSCODE || crypto.randomBytes(16).toString('hex')).trim();
 
     const bufferPass = Buffer.from(password);
     const bufferAdminPass = Buffer.from(adminPass);
