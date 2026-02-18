@@ -566,8 +566,9 @@ function openOrderModal(id) {
     orderModal.style.display = 'flex';
     orderModal.classList.add('active');
 
-    // Populate Data
-    document.getElementById('view-order-id').textContent = 'ORD-' + order.id;
+    // Populate Data — avoid double ORD- prefix
+    const orderId = String(order.id);
+    document.getElementById('view-order-id').textContent = orderId.startsWith('ORD-') ? orderId : 'ORD-' + orderId;
     const d = new Date(order.date);
     document.getElementById('view-order-date').textContent = isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -591,9 +592,9 @@ function openOrderModal(id) {
     const loc = [order.address, order.city, order.zip].filter(Boolean).join(', ');
     document.getElementById('view-customer-location').textContent = loc || 'N/A';
 
-    // Transaction ID if available
-    const tid = order.transaction_id || 'N/A';
-    console.log('Transaction ID:', tid);
+    // PhonePe Transaction ID
+    const tid = order.transaction_id || order.phonepeTxnId || order.paymentId || 'N/A';
+    document.getElementById('view-transaction-id').textContent = tid;
 
     // Items
     const itemsContainer = document.getElementById('view-order-items');
