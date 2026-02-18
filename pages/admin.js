@@ -177,6 +177,12 @@ function setupListeners() {
         orderSearchInput.addEventListener('input', () => render());
     }
 
+    // Product search by name
+    const productSearchInput = document.getElementById('product-search-input');
+    if (productSearchInput) {
+        productSearchInput.addEventListener('input', () => render());
+    }
+
     // Danger Zone Listeners
     if (resetDbBtn) {
         resetDbBtn.addEventListener('click', () => {
@@ -713,6 +719,12 @@ function render() {
         } else {
             // Category Match
             itemsToRender = products.filter(p => (p.category || '').includes(currentProductFilter));
+        }
+        // Apply product search if active
+        const productSearchInput = document.getElementById('product-search-input');
+        if (productSearchInput && productSearchInput.value.trim()) {
+            const q = productSearchInput.value.trim().toLowerCase();
+            itemsToRender = itemsToRender.filter(p => (p.name || '').toLowerCase().includes(q));
         }
     } else {
         let filtered = orders.filter(o => o.status === currentOrderFilter);
