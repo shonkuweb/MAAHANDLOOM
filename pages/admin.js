@@ -266,6 +266,51 @@ function setupListeners() {
         cameraInput.addEventListener('change', handleImageUpload);
     }
 
+    // Drag & Drop Zone
+    const dropZone = document.getElementById('image-drop-zone');
+    if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.style.borderColor = '#2C1B10';
+            dropZone.style.background = '#F5F0EB';
+        });
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.style.borderColor = '#D4C9BE';
+            dropZone.style.background = '#FDFCFA';
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.style.borderColor = '#D4C9BE';
+            dropZone.style.background = '#FDFCFA';
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (files.length === 0) {
+                window.showToast('Please drop image files only.', 'error');
+                return;
+            }
+            if (files.length + currentImages.length > 3) {
+                window.showToast('You can only upload up to 3 images.', 'error');
+                return;
+            }
+            files.forEach(file => {
+                compressImage(file, 800, 0.7).then(compressedDataUrl => {
+                    currentImages.push(compressedDataUrl);
+                    renderPreviews();
+                }).catch(err => {
+                    console.error('Compression failed', err);
+                    window.showToast('Failed to process image', 'error');
+                });
+            });
+        });
+        // Click on zone (outside buttons) opens file picker
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.closest('label') || e.target.closest('button')) return;
+            productImagesInput.click();
+        });
+    }
 
 
     // Event Delegation for List Actions (Edit, Delete, View Order)
