@@ -125,7 +125,9 @@ function initDb() {
             amount REAL NOT NULL,
             status TEXT DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`
+        )`,
+        `ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;`,
+        `ALTER TABLE products ADD COLUMN IF NOT EXISTS colors TEXT;`
     ];
 
     const runQueries = async () => {

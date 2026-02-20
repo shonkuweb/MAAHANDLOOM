@@ -55,7 +55,6 @@ function initDb() {
             if (err) console.error("Error creating orders table:", err);
         });
 
-        // Refunds Table
         db.run(`CREATE TABLE IF NOT EXISTS refunds (
             id TEXT PRIMARY KEY,
             order_id TEXT NOT NULL,
@@ -65,6 +64,14 @@ function initDb() {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`, (err) => {
             if (err) console.error("Error creating refunds table:", err);
+        });
+
+        // Migrations
+        db.run(`ALTER TABLE products ADD COLUMN subcategory TEXT`, (err) => {
+            // Ignore error if column already exists
+        });
+        db.run(`ALTER TABLE products ADD COLUMN colors TEXT`, (err) => {
+            // Ignore error if column already exists
         });
 
         console.log('Database tables initialized.');
