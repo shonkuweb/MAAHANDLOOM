@@ -240,17 +240,29 @@ app.post('/api/payment/create', async (req, res) => {
 
         for (const item of items) {
             const product = await new Promise((resolve, reject) => {
-                db.get("SELECT id, name, price, qty FROM products WHERE id = ?", [item.id], (err, row) => {
+                db.get("SELECT id, name, price, qty, colors FROM products WHERE id = ?", [item.id], (err, row) => {
                     if (err) reject(err);
                     else {
                         console.log(`Product lookup for ${item.id}:`, row);
+                        if (row && row.colors && row.colors !== 'null') {
+                            row.colors = JSON.parse(row.colors);
+                        } else if (row) {
+                            row.colors = [];
+                        }
                         resolve(row);
                     }
                 });
             });
 
             if (!product) return res.status(400).json({ error: `Product ${item.id} not found` });
-            if (product.qty < item.qty) return res.status(400).json({ error: `Insufficient stock for ${product.name}` });
+
+            let stockToCheck = product.qty;
+            if (item.color && product.colors) {
+                const variant = product.colors.find(c => c.colorName === item.color.name);
+                if (variant) stockToCheck = variant.qty;
+            }
+
+            if (stockToCheck < item.qty) return res.status(400).json({ error: `Insufficient stock for ${product.name} ${item.color ? '(' + item.color.name + ')' : ''}` });
 
             const itemTotal = product.price * item.qty;
             calculatedTotal += itemTotal;
@@ -258,7 +270,8 @@ app.post('/api/payment/create', async (req, res) => {
                 id: product.id,
                 name: product.name,
                 qty: item.qty,
-                price: product.price
+                price: product.price,
+                color: item.color || null
             });
         }
 

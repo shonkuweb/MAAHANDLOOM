@@ -61,7 +61,8 @@ const Checkout = () => {
                 id: item.id,
                 qty: item.qty,
                 price: product ? product.price : 0,
-                name: product ? product.name : 'Unknown'
+                name: product ? product.name : 'Unknown',
+                color: item.color || null
             };
         });
 
@@ -132,9 +133,19 @@ const Checkout = () => {
                         {cart.map(item => {
                             const product = products.find(p => p.id === item.id);
                             if (!product) return null;
+                            // Use cartItemId as the unique key for the react list
+                            const itemKey = item.cartItemId || item.id;
                             return (
-                                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                                    <span>{product.name} x {item.qty}</span>
+                                <div key={itemKey} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span>{product.name} x {item.qty}</span>
+                                        {item.color && (
+                                            <span style={{ fontSize: '0.8rem', color: '#666', background: '#f5f5f5', padding: '0.1rem 0.4rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.color.hex, display: 'inline-block' }}></span>
+                                                {item.color.name}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span>₹{product.price * item.qty}</span>
                                 </div>
                             );

@@ -24,26 +24,45 @@ const CartSidebar = ({ isOpen, onClose }) => {
                 ) : (
                     cart.map(item => {
                         const product = products.find(p => p.id === item.id) || item;
+
+                        // Determine the image to show. If variant is selected, try finding variant img.
+                        let itemImage = product.image;
+                        if (item.color && product.colors) {
+                            const variant = product.colors.find(c => c.colorName === item.color.name);
+                            if (variant && variant.images && variant.images.length > 0) {
+                                itemImage = variant.images[0];
+                            }
+                        }
+
+                        // Use item.cartItemId or fallback to item.id for legacy cart structures
+                        const updateId = item.cartItemId || item.id;
+
                         return (
-                            <div className="cart-item" key={item.id}>
+                            <div className="cart-item" key={updateId}>
                                 <div className="cart-item-img">
-                                    {product.image ? (
-                                        <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+                                    {itemImage ? (
+                                        <img src={itemImage} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
                                     ) : (
                                         <div style={{ width: '100%', height: '100%', background: '#eee', borderRadius: '12px' }} />
                                     )}
                                 </div>
                                 <div className="cart-item-details">
                                     <div className="cart-item-title">{product.name}</div>
+                                    {item.color && (
+                                        <div style={{ fontSize: '0.75rem', color: '#666', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.1rem', marginBottom: '0.1rem' }}>
+                                            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: item.color.hex, display: 'inline-block', border: '1px solid #ddd' }}></span>
+                                            {item.color.name}
+                                        </div>
+                                    )}
                                     <div className="cart-item-text">
                                         Price: ₹{product.price}<br />
                                         Total: ₹{product.price * item.qty}
                                     </div>
                                 </div>
                                 <div className="qty-selector">
-                                    <button className="qty-btn" onClick={() => updateQty(item.id, item.qty - 1)}>-</button>
+                                    <button className="qty-btn" onClick={() => updateQty(updateId, item.qty - 1)}>-</button>
                                     <span>{item.qty}</span>
-                                    <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                                    <button className="qty-btn" onClick={() => updateQty(updateId, item.qty + 1)}>+</button>
                                 </div>
                             </div>
                         );

@@ -284,60 +284,50 @@
                 <button id="close-modal" class="close-modal-modern">&times;</button>
                 <h2 id="modal-title">ADD PRODUCT</h2>
                 <form id="product-form">
-                    <!-- Drag & Drop Zone -->
-                    <div id="image-drop-zone" style="
-                        border: 2px dashed #D4C9BE;
-                        border-radius: 12px;
-                        padding: 1.25rem 1rem;
-                        text-align: center;
-                        background: #FDFCFA;
-                        cursor: pointer;
-                        transition: all 0.25s ease;
-                        margin-bottom: 0.5rem;
-                    ">
-                        <div style="margin-bottom: 0.5rem;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                fill="none" stroke="#A89680" stroke-width="1.5" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
+                    <form id="product-form">
+                        <input type="text" id="product-name" placeholder="Product Name" required class="modern-input">
+                        <textarea id="product-desc" placeholder="Product Description (optional)" class="modern-input"
+                            rows="2" style="resize: none;"></textarea>
+
+                        <input type="text" id="product-price" placeholder="₹ Price" required class="modern-input">
+
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <select id="product-category" class="modern-input" required
+                                style="background: white; flex: 1;">
+                                <option value="" disabled selected>Select Category</option>
+                                <option value="Surat Silk Special">Surat Silk Special</option>
+                                <option value="Handloom Special">Handloom Special</option>
+                                <option value="Shantipuri Special">Shantipuri Special</option>
+                            </select>
+
+                            <!-- Subcategory (Populated Dynamically) -->
+                            <select id="product-subcategory" class="modern-input"
+                                style="background: white; flex: 1; display: none;">
+                                <option value="" disabled selected>Select Subcategory</option>
+                            </select>
                         </div>
-                        <p style="font-size: 0.78rem; color: #8D7B6A; font-weight: 600; margin: 0 0 0.15rem;">
-                            Drag & drop images here</p>
-                        <p style="font-size: 0.65rem; color: #B5A898; margin: 0 0 0.6rem;">or use the buttons below (max
-                            3 images)</p>
-                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                            <label for="product-images" class="btn-upload-modern"
-                                style="margin:0; font-size: 0.72rem; padding: 0.4rem 1rem;">+ UPLOAD</label>
-                            <button type="button" id="btn-camera" class="btn-upload-modern"
-                                style="margin:0; font-size: 0.72rem; padding: 0.4rem 1rem; background: #2C1B10; color: white; border-style: solid; border-color: #2C1B10;">📷
-                                CAMERA</button>
+
+                        <!-- Dynamic Variants Container -->
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #EEE;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <p style="margin: 0; font-size: 0.8rem; font-weight: 700; color: #2C1B10;">Color
+                                    Variants</p>
+                                <button type="button" id="btn-add-variant" class="btn-save-modern"
+                                    style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.7rem; background: #EEE; color: #333;">+
+                                    ADD COLOR</button>
+                            </div>
+                            <div id="variants-container">
+                                <!-- Variant blocks will be injected here by JS -->
+                            </div>
                         </div>
-                    </div>
-                    <input type="file" id="product-images" accept="image/*" multiple style="display: none;">
-                    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
-                    <div id="image-preview-container"
-                        style="display: flex; gap: 0.5rem; justify-content: center; min-height: 0; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                    </div>
-                    <input type="text" id="product-name" placeholder="Product Name" required class="modern-input">
-                    <textarea id="product-desc" placeholder="Product Description (optional)" class="modern-input"
-                        rows="2" style="resize: none;"></textarea>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="product-price" placeholder="₹ Price" required class="modern-input"
-                            style="flex: 1;">
-                        <input type="number" id="product-qty" placeholder="Qty" required class="modern-input"
-                            style="flex: 0.6;">
-                    </div>
-                    <select id="product-category" class="modern-input" required style="background: white;">
-                        <option value="" disabled selected>Select Category</option>
-                        <option value="Surat Silk Special">Surat Silk Special</option>
-                        <option value="Handloom Special">Handloom Special</option>
-                        <option value="Shantipuri Special">Shantipuri Special</option>
-                    </select>
-                    <button type="submit" class="btn-save-modern">SAVE PRODUCT</button>
-                </form>
+
+                        <!-- Hidden old inputs for backwards compatibility with legacy logic if needed, but we will fully replace them in JS -->
+                        <input type="file" id="camera-input" accept="image/*" capture="environment"
+                            style="display: none;">
+
+                        <button type="submit" class="btn-save-modern" style="margin-top: 1rem;">SAVE PRODUCT</button>
+                    </form>
             </div>
         </div>
         <!-- Order Details Modal -->

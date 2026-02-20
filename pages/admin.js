@@ -108,15 +108,35 @@ const productForm = document.getElementById('product-form');
 const modalTitle = document.getElementById('modal-title');
 const resetDbBtn = document.getElementById('reset-db-btn');
 const delCompletedBtn = document.getElementById('delete-completed-btn');
-const productImagesInput = document.getElementById('product-images');
-const imagePreviewContainer = document.getElementById('image-preview-container');
-// Order Modal Elements
 const orderModal = document.getElementById('order-modal');
 const closeOrderModalBtn = document.getElementById('close-order-modal');
 const modalUpdateStatusBtn = document.getElementById('modal-update-status-btn');
 
-// State for image handling
-let currentImages = [];
+// Subcategory mapping
+const CATEGORY_MAP = {
+    'Surat Silk Special': [
+        'PAPER SILK', 'BHAGALPURI SILK', 'TUSHAR SILK JHALAR', 'SOFT DHAKAI', 'COTTON DHAKAI',
+        'REDO SILK', 'LEELAN SILK', 'MEENAKARI DHAKAI', 'SUPRIYA SILK', 'SUPERHIT SILK',
+        'SILKY JHALAR', 'MALAI COTTON', 'GOVINDA SILK', 'SHAGUN SAREE', 'KAKINADA SILK',
+        'CASHLESS SILK', 'BALUCHARI SILK', 'MULBERRY SILK', 'MARIA SILK', 'DIGITAL LEELAN SILK',
+        'KANI SILK', 'DEBBANI SILK', 'BD Queen silk', 'PURE WHITE LEYLEN SILK', 'KAATAN BANARASI',
+        'PRISTAL JHALAR', 'SAMBALPURI SILK', 'SHUBH MANGAL SILK', 'MAHI CHECK SILK', 'PUSHPA 2 SILK',
+        'MUSHRU SILK', 'ZINDAGI JHALAR', 'SHAKUNTALA WORK'
+    ],
+    'Handloom Special': [
+        'Sambalpuri silk', 'PAPA SILK', 'Bangalore silk', 'Garoud silk', 'KAKINADA BANARASI SILK',
+        'ANARKALI', 'MEKHLA SAREE', 'BANARASI SATON', 'BENARASI WORK', '52-52 SILK SAREE',
+        'RANGEELA BUTI', 'DOCTOR SILK'
+    ],
+    'Shantipuri Special': [
+        'TAANT ARI WORK', 'HANDLOOM TAANT SAREE', 'TANGAIL TAANT SAREE', 'MALMAL COTTON WORK',
+        'SPECIAL GIFT COTTON SAREE', 'SHANTIPURI DHAKAI JAMDANI'
+    ]
+};
+
+// State for variants handling (replaces single image array and single qty)
+let currentVariants = [];
+// Example variant: { id: Date.now(), colorName: '', colorHex: '#ff0000', qty: 1, images: [] }
 
 // Initialize
 function init() {
@@ -250,65 +270,36 @@ function setupListeners() {
         console.error('Product form not found');
     }
 
-    // Image Upload
-    if (productImagesInput) {
-        productImagesInput.addEventListener('change', handleImageUpload);
+    // Category -> Subcategory mapping
+    const categorySelect = document.getElementById('product-category');
+    const subcategorySelect = document.getElementById('product-subcategory');
+    if (categorySelect && subcategorySelect) {
+        categorySelect.addEventListener('change', (e) => {
+            const cat = e.target.value;
+            const subs = CATEGORY_MAP[cat] || [];
+            if (subs.length > 0) {
+                subcategorySelect.style.display = 'block';
+                subcategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>' +
+                    subs.map(s => `<option value="${s}">${s}</option>`).join('');
+            } else {
+                subcategorySelect.style.display = 'none';
+                subcategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
+            }
+        });
     }
 
-    // Camera Upload
-    const cameraBtn = document.getElementById('btn-camera');
-    const cameraInput = document.getElementById('camera-input');
-
-    if (cameraBtn && cameraInput) {
-        cameraBtn.addEventListener('click', () => {
-            cameraInput.click();
-        });
-        cameraInput.addEventListener('change', handleImageUpload);
-    }
-
-    // Drag & Drop Zone
-    const dropZone = document.getElementById('image-drop-zone');
-    if (dropZone) {
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            dropZone.style.borderColor = '#2C1B10';
-            dropZone.style.background = '#F5F0EB';
-        });
-        dropZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            dropZone.style.borderColor = '#D4C9BE';
-            dropZone.style.background = '#FDFCFA';
-        });
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            dropZone.style.borderColor = '#D4C9BE';
-            dropZone.style.background = '#FDFCFA';
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-            if (files.length === 0) {
-                window.showToast('Please drop image files only.', 'error');
-                return;
-            }
-            if (files.length + currentImages.length > 3) {
-                window.showToast('You can only upload up to 3 images.', 'error');
-                return;
-            }
-            files.forEach(file => {
-                compressImage(file, 800, 0.7).then(compressedDataUrl => {
-                    currentImages.push(compressedDataUrl);
-                    renderPreviews();
-                }).catch(err => {
-                    console.error('Compression failed', err);
-                    window.showToast('Failed to process image', 'error');
-                });
+    // Variants Management
+    const btnAddVariant = document.getElementById('btn-add-variant');
+    if (btnAddVariant) {
+        btnAddVariant.addEventListener('click', () => {
+            currentVariants.push({
+                id: Date.now(),
+                colorName: '',
+                colorHex: '#cccccc',
+                qty: 1,
+                images: []
             });
-        });
-        // Click on zone (outside buttons) opens file picker
-        dropZone.addEventListener('click', (e) => {
-            if (e.target.closest('label') || e.target.closest('button')) return;
-            productImagesInput.click();
+            renderVariantBlocks();
         });
     }
 
@@ -380,27 +371,106 @@ function showConfirm(msg, onConfirm) {
     newCancel.addEventListener('click', close);
 }
 
-function handleImageUpload(e) {
-    const files = Array.from(e.target.files);
+function renderVariantBlocks() {
+    const container = document.getElementById('variants-container');
+    if (!container) return;
+    container.innerHTML = '';
 
-    if (files.length + currentImages.length > 3) {
-        window.showToast('You can only upload up to 3 images.', 'error');
-        return;
-    }
+    currentVariants.forEach((variant) => {
+        const block = document.createElement('div');
+        block.style.cssText = 'background: #F9F7F4; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; position: relative; border: 1px solid #EAE0D5;';
 
-    files.forEach(file => {
-        if (!file.type.startsWith('image/')) return;
+        block.innerHTML = `
+            <button type="button" class="remove-variant-btn" data-id="${variant.id}" style="position: absolute; top: 0.5rem; right: 0.5rem; background: transparent; border: none; color: #D16D6A; cursor: pointer; font-weight: bold; font-size: 1rem;">&times;</button>
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
+                <input type="color" class="variant-color-hex modern-input" data-id="${variant.id}" value="${variant.colorHex}" style="padding: 0; width: 40px; height: 40px; border: none; border-radius: 8px; cursor: pointer;">
+                <input type="text" class="variant-color-name modern-input" data-id="${variant.id}" value="${variant.colorName}" placeholder="Color Name (e.g. Red)" required style="flex: 2; margin: 0;">
+                <input type="number" class="variant-qty modern-input" data-id="${variant.id}" value="${variant.qty}" placeholder="Qty" required style="flex: 1; margin: 0;">
+            </div>
+            
+            <div class="variant-drop-zone" data-id="${variant.id}" style="border: 2px dashed #D4C9BE; border-radius: 8px; padding: 1rem; text-align: center; background: #FFF; cursor: pointer; transition: all 0.2s ease;">
+                <p style="font-size: 0.75rem; color: #8D7B6A; font-weight: 600; margin: 0 0 0.5rem;">Drag & drop variant images here (max 3)</p>
+                <label for="variant-images-${variant.id}" class="btn-upload-modern" style="margin: 0; font-size: 0.65rem; padding: 0.3rem 0.8rem; display: inline-block;">+ UPLOAD</label>
+                <input type="file" id="variant-images-${variant.id}" class="variant-file-input" data-id="${variant.id}" accept="image/*" multiple style="display: none;">
+            </div>
+            
+            <div class="variant-previews" id="variant-previews-${variant.id}" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+            </div>
+        `;
 
-        compressImage(file, 800, 0.7).then(compressedDataUrl => {
-            currentImages.push(compressedDataUrl);
-            renderPreviews();
-        }).catch(err => {
-            console.error('Compression failed', err);
-            window.showToast('Failed to process image', 'error');
+        container.appendChild(block);
+
+        // Render current previews for this variant
+        const previewContainer = document.getElementById(`variant-previews-${variant.id}`);
+        variant.images.slice(0, 3).forEach((imgSrc, imgIndex) => {
+            const div = document.createElement('div');
+            div.style.cssText = 'width: 50px; height: 50px; border: 1px solid #ccc; position: relative; background-size: cover; background-position: top center; border-radius: 4px;';
+            div.style.backgroundImage = `url(${imgSrc})`;
+
+            const btn = document.createElement('button');
+            btn.innerHTML = '&times;';
+            btn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 14px; height: 14px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;';
+            btn.onclick = () => {
+                variant.images.splice(imgIndex, 1);
+                renderVariantBlocks();
+            };
+            div.appendChild(btn);
+            previewContainer.appendChild(div);
+        });
+
+        // Event Bindings
+        // Inputs
+        block.querySelector('.variant-color-hex').addEventListener('input', (e) => variant.colorHex = e.target.value);
+        block.querySelector('.variant-color-name').addEventListener('input', (e) => variant.colorName = e.target.value);
+        block.querySelector('.variant-qty').addEventListener('input', (e) => variant.qty = Number(e.target.value));
+
+        // Remove variant
+        block.querySelector('.remove-variant-btn').addEventListener('click', () => {
+            currentVariants = currentVariants.filter(v => v.id !== variant.id);
+            renderVariantBlocks();
+        });
+
+        // File Handler Helper
+        const handleFiles = (files) => {
+            if (files.length + variant.images.length > 3) {
+                window.showToast('Max 3 images per variant', 'error');
+                return;
+            }
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                compressImage(file, 800, 0.7).then(dataUrl => {
+                    variant.images.push(dataUrl);
+                    renderVariantBlocks();
+                }).catch(err => {
+                    console.error('Compression failing', err);
+                    window.showToast('Failed to process image', 'error');
+                });
+            });
+        };
+
+        // File Input Change
+        block.querySelector('.variant-file-input').addEventListener('change', (e) => {
+            handleFiles(Array.from(e.target.files));
+            e.target.value = '';
+        });
+
+        // Drag and Drop
+        const dropZone = block.querySelector('.variant-drop-zone');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.style.borderColor = '#2C1B10'; });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.style.borderColor = '#D4C9BE'; });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            dropZone.style.borderColor = '#D4C9BE';
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            handleFiles(files);
+        });
+
+        // Open file picker on zone click
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.closest('label')) return;
+            block.querySelector('.variant-file-input').click();
         });
     });
-
-    e.target.value = '';
 }
 
 // Helper: Compress Image using Canvas
@@ -431,26 +501,6 @@ function compressImage(file, maxWidth, quality) {
             img.onerror = (err) => reject(err);
         };
         reader.onerror = (err) => reject(err);
-    });
-}
-
-function renderPreviews() {
-    imagePreviewContainer.innerHTML = '';
-    currentImages.slice(0, 3).forEach((imgSrc, index) => {
-        const div = document.createElement('div');
-        div.style.cssText = 'width: 60px; height: 60px; border: 1px solid #ccc; position: relative; background-size: cover; background-position: center;';
-        div.style.backgroundImage = `url(${imgSrc})`;
-
-        const btn = document.createElement('button');
-        btn.innerHTML = '&times;';
-        btn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;';
-        btn.onclick = () => {
-            currentImages.splice(index, 1);
-            renderPreviews();
-        };
-
-        div.appendChild(btn);
-        imagePreviewContainer.appendChild(div);
     });
 }
 
@@ -526,28 +576,62 @@ function openModal(id = null) {
     productModal.classList.add('active');
     editingId = id;
 
+    const subCategorySelect = document.getElementById('product-subcategory');
+
     if (id) {
         const product = products.find(p => p.id === id);
         modalTitle.textContent = 'EDIT PRODUCT';
-        document.getElementById('product-name').value = product.name;
+        document.getElementById('product-name').value = product.name || '';
         document.getElementById('product-desc').value = product.description || '';
-        document.getElementById('product-price').value = product.price;
-        document.getElementById('product-category').value = product.category || '';
-        document.getElementById('product-qty').value = product.qty;
-        currentImages = product.images || (product.image ? [product.image] : []);
+        document.getElementById('product-price').value = product.price || '';
+
+        const categorySelect = document.getElementById('product-category');
+        categorySelect.value = product.category || '';
+
+        // Trigger category change to populate subcategory dropdown
+        const event = new Event('change');
+        categorySelect.dispatchEvent(event);
+
+        if (product.subcategory) {
+            subCategorySelect.value = product.subcategory;
+        }
+
+        // Load colors/variants (with fallback for legacy without colors array)
+        if (product.colors && Array.isArray(product.colors) && product.colors.length > 0) {
+            currentVariants = JSON.parse(JSON.stringify(product.colors)).map(c => ({
+                id: Date.now() + Math.random(), // generate fresh frontend IDs
+                colorName: c.colorName,
+                colorHex: c.colorHex,
+                qty: c.qty,
+                images: c.images || []
+            }));
+        } else {
+            // Legacy product fallback
+            currentVariants = [{
+                id: Date.now(),
+                colorName: 'Default',
+                colorHex: '#D4C9BE',
+                qty: product.qty || 0,
+                images: product.images || (product.image ? [product.image] : [])
+            }];
+        }
     } else {
         modalTitle.textContent = 'ADD PRODUCT';
         productForm.reset();
-        currentImages = [];
+        subCategorySelect.style.display = 'none';
+        subCategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
+        currentVariants = [];
     }
-    renderPreviews();
+    renderVariantBlocks();
 }
 
 function closeModal() {
     productModal.style.display = 'none';
     productModal.classList.remove('active');
     editingId = null;
-    currentImages = [];
+    currentVariants = [];
+    const container = document.getElementById('variants-container');
+    if (container) container.innerHTML = '';
 }
 
 async function saveProduct() {
@@ -562,11 +646,40 @@ async function saveProduct() {
         const description = document.getElementById('product-desc').value;
         const price = parseFloat(document.getElementById('product-price').value) || 0;
         const category = document.getElementById('product-category').value;
-        const qty = parseInt(document.getElementById('product-qty').value) || 0;
-        const image = currentImages.length > 0 ? currentImages[0] : '';
-        const images = currentImages;
+        const subcategory = document.getElementById('product-subcategory').value || '';
 
-        const payload = { name, description, price, category, qty, image, images };
+        // Calculate backwards-compatible root metrics
+        let totalQty = 0;
+        let allImages = [];
+        const colors = currentVariants.map(v => {
+            totalQty += Number(v.qty) || 0;
+            if (v.images && v.images.length > 0) {
+                allImages.push(...v.images);
+            }
+            return {
+                colorName: v.colorName,
+                colorHex: v.colorHex,
+                qty: Number(v.qty) || 0,
+                images: v.images || []
+            };
+        });
+
+        const image = allImages.length > 0 ? allImages[0] : '';
+        const qty = totalQty;
+        const images = allImages;
+
+        const payload = {
+            name,
+            description,
+            price,
+            category,
+            subcategory,
+            colors,
+            qty,
+            image,
+            images
+        };
+
         console.log('Sending Payload:', payload);
 
         let res;
@@ -603,7 +716,7 @@ async function saveProduct() {
     } finally {
         if (saveBtn) {
             saveBtn.disabled = false;
-            saveBtn.textContent = 'SAVE';
+            saveBtn.textContent = 'SAVE PRODUCT';
         }
     }
 }
@@ -650,11 +763,22 @@ function openOrderModal(id) {
     // Items
     const itemsContainer = document.getElementById('view-order-items');
     itemsContainer.innerHTML = (order.items || []).map(item => {
+        let colorHtml = '';
+        if (item.color) {
+            colorHtml = `
+                <div style="font-size:0.75rem;color:#666;display:flex;align-items:center;gap:0.3rem;margin-top:0.2rem;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:${item.color.hex};display:inline-block;border:1px solid #ddd;"></span>
+                    ${item.color.name}
+                </div>
+            `;
+        }
+
         return `
             <div style="display:flex;align-items:center;justify-content:space-between;padding:0.65rem 0.8rem;border-bottom:1px solid #F0EDE8;">
                 <div style="flex:1;min-width:0;">
                     <div style="font-weight:700;font-size:0.85rem;color:#2C1B10;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
-                    <div style="font-size:0.72rem;color:#A89680;font-weight:600;">Qty: ${item.qty}</div>
+                    ${colorHtml}
+                    <div style="font-size:0.72rem;color:#A89680;font-weight:600;margin-top:0.2rem;">Qty: ${item.qty}</div>
                 </div>
                 <div style="font-weight:800;color:#2C1B10;font-size:0.9rem;flex-shrink:0;margin-left:0.5rem;">₹${item.price || 0}</div>
             </div>

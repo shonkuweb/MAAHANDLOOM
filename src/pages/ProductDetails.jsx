@@ -8,11 +8,18 @@ const ProductDetails = () => {
     const { products, addToCart } = useShop();
     const [product, setProduct] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [selectedColor, setSelectedColor] = useState(null);
 
     useEffect(() => {
         if (products.length > 0) {
             const found = products.find(p => p.id === id);
             setProduct(found);
+            if (found && found.colors && found.colors.length > 0) {
+                setSelectedColor(found.colors[0]);
+            } else {
+                setSelectedColor(null);
+            }
+            setCurrentImageIndex(0);
         }
     }, [products, id]);
 
@@ -25,18 +32,24 @@ const ProductDetails = () => {
         );
     }
 
-    // Prepare images array
-    const images = product.images && product.images.length > 0
-        ? product.images
-        : (product.image ? [product.image] : []);
+    // Determine current images based on selected color or fallback to legacy
+    const images = selectedColor && selectedColor.images.length > 0
+        ? selectedColor.images
+        : (product.images && product.images.length > 0
+            ? product.images
+            : (product.image ? [product.image] : []));
+
+    // Determine current stock handling
+    const currentQty = selectedColor ? selectedColor.qty : product.qty;
 
     const handleAddToCart = () => {
-        addToCart(product.id);
+        // We will update cart logic next to handle passing selectedColor
+        addToCart(product.id, selectedColor);
         alert('Added to cart!');
     };
 
     const handleBuyNow = () => {
-        addToCart(product.id);
+        addToCart(product.id, selectedColor);
         navigate('/checkout');
     };
 
@@ -52,7 +65,7 @@ const ProductDetails = () => {
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                     ) : (
-                        <div style={{ padding: '2rem' }}>NO IMAGE</div>
+                        <div style={{ padding: '2rem', textAlign: 'center' }}>NO IMAGE</div>
                     )}
                 </div>
 
@@ -87,16 +100,51 @@ const ProductDetails = () => {
                     </p>
                 </div>
 
-                {/* Additional Info (Static for now as per HTML) */}
+                {/* Color Variants Area */}
+                {product.colors && product.colors.length > 0 && (
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <h3 style={{ fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '0.75rem', color: '#666' }}>Available Colors</h3>
+                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                            {product.colors.map((c, i) => (
+                                <div
+                                    key={i}
+                                    onClick={() => { setSelectedColor(c); setCurrentImageIndex(0); }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.4rem',
+                                        padding: '0.4rem 0.8rem',
+                                        borderRadius: '30px',
+                                        border: `2px solid ${selectedColor?.colorName === c.colorName ? '#2C1B10' : '#EEE'}`,
+                                        cursor: 'pointer',
+                                        background: selectedColor?.colorName === c.colorName ? '#F9F7F4' : '#FFF',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <span style={{ width: '16px', height: '16px', borderRadius: '50%', background: c.colorHex, border: '1px solid #CCC' }}></span>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: selectedColor?.colorName === c.colorName ? '600' : '400', color: '#333' }}>{c.colorName}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Additional Info */}
                 <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                         <span style={{ color: '#666' }}>Category</span>
                         <span style={{ fontWeight: 'bold' }}>{product.category || 'N/A'}</span>
                     </div>
+                    {product.subcategory && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ color: '#666' }}>Subcategory</span>
+                            <span style={{ fontWeight: 'bold' }}>{product.subcategory}</span>
+                        </div>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ color: '#666' }}>Availability</span>
-                        <span style={{ fontWeight: 'bold', color: product.qty > 0 ? '#2C1B10' : 'red' }}>
-                            {product.qty > 0 ? 'In Stock' : 'Out of Stock'}
+                        <span style={{ fontWeight: 'bold', color: currentQty > 0 ? '#2C1B10' : 'red' }}>
+                            {currentQty > 0 ? `${currentQty} in Stock` : 'Out of Stock'}
                         </span>
                     </div>
                 </div>
