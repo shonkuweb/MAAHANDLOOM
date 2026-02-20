@@ -355,6 +355,58 @@ app.post('/api/payment/create', async (req, res) => {
     }
 });
 
+// HELPER: Decrement Stock on Success
+async function decrementStock(orderId) {
+    try {
+        const order = await new Promise((resolve, reject) => {
+            db.get("SELECT items FROM orders WHERE id = ?", [orderId], (err, row) => err ? reject(err) : resolve(row));
+        });
+        if (!order || !order.items) return;
+
+        const items = JSON.parse(order.items);
+        for (const item of items) {
+            const product = await new Promise((resolve, reject) => {
+                db.get("SELECT id, qty, colors FROM products WHERE id = ?", [item.id], (err, row) => err ? reject(err) : resolve(row));
+            });
+
+            if (!product) continue;
+
+            let updatedColorsStr = product.colors;
+            let updatedQty = product.qty - item.qty;
+            if (updatedQty < 0) updatedQty = 0;
+
+            if (item.color && product.colors && product.colors !== 'null') {
+                try {
+                    const parsedColors = JSON.parse(product.colors);
+                    let colorFound = false;
+                    const newColors = parsedColors.map(c => {
+                        if (c.colorName === item.color.name) {
+                            colorFound = true;
+                            let newCqty = (Number(c.qty) || 0) - item.qty;
+                            return { ...c, qty: Math.max(0, newCqty) };
+                        }
+                        return c;
+                    });
+
+                    if (colorFound) {
+                        updatedColorsStr = JSON.stringify(newColors);
+                    }
+                } catch (e) {
+                    console.error("Error parsing product colors during stock decrement", e);
+                }
+            }
+
+            await new Promise((resolve, reject) => {
+                db.run("UPDATE products SET qty = ?, colors = ? WHERE id = ?", [updatedQty, updatedColorsStr, item.id], (err) => err ? reject(err) : resolve());
+            });
+        }
+        console.log(`Stock decremented successfully for order ${orderId}`);
+    } catch (e) {
+        console.error(`Failed to decrement stock for order ${orderId}:`, e);
+    }
+}
+
+
 // CALLBACK HANDLER
 app.all('/api/payment/callback', async (req, res) => {
     console.log("Payment Callback Received:", req.method, "Query:", req.query, "Body:", req.body);
@@ -368,6 +420,16 @@ app.all('/api/payment/callback', async (req, res) => {
     }
 
     console.log(`Verifying Payment for Order: ${merchantOrderId}`);
+
+    // Check if we already processed it
+    const existingOrder = await new Promise((resolve, reject) => {
+        db.get("SELECT payment_status FROM orders WHERE id = ?", [merchantOrderId], (err, row) => err ? reject(err) : resolve(row));
+    }).catch(e => null);
+
+    if (existingOrder && existingOrder.payment_status === 'success') {
+        console.log(`Order ${merchantOrderId} already processed previously.`);
+        return res.redirect(`/order-confirmation?status=success&orderId=${merchantOrderId}`);
+    }
 
     // 2. Call PhonePe Status API (Source of Truth)
     try {
@@ -391,10 +453,10 @@ app.all('/api/payment/callback', async (req, res) => {
         if (statusData.state === 'COMPLETED') {
             // 3. Update Database (Success)
             console.log("Payment COMPLETED. Updating DB...");
-            db.run("UPDATE orders SET payment_status = 'success', status = 'new' WHERE id = ?", [merchantOrderId], (err) => {
-                if (err) console.error("Callback DB Update Error", err);
+            await new Promise((resolve, reject) => {
+                db.run("UPDATE orders SET payment_status = 'success', status = 'new' WHERE id = ?", [merchantOrderId], (err) => err ? reject(err) : resolve());
             });
-
+            await decrementStock(merchantOrderId);
             return res.redirect(`/order-confirmation?status=success&orderId=${merchantOrderId}`);
         } else if (statusData.state === 'FAILED') {
             console.log("Payment FAILED. Updating DB...");
@@ -435,6 +497,11 @@ app.get('/api/payment/status/:merchantOrderId', async (req, res) => {
         const data = response.data;
         const state = data.state;
 
+        // Check current DB status to avoid double-processing stock
+        const existingOrder = await new Promise((resolve, reject) => {
+            db.get("SELECT payment_status FROM orders WHERE id = ?", [merchantOrderId], (err, row) => err ? reject(err) : resolve(row));
+        }).catch(e => null);
+
         let dbStatus = 'pending';
         let paymentStatus = 'pending';
 
@@ -447,9 +514,14 @@ app.get('/api/payment/status/:merchantOrderId', async (req, res) => {
         }
 
         if (state) {
-            db.run("UPDATE orders SET payment_status = ?, status = ? WHERE id = ?", [paymentStatus, dbStatus, merchantOrderId], (err) => {
-                if (err) console.error("Status Update Error:", err);
+            await new Promise((resolve, reject) => {
+                db.run("UPDATE orders SET payment_status = ?, status = ? WHERE id = ?", [paymentStatus, dbStatus, merchantOrderId], (err) => err ? reject(err) : resolve());
             });
+
+            // Only decrement stock if we newly discovered success
+            if (paymentStatus === 'success' && existingOrder && existingOrder.payment_status !== 'success') {
+                await decrementStock(merchantOrderId);
+            }
         }
 
         res.json({
