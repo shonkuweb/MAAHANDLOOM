@@ -94,9 +94,11 @@ function initDb() {
             description TEXT,
             price REAL NOT NULL,
             category TEXT,
+            subcategory TEXT,
+            colors TEXT, -- JSON string
             qty INTEGER DEFAULT 0,
             image TEXT,
-            images TEXT, 
+            images TEXT, -- JSON string
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`,
         `CREATE TABLE IF NOT EXISTS orders (
