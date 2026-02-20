@@ -389,7 +389,7 @@ function renderVariantBlocks() {
             </div>
             
             <div class="variant-drop-zone" data-id="${variant.id}" style="border: 2px dashed #D4C9BE; border-radius: 8px; padding: 1rem; text-align: center; background: #FFF; cursor: pointer; transition: all 0.2s ease;">
-                <p style="font-size: 0.75rem; color: #8D7B6A; font-weight: 600; margin: 0 0 0.5rem;">Drag & drop variant images here (max 3)</p>
+                <p style="font-size: 0.75rem; color: #8D7B6A; font-weight: 600; margin: 0 0 0.5rem;">Drag & drop variant images here</p>
                 <label for="variant-images-${variant.id}" class="btn-upload-modern" style="margin: 0; font-size: 0.65rem; padding: 0.3rem 0.8rem; display: inline-block;">+ UPLOAD</label>
                 <input type="file" id="variant-images-${variant.id}" class="variant-file-input" data-id="${variant.id}" accept="image/*" multiple style="display: none;">
             </div>
@@ -402,7 +402,7 @@ function renderVariantBlocks() {
 
         // Render current previews for this variant
         const previewContainer = document.getElementById(`variant-previews-${variant.id}`);
-        variant.images.slice(0, 3).forEach((imgSrc, imgIndex) => {
+        variant.images.slice(0, 20).forEach((imgSrc, imgIndex) => {
             const div = document.createElement('div');
             div.style.cssText = 'width: 50px; height: 50px; border: 1px solid #ccc; position: relative; background-size: cover; background-position: top center; border-radius: 4px;';
             div.style.backgroundImage = `url(${imgSrc})`;
@@ -432,8 +432,8 @@ function renderVariantBlocks() {
 
         // File Handler Helper
         const handleFiles = (files) => {
-            if (files.length + variant.images.length > 3) {
-                window.showToast('Max 3 images per variant', 'error');
+            if (files.length + variant.images.length > 20) {
+                window.showToast('Max 20 images per variant', 'error');
                 return;
             }
             files.forEach(file => {
