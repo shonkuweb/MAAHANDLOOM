@@ -284,50 +284,47 @@
                 <button id="close-modal" class="close-modal-modern">&times;</button>
                 <h2 id="modal-title">ADD PRODUCT</h2>
                 <form id="product-form">
-                    <form id="product-form">
-                        <input type="text" id="product-name" placeholder="Product Name" required class="modern-input">
-                        <textarea id="product-desc" placeholder="Product Description (optional)" class="modern-input"
-                            rows="2" style="resize: none;"></textarea>
+                    <input type="text" id="product-name" placeholder="Product Name" required class="modern-input">
+                    <textarea id="product-desc" placeholder="Product Description (optional)" class="modern-input"
+                        rows="2" style="resize: none;"></textarea>
 
-                        <input type="text" id="product-price" placeholder="₹ Price" required class="modern-input">
+                    <input type="text" id="product-price" placeholder="₹ Price" required class="modern-input">
 
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <select id="product-category" class="modern-input" required
-                                style="background: white; flex: 1;">
-                                <option value="" disabled selected>Select Category</option>
-                                <option value="Surat Silk Special">Surat Silk Special</option>
-                                <option value="Handloom Special">Handloom Special</option>
-                                <option value="Shantipuri Special">Shantipuri Special</option>
-                            </select>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <select id="product-category" class="modern-input" required style="background: white; flex: 1;">
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="Surat Silk Special">Surat Silk Special</option>
+                            <option value="Handloom Special">Handloom Special</option>
+                            <option value="Shantipuri Special">Shantipuri Special</option>
+                        </select>
 
-                            <!-- Subcategory (Populated Dynamically) -->
-                            <select id="product-subcategory" class="modern-input"
-                                style="background: white; flex: 1; display: none;">
-                                <option value="" disabled selected>Select Subcategory</option>
-                            </select>
+                        <!-- Subcategory (Populated Dynamically) -->
+                        <select id="product-subcategory" class="modern-input"
+                            style="background: white; flex: 1; display: none;">
+                            <option value="" disabled selected>Select Subcategory</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Variants Container -->
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #EEE;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <p style="margin: 0; font-size: 0.8rem; font-weight: 700; color: #2C1B10;">Color
+                                Variants</p>
+                            <button type="button" id="btn-add-variant" class="btn-save-modern"
+                                style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.7rem; background: #EEE; color: #333;">+
+                                ADD COLOR</button>
                         </div>
-
-                        <!-- Dynamic Variants Container -->
-                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #EEE;">
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <p style="margin: 0; font-size: 0.8rem; font-weight: 700; color: #2C1B10;">Color
-                                    Variants</p>
-                                <button type="button" id="btn-add-variant" class="btn-save-modern"
-                                    style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.7rem; background: #EEE; color: #333;">+
-                                    ADD COLOR</button>
-                            </div>
-                            <div id="variants-container">
-                                <!-- Variant blocks will be injected here by JS -->
-                            </div>
+                        <div id="variants-container">
+                            <!-- Variant blocks will be injected here by JS -->
                         </div>
+                    </div>
 
-                        <!-- Hidden old inputs for backwards compatibility with legacy logic if needed, but we will fully replace them in JS -->
-                        <input type="file" id="camera-input" accept="image/*" capture="environment"
-                            style="display: none;">
+                    <!-- Hidden old inputs for backwards compatibility with legacy logic if needed, but we will fully replace them in JS -->
+                    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
 
-                        <button type="submit" class="btn-save-modern" style="margin-top: 1rem;">SAVE PRODUCT</button>
-                    </form>
+                    <button type="submit" class="btn-save-modern" style="margin-top: 1rem;">SAVE PRODUCT</button>
+                </form>
             </div>
         </div>
         <!-- Order Details Modal -->
