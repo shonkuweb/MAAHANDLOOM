@@ -83,22 +83,31 @@ app.use(bodyParser.json({ limit: '100mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
 
 // --- STATIC FILES ---
-// Serve built React app
+// Static files
 app.use(express.static(path.join(__dirname, '../dist')));
-// Serve legacy pages/public assets
-app.use(express.static(path.join(__dirname, '../public')));
-// Serve moved static pages (for admin.html etc if not in dist)
-// Note: Vite build will put them in dist, but for dev or direct access:
-app.use(express.static(path.join(__dirname, '../pages')));
+app.use('/assets', express.static(path.join(__dirname, '../dist/assets'))); // Explicit for Vite
+app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
-// Explicitly route /admin-login to the login page
 app.get('/admin-login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../pages/admin-login.html'));
+    const isProd = process.env.NODE_ENV === 'production';
+    const filePath = isProd
+        ? path.join(__dirname, '../dist/pages/admin-login.html')
+        : path.join(__dirname, '../pages/admin-login.html');
+
+    res.sendFile(filePath, (err) => {
+        if (err) res.status(404).send('Admin Login not found. Check build.');
+    });
 });
 
-// Explicitly route /admin to the legacy admin.html
 app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, '../pages/admin.html'));
+    const isProd = process.env.NODE_ENV === 'production';
+    const filePath = isProd
+        ? path.join(__dirname, '../dist/pages/admin.html')
+        : path.join(__dirname, '../pages/admin.html');
+
+    res.sendFile(filePath, (err) => {
+        if (err) res.status(404).send('Admin Panel not found. Check build.');
+    });
 });
 
 // Token verification endpoint
