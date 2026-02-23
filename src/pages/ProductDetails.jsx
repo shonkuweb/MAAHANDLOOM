@@ -10,6 +10,10 @@ const ProductDetails = () => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [selectedColor, setSelectedColor] = useState(null);
 
+    // Swipe states
+    const [touchStart, setTouchStart] = useState(null);
+    const [touchEnd, setTouchEnd] = useState(null);
+
     useEffect(() => {
         if (products.length > 0) {
             const found = products.find(p => p.id === id);
@@ -53,17 +57,69 @@ const ProductDetails = () => {
         navigate('/checkout');
     };
 
+    // Swipe handlers
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+
+        if (isLeftSwipe && currentImageIndex < images.length - 1) {
+            setCurrentImageIndex(prev => prev + 1);
+        }
+        if (isRightSwipe && currentImageIndex > 0) {
+            setCurrentImageIndex(prev => prev - 1);
+        }
+    };
+
     return (
         <main style={{ padding: '1rem', paddingBottom: '5rem' }}>
             <div className="product-detail-container">
                 {/* Image Gallery */}
-                <div className="detail-image-container">
+                <div className="detail-image-container"
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                    style={{ position: 'relative', overflow: 'hidden' }}>
                     {images.length > 0 ? (
-                        <img
-                            src={images[currentImageIndex]}
-                            alt={product.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
+                        <>
+                            <img
+                                src={images[currentImageIndex]}
+                                alt={product.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                            {images.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            setCurrentImageIndex(prev => Math.max(0, prev - 1));
+                                        }}
+                                        style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.8)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, boxShadow: '0 2px 5px rgba(0,0,0,0.2)', color: '#2C1B10', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                        &#10094;
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            setCurrentImageIndex(prev => Math.min(images.length - 1, prev + 1));
+                                        }}
+                                        style={{ position: 'absolute', top: '50%', right: '10px', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.8)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, boxShadow: '0 2px 5px rgba(0,0,0,0.2)', color: '#2C1B10', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                        &#10095;
+                                    </button>
+                                </>
+                            )}
+                        </>
                     ) : (
                         <div style={{ padding: '2rem', textAlign: 'center' }}>NO IMAGE</div>
                     )}
