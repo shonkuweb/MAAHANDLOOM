@@ -180,14 +180,32 @@ function setupListeners() {
         settingsBtn.addEventListener('click', () => switchView('settings'));
     }
 
-    // Change Password Form Logic
-    const changePasswordForm = document.getElementById('change-password-form');
-    if (changePasswordForm) {
-        changePasswordForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const currentPassword = document.getElementById('current-password').value;
-            const newPassword = document.getElementById('new-password').value;
-            const confirmNewPassword = document.getElementById('confirm-new-password').value;
+    // Change Password Logic (Click Listener)
+    const initPasswordListener = () => {
+        const submitBtn = document.getElementById('submit-password-btn');
+        if (!submitBtn) {
+            console.warn("Change password button not found in DOM");
+            return;
+        }
+
+        // Prevent attaching multiple times
+        const newBtn = submitBtn.cloneNode(true);
+        submitBtn.parentNode.replaceChild(newBtn, submitBtn);
+
+        newBtn.addEventListener('click', async () => {
+            console.log("Password button clicked!");
+            const currentPasswordInput = document.getElementById('current-password');
+            const newPasswordInput = document.getElementById('new-password');
+            const confirmNewPasswordInput = document.getElementById('confirm-new-password');
+
+            const currentPassword = currentPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+            const confirmNewPassword = confirmNewPasswordInput.value;
+
+            if (!currentPassword || !newPassword || !confirmNewPassword) {
+                window.showToast('Please fill out all fields.', 'error');
+                return;
+            }
 
             if (newPassword !== confirmNewPassword) {
                 window.showToast('New passwords do not match.', 'error');
@@ -199,6 +217,9 @@ function setupListeners() {
                 return;
             }
 
+            newBtn.disabled = true;
+            newBtn.textContent = 'Updating...';
+
             try {
                 const res = await fetch('/api/admin/password', {
                     method: 'PUT',
@@ -209,16 +230,25 @@ function setupListeners() {
                 const data = await res.json();
                 if (res.ok && data.success) {
                     window.showToast('Password successfully changed!', 'success');
-                    changePasswordForm.reset();
+                    currentPasswordInput.value = '';
+                    newPasswordInput.value = '';
+                    confirmNewPasswordInput.value = '';
                 } else {
                     window.showToast(data.error || 'Failed to change password.', 'error');
                 }
             } catch (err) {
                 console.error("Password change error:", err);
                 window.showToast('Server error when changing password.', 'error');
+            } finally {
+                newBtn.disabled = false;
+                newBtn.textContent = 'Change Password';
             }
         });
-    }
+    };
+
+    // Call listener init
+    initPasswordListener();
+
 
     filterBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
