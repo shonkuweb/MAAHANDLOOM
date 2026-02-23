@@ -74,6 +74,27 @@ function initDb() {
             // Ignore error if column already exists
         });
 
+        // Admin Settings Table
+        db.run(`CREATE TABLE IF NOT EXISTS admin_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            passcode TEXT NOT NULL,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`, (err) => {
+            if (err) {
+                console.error("Error creating admin_settings table:", err);
+            } else {
+                // Seed with .env password if empty
+                db.get("SELECT COUNT(*) as count FROM admin_settings", (err, row) => {
+                    if (!err && row.count === 0) {
+                        const defaultPasscode = process.env.ADMIN_PASSCODE || 'admin123';
+                        db.run("INSERT INTO admin_settings (passcode) VALUES (?)", [defaultPasscode], (err) => {
+                            if (!err) console.log("Seeded admin_settings with environment passcode.");
+                        });
+                    }
+                });
+            }
+        });
+
         console.log('Database tables initialized.');
     });
 }

@@ -675,13 +675,54 @@ app.put('/api/orders/:id', requireAuth, (req, res) => {
 });
 
 app.post('/api/auth/login', (req, res) => {
-    // BYPASS AUTHENTICATION AS REQUESTED
-    const token = jwt.sign(
-        { role: 'admin', loginTime: Date.now() },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-    );
-    res.json({ success: true, token });
+    const { password } = req.body;
+
+    if (!password) {
+        return res.status(400).json({ success: false, error: 'Password required' });
+    }
+
+    db.get('SELECT passcode FROM admin_settings ORDER BY id DESC LIMIT 1', [], (err, row) => {
+        if (err) {
+            console.error("Login DB Error:", err);
+            return res.status(500).json({ success: false, error: 'Database error' });
+        }
+        if (!row) {
+            return res.status(500).json({ success: false, error: 'Admin settings not initialized' });
+        }
+
+        if (password === row.passcode) {
+            const token = jwt.sign(
+                { role: 'admin', loginTime: Date.now() },
+                JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+            return res.json({ success: true, token });
+        } else {
+            return res.status(401).json({ success: false, error: 'Invalid passcode' });
+        }
+    });
+});
+
+app.put('/api/admin/password', requireAuth, (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+        return res.status(400).json({ success: false, error: 'Both current and new passwords are required' });
+    }
+
+    db.get('SELECT id, passcode FROM admin_settings ORDER BY id DESC LIMIT 1', [], (err, row) => {
+        if (err) return res.status(500).json({ success: false, error: 'Database error' });
+        if (!row) return res.status(500).json({ success: false, error: 'Admin settings not initialized' });
+
+        if (oldPassword !== row.passcode) {
+            return res.status(401).json({ success: false, error: 'Incorrect current password' });
+        }
+
+        db.run('UPDATE admin_settings SET passcode = ? WHERE id = ?', [newPassword, row.id], (err) => {
+            if (err) return res.status(500).json({ success: false, error: 'Failed to update password' });
+            res.json({ success: true, message: 'Password updated successfully' });
+        });
+    });
 });
 
 app.delete('/api/products/:id', requireAuth, (req, res) => {

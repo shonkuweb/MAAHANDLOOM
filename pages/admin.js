@@ -172,8 +172,53 @@ function setupListeners() {
         overlay.addEventListener('click', closeSidebar);
     }
 
+    const settingsBtn = document.getElementById('btn-settings');
+
     productsBtn.addEventListener('click', () => switchView('products'));
     ordersBtn.addEventListener('click', () => switchView('orders'));
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => switchView('settings'));
+    }
+
+    // Change Password Form Logic
+    const changePasswordForm = document.getElementById('change-password-form');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+            if (newPassword !== confirmNewPassword) {
+                window.showToast('New passwords do not match.', 'error');
+                return;
+            }
+
+            if (newPassword.length < 5) {
+                window.showToast('New password too short.', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/password', {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ oldPassword: currentPassword, newPassword: newPassword })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    window.showToast('Password successfully changed!', 'success');
+                    changePasswordForm.reset();
+                } else {
+                    window.showToast(data.error || 'Failed to change password.', 'error');
+                }
+            } catch (err) {
+                console.error("Password change error:", err);
+                window.showToast('Server error when changing password.', 'error');
+            }
+        });
+    }
 
     filterBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -507,24 +552,52 @@ function compressImage(file, maxWidth, quality) {
 function switchView(view) {
     currentView = view;
 
+    // Safety check for elements
+    const settingsBtn = document.getElementById('btn-settings');
+    const settingsSec = document.getElementById('settings-section');
+
     if (view === 'products') {
         productsBtn.classList.add('active');
         ordersBtn.classList.remove('active');
+        if (settingsBtn) settingsBtn.classList.remove('active');
+
         productFilterSection.style.display = 'flex';
         orderFilterSection.style.display = 'none';
+        if (settingsSec) settingsSec.style.display = 'none';
+
         if (resetDbBtn) resetDbBtn.style.display = 'block';
         if (delCompletedBtn) delCompletedBtn.style.display = 'none';
-    } else {
+        listContainer.style.display = 'block';
+
+    } else if (view === 'orders') {
         productsBtn.classList.remove('active');
         ordersBtn.classList.add('active');
+        if (settingsBtn) settingsBtn.classList.remove('active');
+
         productFilterSection.style.display = 'none';
         orderFilterSection.style.display = 'flex';
+        if (settingsSec) settingsSec.style.display = 'none';
+
         if (resetDbBtn) resetDbBtn.style.display = 'none';
         if (delCompletedBtn) delCompletedBtn.style.display = 'block';
+        listContainer.style.display = 'block';
+
+    } else if (view === 'settings') {
+        productsBtn.classList.remove('active');
+        ordersBtn.classList.remove('active');
+        if (settingsBtn) settingsBtn.classList.add('active');
+
+        productFilterSection.style.display = 'none';
+        orderFilterSection.style.display = 'none';
+        if (settingsSec) settingsSec.style.display = 'block';
+
+        if (resetDbBtn) resetDbBtn.style.display = 'none';
+        if (delCompletedBtn) delCompletedBtn.style.display = 'none';
+        listContainer.style.display = 'none';
     }
 
     checkAddButtonVisibility();
-    render();
+    if (view !== 'settings') render();
 }
 
 function checkAddButtonVisibility() {

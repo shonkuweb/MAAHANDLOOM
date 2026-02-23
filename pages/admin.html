@@ -224,10 +224,13 @@
                 </svg></a></div>
     </aside>
     <main style="padding: 1rem; padding-top: 2rem;">
-        <!-- Toggle (Products / Orders) -->
+        <!-- Toggle (Products / Orders / Settings) -->
         <div class="admin-toggle-container">
-            <div class="toggle-wrapper"><button id="btn-products" class="toggle-btn active">products</button><button
-                    id="btn-orders" class="toggle-btn">orders</button></div>
+            <div class="toggle-wrapper">
+                <button id="btn-products" class="toggle-btn active">products</button>
+                <button id="btn-orders" class="toggle-btn">orders</button>
+                <button id="btn-settings" class="toggle-btn">settings</button>
+            </div>
         </div>
         <!-- Add Product Button --><button id="add-product-btn" class="btn-add-product-modern">+ADD PRODUCT
         </button>
@@ -263,6 +266,34 @@
         <!-- List Container -->
         <div id="admin-list" class="admin-list">
             <!-- JS renders items here -->
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings-section" style="display: none; max-width: 500px; margin: 2rem auto;">
+            <div class="admin-card"
+                style="background: white; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 12px; padding: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; text-align: center; color: #2C1B10;">Change Admin Password</h3>
+                <form id="change-password-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 600; color: #555;">Current Password</label>
+                        <input type="password" id="current-password" class="modern-input" required
+                            style="margin-top: 0.2rem;" autocomplete="off">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 600; color: #555;">New Password</label>
+                        <input type="password" id="new-password" class="modern-input" required
+                            style="margin-top: 0.2rem;" autocomplete="new-password">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 600; color: #555;">Confirm New Password</label>
+                        <input type="password" id="confirm-new-password" class="modern-input" required
+                            style="margin-top: 0.2rem;" autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="view-btn"
+                        style="background: #2C1B10; color: white; margin-top: 1rem; padding: 0.8rem; border-radius: 8px;">Change
+                        Password</button>
+                </form>
+            </div>
         </div>
 
         <!-- Danger Zone -->

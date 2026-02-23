@@ -126,6 +126,11 @@ function initDb() {
             status TEXT DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`,
+        `CREATE TABLE IF NOT EXISTS admin_settings (
+            id SERIAL PRIMARY KEY,
+            passcode TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS colors TEXT;`
     ];
@@ -139,6 +144,19 @@ function initDb() {
                 console.error('Table creation error:', err);
             }
         }
+
+        // Seed admin_settings table if empty
+        try {
+            const result = await pool.query('SELECT COUNT(*) FROM admin_settings');
+            if (parseInt(result.rows[0].count) === 0) {
+                const defaultPasscode = process.env.ADMIN_PASSCODE || 'admin123';
+                await pool.query('INSERT INTO admin_settings (passcode) VALUES ($1)', [defaultPasscode]);
+                console.log("Seeded admin_settings with environment passcode.");
+            }
+        } catch (err) {
+            console.error('Error seeding admin_settings:', err);
+        }
+
         console.log("Database schema initialization complete.");
     };
 
