@@ -9,6 +9,7 @@ export default defineConfig({
             input: {
                 main: resolve(__dirname, 'index.html'),
                 admin: resolve(__dirname, 'pages/admin.html'),
+                adminLogin: resolve(__dirname, 'pages/admin-login.html'),
                 about: resolve(__dirname, 'pages/about.html'),
                 categories: resolve(__dirname, 'pages/categories.html'),
                 contact: resolve(__dirname, 'pages/contact.html'),
