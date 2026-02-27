@@ -690,16 +690,21 @@ app.post('/api/auth/login', (req, res) => {
         return res.status(400).json({ success: false, error: 'Password required' });
     }
 
+    // Default fallback from ENV in case DB is still initializing or seeding failed
+    const fallbackPassword = process.env.ADMIN_PASSCODE || 'admin123';
+
     db.get('SELECT passcode FROM admin_settings ORDER BY id DESC LIMIT 1', [], (err, row) => {
+        let validPassword = fallbackPassword;
+
         if (err) {
-            console.error("Login DB Error:", err);
-            return res.status(500).json({ success: false, error: 'Database error' });
-        }
-        if (!row) {
-            return res.status(500).json({ success: false, error: 'Admin settings not initialized' });
+            console.error("Login DB Error (falling back to ENV):", err.message);
+        } else if (row && row.passcode) {
+            validPassword = row.passcode;
+        } else {
+            console.warn("Admin settings not initialized yet (falling back to ENV).");
         }
 
-        if (password === row.passcode) {
+        if (password === validPassword) {
             const token = jwt.sign(
                 { role: 'admin', loginTime: Date.now() },
                 JWT_SECRET,
