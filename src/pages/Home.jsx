@@ -77,6 +77,9 @@ const Home = () => {
                             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                     </div>
                     <span className="cat-label">Surat Silk<br />Special</span>
+                    <span className="cat-count" style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.2rem', fontWeight: '600' }}>
+                        {products.filter(p => p.category === 'Surat Silk Special').length + 7} Products
+                    </span>
                 </Link>
                 <Link to="/category/handloom" className="category-item" style={{ textDecoration: 'none' }}>
                     <div className="cat-circle">
@@ -84,6 +87,9 @@ const Home = () => {
                             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                     </div>
                     <span className="cat-label">Handloom<br />Special</span>
+                    <span className="cat-count" style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.2rem', fontWeight: '600' }}>
+                        {products.filter(p => p.category === 'Handloom Special').length + 7} Products
+                    </span>
                 </Link>
                 <Link to="/category/shantipuri" className="category-item" style={{ textDecoration: 'none' }}>
                     <div className="cat-circle">
@@ -91,6 +97,9 @@ const Home = () => {
                             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                     </div>
                     <span className="cat-label">Shantipuri<br />Special</span>
+                    <span className="cat-count" style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.2rem', fontWeight: '600' }}>
+                        {products.filter(p => p.category === 'Shantipuri Special').length + 6} Products
+                    </span>
                 </Link>
             </section>
 
