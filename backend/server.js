@@ -185,7 +185,7 @@ async function getPhonePeToken() {
 
 // PRODUCTS
 app.get('/api/products', (req, res) => {
-    db.all("SELECT * FROM products", [], (err, rows) => {
+    db.all("SELECT * FROM products ORDER BY display_index ASC, created_at DESC", [], (err, rows) => {
         if (err) {
             console.error("Fetch Products Error:", err);
             return res.status(500).json({ error: err.message });
@@ -208,21 +208,22 @@ app.get('/api/products', (req, res) => {
 });
 
 app.post('/api/products', requireAuth, (req, res) => {
-    const { id, name, description, price, category, subcategory, colors, qty, image, images } = req.body;
+    const { id, name, description, price, category, subcategory, colors, qty, image, images, display_index } = req.body;
     const finalId = id || 'P' + Date.now();
     const imagesStr = JSON.stringify(images || []);
     const colorsStr = JSON.stringify(colors || []);
 
     db.get("SELECT id FROM products WHERE id = ?", [finalId], (err, row) => {
+        const dIndex = parseInt(display_index) || 999;
         if (row) {
-            const sql = `UPDATE products SET name = ?, description = ?, price = ?, category = ?, subcategory = ?, colors = ?, qty = ?, image = ?, images = ? WHERE id = ?`;
-            db.run(sql, [name, description, price, category, subcategory, colorsStr, qty, image, imagesStr, finalId], function (err) {
+            const sql = `UPDATE products SET name = ?, description = ?, price = ?, category = ?, subcategory = ?, colors = ?, qty = ?, image = ?, images = ?, display_index = ? WHERE id = ?`;
+            db.run(sql, [name, description, price, category, subcategory, colorsStr, qty, image, imagesStr, dIndex, finalId], function (err) {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ message: 'Product updated', id: finalId });
             });
         } else {
-            const sql = `INSERT INTO products (id, name, description, price, category, subcategory, colors, qty, image, images) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-            db.run(sql, [finalId, name, description, price, category, subcategory, colorsStr, qty, image, imagesStr], function (err) {
+            const sql = `INSERT INTO products (id, name, description, price, category, subcategory, colors, qty, image, images, display_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            db.run(sql, [finalId, name, description, price, category, subcategory, colorsStr, qty, image, imagesStr, dIndex], function (err) {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ message: 'Product created', id: finalId });
             });
@@ -231,13 +232,14 @@ app.post('/api/products', requireAuth, (req, res) => {
 });
 
 app.put('/api/products/:id', requireAuth, (req, res) => {
-    const { name, description, price, category, subcategory, colors, qty, image, images } = req.body;
+    const { name, description, price, category, subcategory, colors, qty, image, images, display_index } = req.body;
     const finalId = req.params.id;
     const imagesStr = JSON.stringify(images || []);
     const colorsStr = JSON.stringify(colors || []);
+    const dIndex = parseInt(display_index) || 999;
 
-    const sql = `UPDATE products SET name = ?, description = ?, price = ?, category = ?, subcategory = ?, colors = ?, qty = ?, image = ?, images = ? WHERE id = ?`;
-    db.run(sql, [name, description, price, category, subcategory, colorsStr, qty, image, imagesStr, finalId], function (err) {
+    const sql = `UPDATE products SET name = ?, description = ?, price = ?, category = ?, subcategory = ?, colors = ?, qty = ?, image = ?, images = ?, display_index = ? WHERE id = ?`;
+    db.run(sql, [name, description, price, category, subcategory, colorsStr, qty, image, imagesStr, dIndex, finalId], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Product updated', id: finalId });
     });

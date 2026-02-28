@@ -687,6 +687,7 @@ function openModal(id = null) {
         document.getElementById('product-name').value = product.name || '';
         document.getElementById('product-desc').value = product.description || '';
         document.getElementById('product-price').value = product.price || '';
+        document.getElementById('product-index').value = product.display_index || 999;
 
         const categorySelect = document.getElementById('product-category');
         categorySelect.value = product.category || '';
@@ -721,6 +722,7 @@ function openModal(id = null) {
     } else {
         modalTitle.textContent = 'ADD PRODUCT';
         productForm.reset();
+        document.getElementById('product-index').value = 999;
         subCategorySelect.style.display = 'none';
         subCategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
         currentVariants = [];
@@ -750,6 +752,7 @@ async function saveProduct() {
         const price = parseFloat(document.getElementById('product-price').value) || 0;
         const category = document.getElementById('product-category').value;
         const subcategory = document.getElementById('product-subcategory').value || '';
+        const display_index = parseInt(document.getElementById('product-index').value) || 999;
 
         // Calculate backwards-compatible root metrics
         let totalQty = 0;
@@ -780,7 +783,8 @@ async function saveProduct() {
             colors,
             qty,
             image,
-            images
+            images,
+            display_index
         };
 
         console.log('Sending Payload:', payload);

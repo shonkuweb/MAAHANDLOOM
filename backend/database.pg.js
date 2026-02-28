@@ -99,6 +99,7 @@ function initDb() {
             qty INTEGER DEFAULT 0,
             image TEXT,
             images TEXT, -- JSON string
+            display_index INTEGER DEFAULT 999,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`,
         `CREATE TABLE IF NOT EXISTS orders (
@@ -132,7 +133,8 @@ function initDb() {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;`,
-        `ALTER TABLE products ADD COLUMN IF NOT EXISTS colors TEXT;`
+        `ALTER TABLE products ADD COLUMN IF NOT EXISTS colors TEXT;`,
+        `ALTER TABLE products ADD COLUMN IF NOT EXISTS display_index INTEGER DEFAULT 999;`
     ];
 
     const runQueries = async () => {

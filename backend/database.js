@@ -29,6 +29,7 @@ function initDb() {
             qty INTEGER DEFAULT 0,
             image TEXT,
             images TEXT, -- JSON string
+            display_index INTEGER DEFAULT 999,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`, (err) => {
             if (err) console.error("Error creating products table:", err);
@@ -71,6 +72,9 @@ function initDb() {
             // Ignore error if column already exists
         });
         db.run(`ALTER TABLE products ADD COLUMN colors TEXT`, (err) => {
+            // Ignore error if column already exists
+        });
+        db.run(`ALTER TABLE products ADD COLUMN display_index INTEGER DEFAULT 999`, (err) => {
             // Ignore error if column already exists
         });
 
