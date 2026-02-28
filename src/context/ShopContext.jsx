@@ -25,7 +25,13 @@ export const ShopProvider = ({ children }) => {
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch('/api/products');
+            const res = await fetch('/api/products', {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
             if (res.ok) {
                 const data = await res.json();
                 setProducts(data);

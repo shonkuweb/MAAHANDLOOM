@@ -45,7 +45,13 @@ function getAuthHeaders() {
 async function fetchData() {
     try {
         const [pRes, oRes] = await Promise.all([
-            fetch('/api/products'),
+            fetch('/api/products', {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            }),
             fetch('/api/orders')
         ]);
 
