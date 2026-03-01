@@ -78,7 +78,7 @@ const Home = () => {
                     </div>
                     <span className="cat-label">Surat Silk<br />Special</span>
                     <span className="cat-count" style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.2rem', fontWeight: '600' }}>
-                        {products.filter(p => p.category === 'Surat Silk Special').length + 7} Products
+                        {products.filter(p => p.category === 'Surat Silk Special').length} Products
                     </span>
                 </Link>
                 <Link to="/category/handloom" className="category-item" style={{ textDecoration: 'none' }}>
@@ -88,7 +88,7 @@ const Home = () => {
                     </div>
                     <span className="cat-label">Handloom<br />Special</span>
                     <span className="cat-count" style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.2rem', fontWeight: '600' }}>
-                        {products.filter(p => p.category === 'Handloom Special').length + 7} Products
+                        {products.filter(p => p.category === 'Handloom Special').length} Products
                     </span>
                 </Link>
                 <Link to="/category/shantipuri" className="category-item" style={{ textDecoration: 'none' }}>
@@ -98,7 +98,7 @@ const Home = () => {
                     </div>
                     <span className="cat-label">Shantipuri<br />Special</span>
                     <span className="cat-count" style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.2rem', fontWeight: '600' }}>
-                        {products.filter(p => p.category === 'Shantipuri Special').length + 6} Products
+                        {products.filter(p => p.category === 'Shantipuri Special').length} Products
                     </span>
                 </Link>
             </section>

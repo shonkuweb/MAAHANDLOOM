@@ -82,7 +82,7 @@ async function fetchData() {
         const btnOrders = document.getElementById('btn-orders');
         if (btnOrders) btnOrders.innerHTML = `ORDERS <span class="order-counter">${orders.length}</span>`;
         const btnProducts = document.getElementById('btn-products');
-        if (btnProducts) btnProducts.innerHTML = `PRODUCTS <span class="order-counter">${products.length + 20}</span>`;
+        if (btnProducts) btnProducts.innerHTML = `PRODUCTS <span class="order-counter">${products.length}</span>`;
 
     } catch (e) {
         console.error('Admin Fetch Failed', e);
@@ -988,7 +988,7 @@ function render() {
 
     const btnProducts = document.getElementById('btn-products');
     if (btnProducts) {
-        btnProducts.innerHTML = `PRODUCTS <span class="order-counter">${products.length + 20}</span>`;
+        btnProducts.innerHTML = `PRODUCTS <span class="order-counter">${products.length}</span>`;
     }
 
     let itemsToRender = [];
