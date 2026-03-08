@@ -25,16 +25,40 @@ export const ShopProvider = ({ children }) => {
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch('/api/products', {
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
+            let page = 1;
+            const limit = 6;
+            let hasMore = true;
+            let allFetchedProducts = [];
+
+            while (hasMore) {
+                const res = await fetch(`/api/products?limit=${limit}&page=${page}`, {
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+
+                if (!res.ok) {
+                    throw new Error('Failed to fetch products');
                 }
-            });
-            if (res.ok) {
+
                 const data = await res.json();
-                setProducts(data);
+
+                if (data.length === 0) {
+                    hasMore = false; // No more products to fetch
+                } else {
+                    allFetchedProducts = [...allFetchedProducts, ...data];
+                    // Update state progressively so UI updates immediately
+                    setProducts(allFetchedProducts);
+
+                    // If we received fewer items than the limit, we've reached the end
+                    if (data.length < limit) {
+                        hasMore = false;
+                    } else {
+                        page++;
+                    }
+                }
             }
         } catch (error) {
             console.error('Failed to fetch products', error);

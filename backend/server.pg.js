@@ -48,7 +48,18 @@ const processPayment = (req, res, next) => {
 // PRODUCTS
 app.get('/api/products', async (req, res) => {
     try {
-        const { rows } = await db.query("SELECT * FROM products");
+        let sql = "SELECT * FROM products ORDER BY created_at DESC";
+        const params = [];
+
+        if (req.query.limit) {
+            const limit = parseInt(req.query.limit);
+            const page = parseInt(req.query.page) || 1;
+            const offset = (page - 1) * limit;
+            sql += ` LIMIT $1 OFFSET $2`;
+            params.push(limit, offset);
+        }
+
+        const { rows } = await db.query(sql, params);
         // Parse JSON fields
         const products = rows.map(p => ({
             ...p,

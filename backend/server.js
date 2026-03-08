@@ -185,7 +185,20 @@ async function getPhonePeToken() {
 
 // PRODUCTS
 app.get('/api/products', (req, res) => {
-    db.all("SELECT * FROM products ORDER BY display_index ASC, created_at DESC", [], (err, rows) => {
+    let limitClause = '';
+    const params = [];
+
+    if (req.query.limit) {
+        const limit = parseInt(req.query.limit);
+        const page = parseInt(req.query.page) || 1;
+        const offset = (page - 1) * limit;
+        limitClause = ` LIMIT ? OFFSET ?`;
+        params.push(limit, offset);
+    }
+
+    const sql = `SELECT * FROM products ORDER BY display_index ASC, created_at DESC${limitClause}`;
+
+    db.all(sql, params, (err, rows) => {
         if (err) {
             console.error("Fetch Products Error:", err);
             return res.status(500).json({ error: err.message });
@@ -197,7 +210,7 @@ app.get('/api/products', (req, res) => {
                 images: (p.images && p.images !== 'null') ? JSON.parse(p.images) : [],
                 colors: (p.colors && p.colors !== 'null') ? JSON.parse(p.colors) : []
             }));
-            console.log(`Fetched ${products.length} products`);
+            console.log(`Fetched ${products.length} products (Page: ${req.query.page || 'All'}, Limit: ${req.query.limit || 'All'})`);
             res.json(products);
         } catch (parseErr) {
             console.error("Product Parse Error:", parseErr);
