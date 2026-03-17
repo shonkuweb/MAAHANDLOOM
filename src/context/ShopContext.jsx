@@ -26,7 +26,7 @@ export const ShopProvider = ({ children }) => {
     const fetchProducts = async () => {
         try {
             let page = 1;
-            const limit = 6;
+            const limit = 4;
             let hasMore = true;
             let allFetchedProducts = [];
 
