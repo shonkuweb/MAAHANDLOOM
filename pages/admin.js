@@ -547,7 +547,7 @@ function renderVariantBlocks() {
 
         // Render current previews for this variant
         const previewContainer = document.getElementById(`variant-previews-${variant.id}`);
-        variant.images.slice(0, 20).forEach((imgSrc, imgIndex) => {
+        variant.images.slice(0, 3).forEach((imgSrc, imgIndex) => {
             const div = document.createElement('div');
             div.style.cssText = 'width: 50px; height: 50px; border: 1px solid #ccc; position: relative; background-size: cover; background-position: top center; border-radius: 4px;';
             div.style.backgroundImage = `url(${imgSrc})`;
@@ -577,15 +577,17 @@ function renderVariantBlocks() {
 
         // File Handler Helper
         const handleFiles = (files) => {
-            if (files.length + variant.images.length > 20) {
-                window.showToast('Max 20 images per variant', 'error');
+            if (files.length + variant.images.length > 3) {
+                window.showToast('Max 3 images per variant allowed', 'error');
                 return;
             }
             files.forEach(file => {
                 if (!file.type.startsWith('image/')) return;
                 compressImage(file, 800, 0.7).then(dataUrl => {
-                    variant.images.push(dataUrl);
-                    renderVariantBlocks();
+                    if (variant.images.length < 3) {
+                        variant.images.push(dataUrl);
+                        renderVariantBlocks();
+                    }
                 }).catch(err => {
                     console.error('Compression failing', err);
                     window.showToast('Failed to process image', 'error');
