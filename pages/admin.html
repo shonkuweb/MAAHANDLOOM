@@ -339,6 +339,18 @@
                         </select>
                     </div>
 
+                    <!-- Top-Level Product Images Container -->
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #EEE;">
+                        <p style="margin: 0; font-size: 0.8rem; font-weight: 700; color: #2C1B10; margin-bottom: 0.5rem;">Product Images (Max 3)</p>
+                        <div id="product-drop-zone" style="border: 2px dashed #D4C9BE; border-radius: 8px; padding: 1rem; text-align: center; background: #FFF; cursor: pointer; transition: all 0.2s ease;">
+                            <p style="font-size: 0.75rem; color: #8D7B6A; font-weight: 600; margin: 0 0 0.5rem;">Drag & drop up to 3 product images here</p>
+                            <label for="product-images-input" class="btn-upload-modern" style="margin: 0; font-size: 0.65rem; padding: 0.3rem 0.8rem; display: inline-block;">+ UPLOAD</label>
+                            <input type="file" id="product-images-input" accept="image/*" multiple style="display: none;">
+                        </div>
+                        <div id="product-image-previews" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                        </div>
+                    </div>
+
                     <!-- Dynamic Variants Container -->
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #EEE;">
                         <div
