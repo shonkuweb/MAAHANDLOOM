@@ -483,9 +483,22 @@ function showConfirm(msg, onConfirm) {
     msgEl.textContent = msg;
     modal.classList.add('active');
 
+    const handleKeydown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            onConfirm();
+            close();
+        } else if (e.key === 'Escape') {
+            close();
+        }
+    };
+
     const close = () => {
         modal.classList.remove('active');
+        document.removeEventListener('keydown', handleKeydown);
     };
+
+    document.addEventListener('keydown', handleKeydown);
 
     newYes.addEventListener('click', () => {
         onConfirm();
