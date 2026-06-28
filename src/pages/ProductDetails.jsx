@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 
@@ -12,22 +12,25 @@ const ProductDetails = () => {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
 
-    // Swipe states
-    const [touchStart, setTouchStart] = useState(null);
-    const [touchEnd, setTouchEnd] = useState(null);
+    // Swipe refs (avoids re-renders during swipe)
+    const touchStartX = useRef(null);
+    const touchEndX = useRef(null);
 
     useEffect(() => {
         if (products.length > 0) {
             const found = products.find(p => p.id === id);
-            setProduct(found);
-            if (found && found.colors && found.colors.length > 0) {
-                setSelectedColor(found.colors[0]);
-            } else {
-                setSelectedColor(null);
+            
+            if (!product || product.id !== id) {
+                if (found && found.colors && found.colors.length > 0) {
+                    setSelectedColor(found.colors[0]);
+                } else {
+                    setSelectedColor(null);
+                }
+                setCurrentImageIndex(0);
             }
-            setCurrentImageIndex(0);
+            setProduct(found);
         }
-    }, [products, id]);
+    }, [products, id, product?.id]);
 
     if (!product) {
         return (
@@ -63,15 +66,17 @@ const ProductDetails = () => {
     const minSwipeDistance = 50;
 
     const onTouchStart = (e) => {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
+        touchEndX.current = null;
+        touchStartX.current = e.targetTouches[0].clientX;
     };
 
-    const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+    const onTouchMove = (e) => {
+        touchEndX.current = e.targetTouches[0].clientX;
+    };
 
     const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return;
-        const distance = touchStart - touchEnd;
+        if (!touchStartX.current || !touchEndX.current) return;
+        const distance = touchStartX.current - touchEndX.current;
         const isLeftSwipe = distance > minSwipeDistance;
         const isRightSwipe = distance < -minSwipeDistance;
 
@@ -81,6 +86,10 @@ const ProductDetails = () => {
         if (isRightSwipe && currentImageIndex > 0) {
             setCurrentImageIndex(prev => prev - 1);
         }
+        
+        // Reset after handling swipe
+        touchStartX.current = null;
+        touchEndX.current = null;
     };
 
     return (
