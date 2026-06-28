@@ -9,6 +9,8 @@ const ProductDetails = () => {
     const [product, setProduct] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [selectedColor, setSelectedColor] = useState(null);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [isZoomed, setIsZoomed] = useState(false);
 
     // Swipe states
     const [touchStart, setTouchStart] = useState(null);
@@ -95,7 +97,8 @@ const ProductDetails = () => {
                             <img
                                 src={images[currentImageIndex]}
                                 alt={product.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                onClick={() => { setLightboxOpen(true); setIsZoomed(false); }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
                             />
                             {images.length > 1 && (
                                 <>
@@ -255,6 +258,70 @@ const ProductDetails = () => {
                     )}
                 </div>
             </div>
+
+            {/* Lightbox */}
+            {lightboxOpen && (
+                <div 
+                    onClick={() => setLightboxOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        background: 'rgba(0,0,0,0.95)',
+                        zIndex: 99999,
+                        display: 'flex',
+                        alignItems: isZoomed ? 'flex-start' : 'center',
+                        justifyContent: isZoomed ? 'flex-start' : 'center',
+                        overflow: 'auto',
+                        padding: '20px',
+                        boxSizing: 'border-box'
+                    }}
+                >
+                    <img 
+                        src={images[currentImageIndex]} 
+                        alt={product.name}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsZoomed(!isZoomed);
+                        }}
+                        style={{
+                            maxWidth: isZoomed ? 'none' : '100%',
+                            maxHeight: isZoomed ? 'none' : '100vh',
+                            width: isZoomed ? '200vw' : 'auto',
+                            objectFit: 'contain',
+                            cursor: isZoomed ? 'zoom-out' : 'zoom-in',
+                            transition: 'max-width 0.3s, max-height 0.3s'
+                        }}
+                    />
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setLightboxOpen(false);
+                        }}
+                        style={{
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            background: 'rgba(255,255,255,0.2)',
+                            border: 'none',
+                            color: 'white',
+                            fontSize: '24px',
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            cursor: 'pointer',
+                            zIndex: 100000,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
         </main>
     );
 };
