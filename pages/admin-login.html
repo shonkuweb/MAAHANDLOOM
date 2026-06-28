@@ -75,7 +75,6 @@
             border-radius: 8px;
             font-size: 16px;
             transition: all 0.3s ease;
-            -webkit-text-security: disc;
         }
 
         .form-group input:focus {
@@ -198,7 +197,7 @@
             <div class="form-group">
                 <label for="passcode">Admin Passcode</label>
                 <input type="password" id="passcode" name="passcode" placeholder="Enter your passcode"
-                    autocomplete="off" required>
+                    autocomplete="current-password" autocorrect="off" autocapitalize="none" spellcheck="false" required>
             </div>
 
             <button type="submit" class="login-btn" id="login-btn">
