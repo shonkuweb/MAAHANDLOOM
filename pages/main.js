@@ -733,7 +733,8 @@ function initProductDetails() {
         const img = document.createElement('img');
         img.src = src;
         img.className = 'slide-img';
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;cursor:pointer;';
+        img.onclick = () => openImageLightbox(src);
         slider.prepend(img);
       } else {
         const d = document.createElement('div');
@@ -1219,3 +1220,48 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Bootstrapping failed:', err);
   }
 });
+
+window.openImageLightbox = function(src) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.95);z-index:99999;overflow:auto;';
+    
+    const container = document.createElement('div');
+    container.style.cssText = 'display:flex; align-items:center; justify-content:center; min-width:100%; min-height:100%; padding:20px; box-sizing:border-box;';
+    
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.cssText = 'max-width:100%; max-height:100vh; object-fit:contain; cursor:zoom-in; transition: max-width 0.3s, max-height 0.3s;';
+    
+    let zoomed = false;
+    img.onclick = (e) => {
+        e.stopPropagation();
+        zoomed = !zoomed;
+        if (zoomed) {
+            img.style.maxWidth = 'none';
+            img.style.maxHeight = 'none';
+            img.style.width = '200vw'; 
+            img.style.cursor = 'zoom-out';
+            container.style.alignItems = 'flex-start';
+            container.style.justifyContent = 'flex-start';
+        } else {
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100vh';
+            img.style.width = 'auto';
+            img.style.cursor = 'zoom-in';
+            container.style.alignItems = 'center';
+            container.style.justifyContent = 'center';
+        }
+    };
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.style.cssText = 'position:fixed;top:20px;right:20px;background:rgba(255,255,255,0.2);border:none;color:white;font-size:24px;width:40px;height:40px;border-radius:50%;cursor:pointer;z-index:100000;display:flex;align-items:center;justify-content:center;';
+    closeBtn.onclick = () => overlay.remove();
+    
+    container.onclick = () => overlay.remove();
+    
+    container.appendChild(img);
+    overlay.appendChild(container);
+    overlay.appendChild(closeBtn);
+    document.body.appendChild(overlay);
+};
