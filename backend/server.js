@@ -57,23 +57,10 @@ app.use('/api/auth', authLimiter);
 // --- JWT SECRET ---
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
-// --- AUTH MIDDLEWARE ---
+// --- AUTH MIDDLEWARE (Bypassed for now) ---
 const requireAuth = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Unauthorized: No token provided' });
-    }
-
-    const token = authHeader.split(' ')[1];
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.admin = decoded;
-        next();
-    } catch (err) {
-        return res.status(401).json({ error: 'Unauthorized: Invalid token' });
-    }
+    req.admin = { role: 'admin' };
+    next();
 };
 
 app.use(cors()); // In production, restrict this to your domain: { origin: 'https://yourdomain.com' }
@@ -89,14 +76,7 @@ app.use('/assets', express.static(path.join(__dirname, '../dist/assets'))); // E
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 app.get('/admin-login', (req, res) => {
-    const isProd = process.env.NODE_ENV === 'production';
-    const filePath = isProd
-        ? path.join(__dirname, '../dist/pages/admin-login.html')
-        : path.join(__dirname, '../pages/admin-login.html');
-
-    res.sendFile(filePath, (err) => {
-        if (err) res.status(404).send('Admin Login not found. Check build.');
-    });
+    res.redirect('/admin');
 });
 
 app.get('/admin', (req, res) => {
@@ -111,8 +91,8 @@ app.get('/admin', (req, res) => {
 });
 
 // Token verification endpoint
-app.get('/api/auth/verify', requireAuth, (req, res) => {
-    res.json({ valid: true, role: req.admin.role });
+app.get('/api/auth/verify', (req, res) => {
+    res.json({ valid: true, role: 'admin' });
 });
 
 

@@ -1,32 +1,7 @@
-// Authentication - Redirect to login page if not authenticated
+// Authentication - Login screen temporarily bypassed
 async function checkAuth() {
-    const token = sessionStorage.getItem('adminToken');
-
-    if (!token) {
-        // No token, redirect to login
-        window.location.href = '/admin-login';
-        return;
-    }
-
-    // Verify token with server
-    try {
-        const res = await fetch('/api/auth/verify', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-            // Token is valid, fetch data
-            fetchData();
-        } else {
-            // Token invalid, clear and redirect
-            sessionStorage.removeItem('adminToken');
-            window.location.href = '/admin-login';
-        }
-    } catch (err) {
-        console.error('Auth verification failed:', err);
-        sessionStorage.removeItem('adminToken');
-        window.location.href = '/admin-login';
-    }
+    // Directly fetch data without requiring login
+    fetchData();
 }
 
 // State
