@@ -390,6 +390,249 @@
             <div id="recent-invoices-list" class="cart-items-list"></div>
         </main>
 
+        <!-- SCREEN 6: MORE & HARDWARE SETTINGS VIEW (APPLE HIG DESIGN) -->
+        <main id="view-more" class="content-view">
+            <div class="screen-header-bar">
+                <div>
+                    <h2 class="screen-title">Settings & System</h2>
+                    <p class="screen-subtitle">Hardware station, store profile & cloud sync</p>
+                </div>
+            </div>
+
+            <!-- SECTION 1: STORE PROFILE & TAX INVOICING -->
+            <div class="settings-apple-card">
+                <div class="settings-card-header">
+                    <div class="settings-icon-bubble bubble-emerald">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Store Profile & Invoicing</div>
+                        <div class="settings-card-desc">Printed on all 58mm receipts & barcode labels</div>
+                    </div>
+                </div>
+
+                <div class="settings-card-body">
+                    <div class="form-grid-2">
+                        <div class="form-field-group">
+                            <label class="field-label">Store Name</label>
+                            <input type="text" id="setting-store-name" class="field-input" value="Indrita Fabrics" placeholder="Store Name">
+                        </div>
+                        <div class="form-field-group">
+                            <label class="field-label">Tagline / Header</label>
+                            <input type="text" id="setting-store-tagline" class="field-input" value="Tradition in Every Drape" placeholder="Store Tagline">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-field-group">
+                            <label class="field-label">Phone Number</label>
+                            <input type="text" id="setting-store-phone" class="field-input" value="+91 9876543210" placeholder="Phone Number">
+                        </div>
+                        <div class="form-field-group">
+                            <label class="field-label">GSTIN / Tax ID</label>
+                            <input type="text" id="setting-store-gst" class="field-input" value="19AAAAA0000A1Z5" placeholder="GSTIN (e.g. 19AAAAA0000A1Z5)">
+                        </div>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label class="field-label">Store Address (Printed on Receipts)</label>
+                        <input type="text" id="setting-store-address" class="field-input" value="Main Road, Fabric Market, Kolkata - 700001" placeholder="Store Address">
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                        <button type="button" id="btn-save-store-settings" class="btn-apple-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Save Store Profile</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: DEV 2IN1 THERMAL PRINTER HARDWARE STATION -->
+            <div class="settings-apple-card">
+                <div class="settings-card-header">
+                    <div class="settings-icon-bubble bubble-blue">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">DEV 2IN1 Hardware Station (632-L58P)</div>
+                        <div class="settings-card-desc">203 DPI • 58mm Thermal Dual Receipt & Label Printer</div>
+                    </div>
+                </div>
+
+                <div class="settings-card-body">
+                    <div class="hardware-status-row">
+                        <div class="hardware-info-col">
+                            <div class="hardware-status-badge online" id="more-printer-status-badge">
+                                <span class="pulse-dot"></span>
+                                <span id="more-printer-status-text">Web Bluetooth Ready</span>
+                            </div>
+                            <div class="hardware-detail-text">Model: 632-L58P | Width: 58mm | Density: 203 DPI</div>
+                        </div>
+                        <button type="button" id="btn-more-pair-printer" class="btn-apple-secondary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29z"/></svg>
+                            <span>Pair Printer</span>
+                        </button>
+                    </div>
+
+                    <div class="printer-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
+                        <button type="button" id="btn-more-test-receipt" class="btn-hardware-action">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            <span>Print Test Receipt (58mm)</span>
+                        </button>
+                        <button type="button" id="btn-more-test-label" class="btn-hardware-action">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>Print Test Label (TSPL)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: CLOUDFLARE R2 MEDIA STORAGE -->
+            <div class="settings-apple-card">
+                <div class="settings-card-header">
+                    <div class="settings-icon-bubble bubble-orange">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Cloudflare R2 Cloud Storage</div>
+                        <div class="settings-card-desc">High-speed global CDN for product photos</div>
+                    </div>
+                </div>
+
+                <div class="settings-card-body">
+                    <div class="cloud-status-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 12px; font-weight: 700; color: #0F172A;">Storage Bucket</span>
+                            <span class="badge-status-green">Connected • chf-media</span>
+                        </div>
+                        <div style="font-size: 11px; color: #64748B; word-break: break-all;">
+                            Public CDN: <a href="https://pub-ce8688bc6c654bcfb99716f7c9373bcd.r2.dev" target="_blank" style="color: #0F5132; font-weight: 600;">pub-ce8688bc6c654bcfb99716f7c9373bcd.r2.dev</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: POS & BILLING PREFERENCES -->
+            <div class="settings-apple-card">
+                <div class="settings-card-header">
+                    <div class="settings-icon-bubble bubble-purple">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">POS & Workflow Preferences</div>
+                        <div class="settings-card-desc">Customize tax calculations and scanning feedback</div>
+                    </div>
+                </div>
+
+                <div class="settings-card-body">
+                    <div class="settings-toggle-row">
+                        <div>
+                            <div class="toggle-title">Default GST Rate</div>
+                            <div class="toggle-desc">Applied when creating new bills</div>
+                        </div>
+                        <select id="setting-default-gst" class="field-input" style="width: 100px; padding: 6px 10px;">
+                            <option value="0">0%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18" selected>18%</option>
+                            <option value="28">28%</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-toggle-row">
+                        <div>
+                            <div class="toggle-title">Audio Beep on Scan</div>
+                            <div class="toggle-desc">Sound chime when a barcode or QR code is detected</div>
+                        </div>
+                        <label class="custom-switch">
+                            <input type="checkbox" id="setting-sound-beep" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-toggle-row">
+                        <div>
+                            <div class="toggle-title">Auto-Generate Product Barcode</div>
+                            <div class="toggle-desc">Automatically create EAN-13 barcodes when SKU is entered</div>
+                        </div>
+                        <label class="custom-switch">
+                            <input type="checkbox" id="setting-auto-barcode" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: DATA EXPORTS & RESET -->
+            <div class="settings-apple-card">
+                <div class="settings-card-header">
+                    <div class="settings-icon-bubble bubble-pink">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Data Backup & Export</div>
+                        <div class="settings-card-desc">Download accounting CSVs & manage inventory data</div>
+                    </div>
+                </div>
+
+                <div class="settings-card-body">
+                    <div class="data-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                        <a href="/api/billing/export/invoices-csv" class="btn-apple-secondary" download style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>Export Invoices (CSV)</span>
+                        </a>
+                        <a href="/api/billing/export/products-csv" class="btn-apple-secondary" download style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>Export Products (CSV)</span>
+                        </a>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-clear-invoices-data" class="btn-danger-outline" style="flex: 1;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Clear Invoices History</span>
+                        </button>
+                        <button type="button" id="btn-clear-products-data" class="btn-danger-outline" style="flex: 1;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Clear All Products</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 6: QUICK LINKS -->
+            <div class="settings-apple-card">
+                <div class="settings-card-header">
+                    <div class="settings-icon-bubble bubble-dark">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Quick Portals</div>
+                        <div class="settings-card-desc">Navigate to e-commerce and administrative controls</div>
+                    </div>
+                </div>
+
+                <div class="settings-card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <a href="/admin" class="btn-apple-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            <span>Store Admin Panel</span>
+                        </a>
+                        <a href="/" target="_blank" class="btn-apple-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            <span>View Online Store</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="more-footer-badge">
+                <div style="font-weight: 700; color: var(--text-primary);">Indrita Fabrics • POS Terminal Pro</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">DEV 2IN1 ESC/POS (58mm) & TSPL (203 DPI) Direct Bluetooth Engine</div>
+            </div>
+        </main>
+
         <!-- BOTTOM NAVIGATION BAR -->
         <nav class="bottom-nav-bar">
             <button class="nav-tab-item active" data-view="home">
@@ -408,7 +651,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                 <span>Reports</span>
             </button>
-            <button class="nav-tab-item" id="btn-nav-more">
+            <button class="nav-tab-item" data-view="more" id="btn-nav-more">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
                 <span>More</span>
             </button>
@@ -662,4 +905,4 @@
     <!-- Main Controller Script -->
     <script type="module" src="/src/billing/billing.js"></script>
 </body>
-</html>\n
+</html>

@@ -100,106 +100,7 @@ export function createBillingRouter(db) {
                 )
             `);
 
-            // Seed initial products if empty to match the user screenshot catalogue perfectly
-            const existingProducts = await runQuery("SELECT COUNT(*) as count FROM billing_products");
-            const count = existingProducts[0]?.count || existingProducts[0]?.COUNT || 0;
-            
-            if (parseInt(count, 10) === 0) {
-                const initialProducts = [
-                    {
-                        id: "p_" + Date.now() + "_1",
-                        name: "Kanchipuram Silk Saree",
-                        sku: "KS00123",
-                        barcode: "8901234567890",
-                        category: "Sarees",
-                        subcategory: "Silk",
-                        price: 8950,
-                        stock: 12,
-                        description: "Authentic Kanchipuram pure silk saree with traditional rich zari border and contrast pallu.",
-                        image_url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80"
-                    },
-                    {
-                        id: "p_" + Date.now() + "_2",
-                        name: "Banarasi Saree",
-                        sku: "BS01456",
-                        barcode: "8901234567891",
-                        category: "Sarees",
-                        subcategory: "Banarasi",
-                        price: 6750,
-                        stock: 8,
-                        description: "Exquisite Banarasi woven silk saree featuring royal brocade motifs and lustrous finish.",
-                        image_url: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=400&q=80"
-                    },
-                    {
-                        id: "p_" + Date.now() + "_3",
-                        name: "Cotton Saree",
-                        sku: "CS07890",
-                        barcode: "8901234567892",
-                        category: "Sarees",
-                        subcategory: "Cotton",
-                        price: 2480,
-                        stock: 25,
-                        description: "Premium breathable pure handloom cotton saree with contrast ethnic woven border.",
-                        image_url: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=400&q=80"
-                    },
-                    {
-                        id: "p_" + Date.now() + "_4",
-                        name: "Tussar Silk Saree",
-                        sku: "TS00987",
-                        barcode: "8901234567893",
-                        category: "Sarees",
-                        subcategory: "Tussar",
-                        price: 5920,
-                        stock: 6,
-                        description: "Natural textured Tussar wild silk saree with artistic handcrafted hand-painted floral motifs.",
-                        image_url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=400&q=80"
-                    },
-                    {
-                        id: "p_" + Date.now() + "_5",
-                        name: "Georgette Saree",
-                        sku: "GS00421",
-                        barcode: "8901234567894",
-                        category: "Sarees",
-                        subcategory: "Georgette",
-                        price: 3850,
-                        stock: 14,
-                        description: "Lightweight graceful pure Georgette saree adorned with delicate all-over sequins work.",
-                        image_url: "https://images.unsplash.com/photo-1610030469668-93530c77658f?auto=format&fit=crop&w=400&q=80"
-                    },
-                    {
-                        id: "p_" + Date.now() + "_6",
-                        name: "Chanderi Silk Dupatta",
-                        sku: "DP00312",
-                        barcode: "8901234567895",
-                        category: "Dupattas",
-                        subcategory: "Chanderi",
-                        price: 1850,
-                        stock: 18,
-                        description: "Handwoven shimmering Chanderi silk dupatta with subtle gold zari borders.",
-                        image_url: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=400&q=80"
-                    },
-                    {
-                        id: "p_" + Date.now() + "_7",
-                        name: "Anarkali Suit Set",
-                        sku: "ST00891",
-                        barcode: "8901234567896",
-                        category: "Suits",
-                        subcategory: "Anarkali",
-                        price: 4500,
-                        stock: 9,
-                        description: "Floor length designer Anarkali ethnic suit with embroidered dupatta and churidar.",
-                        image_url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=400&q=80"
-                    }
-                ];
-
-                for (const p of initialProducts) {
-                    await runQuery(
-                        "INSERT INTO billing_products (id, name, sku, barcode, category, subcategory, price, stock, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        [p.id, p.name, p.sku, p.barcode, p.category, p.subcategory, p.price, p.stock, p.description, p.image_url]
-                    );
-                }
-                console.log("[BILLING] Initial products catalog seeded.");
-            }
+            // NOTE: Do NOT seed any fake products. The catalog starts 100% clean and real.
 
             // Seed initial settings if empty
             const existingSettings = await runQuery("SELECT COUNT(*) as count FROM billing_settings");
@@ -219,7 +120,7 @@ export function createBillingRouter(db) {
                         18
                     ]
                 );
-                console.log("[BILLING] Initial store settings seeded.");
+                console.log("[BILLING] Initial store settings initialized.");
             }
         } catch (err) {
             console.error("[BILLING] DB Init error:", err);
@@ -535,6 +436,74 @@ export function createBillingRouter(db) {
 
             const updated = await runQuery("SELECT * FROM billing_settings WHERE id = 1");
             res.json(updated[0]);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    // --- CLOUDFLARE R2 STATUS ---
+    router.get("/r2-status", async (req, res) => {
+        try {
+            res.json({
+                status: "active",
+                bucket: process.env.R2_BUCKET_NAME || "chf-media",
+                publicUrl: process.env.R2_PUBLIC_URL || "https://pub-ce8688bc6c654bcfb99716f7c9373bcd.r2.dev",
+                accountId: (process.env.R2_ACCOUNT_ID || "d098e896b8f7dc0403ad3a16f592dfe6").slice(0, 6) + "...",
+                mode: "AWS S3 Signature v4 Direct"
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    // --- CSV EXPORT INVOICES ---
+    router.get("/export/invoices-csv", async (req, res) => {
+        try {
+            const rows = await runQuery("SELECT * FROM billing_invoices ORDER BY created_at DESC");
+            let csv = "Invoice ID,Customer,Phone,Items Count,Subtotal,Discount,GST Amount,Total,Payment Mode,Date\n";
+            rows.forEach(r => {
+                let itemCount = 1;
+                try {
+                    const items = JSON.parse(r.items);
+                    itemCount = items.length;
+                } catch {}
+                csv += `"${r.id}","${(r.customer_name || '').replace(/"/g, '""')}","${r.customer_phone || ''}",${itemCount},${r.subtotal || 0},${r.discount || 0},${r.gst_amount || 0},${r.total || 0},"${r.payment_method || 'CASH'}","${r.created_at || ''}"\n`;
+            });
+            res.setHeader("Content-Type", "text/csv");
+            res.setHeader("Content-Disposition", `attachment; filename=Indrita_Fabrics_Invoices_${Date.now()}.csv`);
+            res.send(csv);
+        } catch (err) {
+            res.status(500).send("Export failed: " + err.message);
+        }
+    });
+
+    // --- CSV EXPORT PRODUCTS ---
+    router.get("/export/products-csv", async (req, res) => {
+        try {
+            const rows = await runQuery("SELECT * FROM billing_products ORDER BY category ASC, name ASC");
+            let csv = "ID,Name,SKU,Barcode,Category,Subcategory,Price,Stock,Description,Image URL\n";
+            rows.forEach(p => {
+                csv += `"${p.id}","${(p.name || '').replace(/"/g, '""')}","${p.sku || ''}","${p.barcode || ''}","${p.category || ''}","${p.subcategory || ''}",${p.price || 0},${p.stock || 0},"${(p.description || '').replace(/"/g, '""')}","${p.image_url || ''}"\n`;
+            });
+            res.setHeader("Content-Type", "text/csv");
+            res.setHeader("Content-Disposition", `attachment; filename=Indrita_Fabrics_Products_${Date.now()}.csv`);
+            res.send(csv);
+        } catch (err) {
+            res.status(500).send("Export failed: " + err.message);
+        }
+    });
+
+    // --- CLEAR PRODUCTS OR INVOICES ---
+    router.post("/clear-data", async (req, res) => {
+        try {
+            const { target } = req.body; // 'products', 'invoices', 'all'
+            if (target === 'products' || target === 'all') {
+                await runQuery("DELETE FROM billing_products");
+            }
+            if (target === 'invoices' || target === 'all') {
+                await runQuery("DELETE FROM billing_invoices");
+            }
+            res.json({ success: true, message: `Successfully cleared ${target}` });
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

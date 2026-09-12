@@ -42,15 +42,19 @@ app.use(helmet({
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 1000, // General API limiter
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use('/api', limiter);
+app.use('/api', (req, res, next) => {
+    // POS Billing system needs high throughput for continuous scanning and catalogue lookups
+    if (req.path.startsWith('/billing')) return next();
+    return limiter(req, res, next);
+});
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Limit login attempts
+    max: 20, // Limit login attempts
     message: "Too many login attempts, please try again after 15 minutes"
 });
 app.use('/api/auth', authLimiter);

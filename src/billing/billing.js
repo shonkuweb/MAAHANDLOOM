@@ -82,6 +82,7 @@ async function initApp() {
     setupModalHandlers();
     setupPrinterControls();
     setupScannerTools();
+    setupMoreSettingsHandlers();
     
     await loadStoreSettings();
     await loadProducts();
@@ -106,7 +107,7 @@ function setupNavigation() {
 
     document.getElementById("btn-header-printer-status")?.addEventListener("click", handlePrinterButtonClick);
     document.getElementById("btn-card-printer-settings")?.addEventListener("click", openPrinterSettingsModal);
-    document.getElementById("btn-open-settings")?.addEventListener("click", openPrinterSettingsModal);
+    document.getElementById("btn-open-settings")?.addEventListener("click", () => switchView("more"));
 
     document.getElementById("btn-close-tip")?.addEventListener("click", () => {
         const banner = document.getElementById("home-tip-banner");
@@ -151,6 +152,8 @@ function switchView(viewName) {
         renderCatalog();
     } else if (viewName === "reports") {
         loadReportsData();
+    } else if (viewName === "more") {
+        syncMoreTabInputs();
     }
 }
 
@@ -162,6 +165,7 @@ async function loadStoreSettings() {
             const data = await res.json();
             state.storeSettings = { ...state.storeSettings, ...data };
             updateHeaderBranding();
+            syncMoreTabInputs();
         }
     } catch (e) {
         console.warn("Using default store settings:", e);
@@ -173,6 +177,23 @@ function updateHeaderBranding() {
     const tagEl = document.getElementById("header-tagline");
     if (titleEl) titleEl.textContent = state.storeSettings.store_name || "Indrita Fabrics";
     if (tagEl) tagEl.textContent = state.storeSettings.tagline || "Tradition in Every Drape";
+}
+
+function syncMoreTabInputs() {
+    const s = state.storeSettings;
+    const nameInput = document.getElementById("setting-store-name");
+    const tagInput = document.getElementById("setting-store-tagline");
+    const phoneInput = document.getElementById("setting-store-phone");
+    const gstInput = document.getElementById("setting-store-gst");
+    const addrInput = document.getElementById("setting-store-address");
+    const gstRateSelect = document.getElementById("setting-default-gst");
+
+    if (nameInput) nameInput.value = s.store_name || "Indrita Fabrics";
+    if (tagInput) tagInput.value = s.tagline || "Tradition in Every Drape";
+    if (phoneInput) phoneInput.value = s.phone || "";
+    if (gstInput) gstInput.value = s.gst_number || "";
+    if (addrInput) addrInput.value = s.address || "";
+    if (gstRateSelect && s.default_gst_rate !== undefined) gstRateSelect.value = String(s.default_gst_rate);
 }
 
 async function loadProducts() {
@@ -371,11 +392,28 @@ function renderCatalog() {
     const container = document.getElementById("catalog-products-list");
     if (!container) return;
 
+    if (!state.products.length) {
+        container.innerHTML = `
+            <div class="empty-catalog-box">
+                <div class="empty-catalog-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                </div>
+                <div class="empty-catalog-title">No Products in Catalog</div>
+                <div class="empty-catalog-desc">Your POS catalog is clean and ready. Tap below to add your first product, saree, or suit.</div>
+                <button type="button" class="btn-apple-primary" onclick="window.openAddProductModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Add First Product</span>
+                </button>
+            </div>
+        `;
+        return;
+    }
+
     if (!state.filteredProducts.length) {
         container.innerHTML = `
-            <div style="text-align:center; padding: 40px 16px; background:white; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-                <div style="font-size:14px; font-weight:700; color:#475569;">No products found</div>
-                <div style="font-size:11px; color:#94A3B8; margin-top:4px;">Try searching with a different term or add a new product</div>
+            <div class="empty-catalog-box" style="padding: 24px;">
+                <div style="font-size:14px; font-weight:700; color:#475569;">No products matching filter</div>
+                <div style="font-size:11px; color:#94A3B8; margin-top:4px;">Try searching for another keyword or select "All" categories.</div>
             </div>
         `;
         return;
@@ -384,9 +422,10 @@ function renderCatalog() {
     container.innerHTML = state.filteredProducts.map(p => {
         const catBadgeClass = getBadgeClass(p.category || p.subcategory);
         const subBadgeClass = getBadgeClass(p.subcategory);
+        const imgUrl = p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
         return `
             <div class="product-row-card" onclick="window.handleProductCardClick('${p.id}')">
-                <img class="prod-thumb-img" src="${p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80"}" alt="${p.name}">
+                <img class="prod-thumb-img" src="${imgUrl}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80'">
                 <div class="prod-info-block">
                     <div class="prod-title">${p.name}</div>
                     <div class="prod-sku-line">SKU: ${p.sku}</div>
@@ -439,6 +478,12 @@ function setupModalHandlers() {
     document.getElementById("btn-close-product-modal")?.addEventListener("click", closeAddProductModal);
     document.getElementById("btn-cancel-product")?.addEventListener("click", closeAddProductModal);
     document.getElementById("btn-save-product-submit")?.addEventListener("click", submitAddProduct);
+    
+    // Prevent accidental reload if Enter pressed
+    document.getElementById("form-product-details")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        submitAddProduct();
+    });
 
     document.getElementById("input-prod-desc")?.addEventListener("input", (e) => {
         const count = e.target.value.length;
@@ -487,10 +532,13 @@ function setupModalHandlers() {
                 if (data.success && data.url) {
                     previewImg.dataset.r2Url = data.url;
                     window.showToast("Photo stored in Cloudflare R2!");
+                } else {
+                    console.warn("R2 Upload returned error:", data);
+                    window.showToast("Photo cached locally");
                 }
             } catch (err) {
                 console.error("R2 Upload Error:", err);
-                window.showToast("Photo saved locally");
+                window.showToast("Photo cached locally");
             }
         };
         reader.readAsDataURL(file);
@@ -548,36 +596,53 @@ function openAddProductModal() {
     form.reset();
     document.getElementById("input-product-id").value = "";
     document.getElementById("modal-product-title").textContent = "Add Product";
-    document.getElementById("r2-photo-preview").style.display = "none";
-    document.getElementById("r2-photo-preview").removeAttribute("data-r2-url");
+    const previewImg = document.getElementById("r2-photo-preview");
+    if (previewImg) {
+        previewImg.style.display = "none";
+        previewImg.removeAttribute("data-r2-url");
+        previewImg.src = "";
+    }
     document.getElementById("r2-photo-placeholder").style.display = "flex";
     document.getElementById("desc-char-count").textContent = "0/200";
     modal?.classList.add("active");
 }
+window.openAddProductModal = openAddProductModal;
 
 function closeAddProductModal() {
     document.getElementById("modal-add-product")?.classList.remove("active");
 }
 
 async function submitAddProduct() {
+    const saveBtn = document.getElementById("btn-save-product-submit");
     const name = document.getElementById("input-prod-name").value.trim();
     const sku = document.getElementById("input-prod-sku").value.trim();
     const barcode = document.getElementById("input-prod-barcode").value.trim() || sku;
     const category = document.getElementById("select-prod-category").value;
     const subcategory = document.getElementById("input-prod-subcategory").value.trim();
-    const price = Number(document.getElementById("input-prod-price").value);
+    const rawPrice = document.getElementById("input-prod-price").value;
+    const price = Number(rawPrice);
     const stock = Number(document.getElementById("input-prod-stock").value || 0);
     const description = document.getElementById("input-prod-desc").value.trim();
     const previewImg = document.getElementById("r2-photo-preview");
-    const image_url = previewImg.dataset.r2Url || previewImg.src || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
     const shouldPrintLabel = document.getElementById("toggle-print-label-after-add").checked;
 
-    if (!name || !sku || isNaN(price)) {
-        window.showToast("Please fill in required fields (*)");
+    if (!name || !sku || !rawPrice || isNaN(price) || price < 0) {
+        window.showToast("Please fill in Name, SKU, and a valid Price (*)");
         return;
     }
 
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving...";
+    }
+
     try {
+        let image_url = previewImg?.dataset?.r2Url || previewImg?.src || "";
+        // If image was not uploaded or is empty, use a clean silk saree default
+        if (!image_url || image_url.startsWith("data:") || image_url === window.location.href) {
+            image_url = "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
+        }
+
         const res = await fetch("/api/billing/products", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -605,10 +670,18 @@ async function submitAddProduct() {
             if (shouldPrintLabel) {
                 setTimeout(() => openBarcodeLabelModal(created), 300);
             }
+        } else {
+            const errData = await res.json().catch(() => ({}));
+            window.showToast("Error: " + (errData.error || "Failed to save product"));
         }
     } catch (e) {
         console.error("Save product failed:", e);
-        window.showToast("Failed to save product");
+        window.showToast("Network error: Failed to save product");
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = "Save Product";
+        }
     }
 }
 
@@ -1441,3 +1514,88 @@ window.reprintInvoice = async (invoiceId) => {
         console.error("Reprint error:", e);
     }
 };
+
+// --- MORE TAB & SYSTEM SETTINGS CONTROLLER ---
+function setupMoreSettingsHandlers() {
+    // Save Store Profile
+    document.getElementById("btn-save-store-settings")?.addEventListener("click", async () => {
+        const store_name = document.getElementById("setting-store-name")?.value.trim() || "Indrita Fabrics";
+        const tagline = document.getElementById("setting-store-tagline")?.value.trim() || "Tradition in Every Drape";
+        const phone = document.getElementById("setting-store-phone")?.value.trim() || "";
+        const gst_number = document.getElementById("setting-store-gst")?.value.trim() || "";
+        const address = document.getElementById("setting-store-address")?.value.trim() || "";
+        const default_gst_rate = Number(document.getElementById("setting-default-gst")?.value || 18);
+
+        try {
+            const res = await fetch("/api/billing/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    store_name,
+                    tagline,
+                    phone,
+                    gst_number,
+                    address,
+                    default_gst_rate,
+                    printer_model: "DEV 2IN1 632-L58P",
+                    printer_paper_width: 58,
+                    printer_dpi: 203
+                })
+            });
+
+            if (res.ok) {
+                const updated = await res.json();
+                state.storeSettings = { ...state.storeSettings, ...updated };
+                updateHeaderBranding();
+                window.showToast("Store profile updated successfully!");
+            }
+        } catch (e) {
+            console.error("Save settings error:", e);
+            window.showToast("Failed to save settings");
+        }
+    });
+
+    // Hardware Pair & Test Print from More Screen
+    document.getElementById("btn-more-pair-printer")?.addEventListener("click", connectWebBluetoothPrinter);
+    document.getElementById("btn-more-test-receipt")?.addEventListener("click", () => executeTestPrint58mmReceipt());
+    document.getElementById("btn-more-test-label")?.addEventListener("click", () => executeTestPrint58mmLabel());
+
+    // Clear Invoices
+    document.getElementById("btn-clear-invoices-data")?.addEventListener("click", async () => {
+        if (!confirm("Are you sure you want to clear all invoice history? This cannot be undone.")) return;
+        try {
+            const res = await fetch("/api/billing/clear-data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ target: "invoices" })
+            });
+            if (res.ok) {
+                window.showToast("Invoice history cleared");
+                await loadReportsData();
+            }
+        } catch (e) {
+            window.showToast("Failed to clear invoices");
+        }
+    });
+
+    // Clear Products
+    document.getElementById("btn-clear-products-data")?.addEventListener("click", async () => {
+        if (!confirm("Are you sure you want to delete all products from POS catalog?")) return;
+        try {
+            const res = await fetch("/api/billing/clear-data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ target: "products" })
+            });
+            if (res.ok) {
+                state.products = [];
+                state.filteredProducts = [];
+                renderCatalog();
+                window.showToast("POS catalog cleared");
+            }
+        } catch (e) {
+            window.showToast("Failed to clear products");
+        }
+    });
+}
+
