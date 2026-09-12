@@ -6,6 +6,9 @@ const state = {
     currentView: "home",
     products: [],
     filteredProducts: [],
+    selectedProductIds: new Set(),
+    customers: [],
+    filteredCustomers: [],
     cart: [],
     selectedCustomer: null,
     currentCategory: "All",
@@ -94,6 +97,7 @@ async function initApp() {
     await loadStoreSettings();
     await loadProducts();
     await loadReportsData();
+    await loadCustomers();
 }
 
 // --- NAVIGATION & VIEW SWITCHING ---
@@ -105,16 +109,38 @@ function setupNavigation() {
         });
     });
 
-    document.getElementById("btn-home-new-bill")?.addEventListener("click", () => switchView("new-bill"));
+    // Home Screen Actions
+    document.getElementById("btn-hero-new-bill")?.addEventListener("click", () => switchView("new-bill"));
+    document.getElementById("btn-home-generate-label")?.addEventListener("click", () => openBarcodeLabelModal());
     document.getElementById("btn-home-scan-label")?.addEventListener("click", () => switchView("scan"));
+    
+    // Legacy / tile buttons (if any)
+    document.getElementById("btn-home-new-bill")?.addEventListener("click", () => switchView("new-bill"));
     document.getElementById("tile-products")?.addEventListener("click", () => switchView("products"));
-    document.getElementById("tile-customers")?.addEventListener("click", openCustomerModal);
+    document.getElementById("tile-customers")?.addEventListener("click", () => switchView("customers"));
     document.getElementById("tile-bill-history")?.addEventListener("click", () => switchView("reports"));
     document.getElementById("tile-reports")?.addEventListener("click", () => switchView("reports"));
 
+    // Printer Actions
     document.getElementById("btn-header-printer-status")?.addEventListener("click", handlePrinterButtonClick);
+    document.getElementById("btn-card-connect-printer")?.addEventListener("click", handlePrinterButtonClick);
+    document.getElementById("card-bluetooth-printer")?.addEventListener("click", (e) => {
+        if (!e.target.closest("button")) handlePrinterButtonClick();
+    });
     document.getElementById("btn-card-printer-settings")?.addEventListener("click", openPrinterSettingsModal);
     document.getElementById("btn-open-settings")?.addEventListener("click", () => switchView("more"));
+
+    // Customer View Actions
+    document.getElementById("btn-open-add-customer-view")?.addEventListener("click", openCustomerModal);
+    document.getElementById("customers-search-input")?.addEventListener("input", (e) => filterCustomers(e.target.value));
+
+    // Bulk Product Actions (Multi-select)
+    document.getElementById("btn-bulk-deselect-all")?.addEventListener("click", clearProductSelection);
+    document.getElementById("btn-bulk-print-labels")?.addEventListener("click", handleBulkPrintLabels);
+    document.getElementById("btn-bulk-delete-products")?.addEventListener("click", handleBulkDeleteProducts);
+
+    // Global listener to close 3-dots popup menus
+    document.addEventListener("click", () => closeAllProductMenus());
 
     document.getElementById("btn-close-tip")?.addEventListener("click", () => {
         const banner = document.getElementById("home-tip-banner");
@@ -157,6 +183,8 @@ function switchView(viewName) {
         renderCart();
     } else if (viewName === "products") {
         renderCatalog();
+    } else if (viewName === "customers") {
+        renderCustomersView();
     } else if (viewName === "reports") {
         loadReportsData();
     } else if (viewName === "more") {
@@ -487,6 +515,8 @@ function renderCatalog() {
     const container = document.getElementById("catalog-products-list");
     if (!container) return;
 
+    updateBulkActionBar();
+
     if (!state.products.length) {
         container.innerHTML = `
             <div class="empty-catalog-box">
@@ -518,29 +548,236 @@ function renderCatalog() {
         const catBadgeClass = getBadgeClass(p.category || p.subcategory);
         const subBadgeClass = getBadgeClass(p.subcategory);
         const imgUrl = p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
+        const isSelected = state.selectedProductIds.has(p.id);
+
         return `
-            <div class="product-row-card" onclick="window.handleProductCardClick('${p.id}')">
-                <img class="prod-thumb-img" src="${imgUrl}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80'">
+            <div class="product-row-card ${isSelected ? "selected" : ""}" id="prod-card-${p.id}" onclick="window.handleProductCardClick('${p.id}')">
+                <!-- Checkbox for Multi-Select -->
+                <label class="prod-select-checkbox-wrap" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="prod-select-checkbox" data-id="${p.id}" ${isSelected ? "checked" : ""} onchange="window.handleProductCheckboxChange('${p.id}', this.checked, event)">
+                    <span class="custom-prod-checkbox"></span>
+                </label>
+
+                <img class="prod-thumb-img" src="${imgUrl}" alt="${escapeHtml(p.name)}" onerror="this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80'">
+                
                 <div class="prod-info-block">
-                    <div class="prod-title">${p.name}</div>
-                    <div class="prod-sku-line">SKU: ${p.sku}</div>
-                    <div class="prod-barcode-line">Barcode: ${p.barcode || "N/A"}</div>
+                    <div class="prod-title">${escapeHtml(p.name)}</div>
+                    <div class="prod-sku-line">SKU: ${escapeHtml(p.sku)}</div>
+                    <div class="prod-barcode-line">Barcode: ${escapeHtml(p.barcode || "N/A")}</div>
                     <div class="prod-tag-badges">
-                        <span class="prod-badge ${catBadgeClass}">${p.category}</span>
-                        ${p.subcategory ? `<span class="prod-badge ${subBadgeClass}">${p.subcategory}</span>` : ""}
+                        <span class="prod-badge ${catBadgeClass}">${escapeHtml(p.category)}</span>
+                        ${p.subcategory ? `<span class="prod-badge ${subBadgeClass}">${escapeHtml(p.subcategory)}</span>` : ""}
                     </div>
                 </div>
+
                 <div class="prod-pricing-side">
                     <div class="prod-price">₹ ${(p.price).toLocaleString("en-IN")}</div>
                     <div class="prod-stock-tag">Stock: ${p.stock || 0}</div>
-                    <button class="prod-menu-btn" onclick="event.stopPropagation(); window.openProductMenu('${p.id}')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg>
-                    </button>
+                    
+                    <!-- 3-Dots Menu with 1. Print Label, 2. Delete, 3. Update -->
+                    <div class="prod-menu-wrapper" onclick="event.stopPropagation()">
+                        <button type="button" class="prod-menu-btn" title="Product Actions" onclick="window.toggleProductActionMenu('${p.id}', event)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg>
+                        </button>
+                        <div class="prod-action-dropdown" id="prod-menu-${p.id}" style="display: none;">
+                            <button type="button" class="prod-dropdown-item" onclick="window.handleMenuPrintLabel('${p.id}', event)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                                <span>1. Print Label</span>
+                            </button>
+                            <button type="button" class="prod-dropdown-item delete" onclick="window.handleMenuDeleteProduct('${p.id}', event)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                <span>2. Delete</span>
+                            </button>
+                            <button type="button" class="prod-dropdown-item update" onclick="window.handleMenuUpdateProduct('${p.id}', event)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>3. Update</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
     }).join("");
 }
+
+// --- MULTI-SELECT HANDLERS ---
+window.handleProductCheckboxChange = (id, isChecked, event) => {
+    if (event) event.stopPropagation();
+    if (isChecked) {
+        state.selectedProductIds.add(id);
+    } else {
+        state.selectedProductIds.delete(id);
+    }
+    const card = document.getElementById(`prod-card-${id}`);
+    if (card) {
+        if (isChecked) card.classList.add("selected");
+        else card.classList.remove("selected");
+    }
+    updateBulkActionBar();
+};
+
+function updateBulkActionBar() {
+    const bar = document.getElementById("products-bulk-actions-bar");
+    const countBadge = document.getElementById("bulk-selected-count");
+    const countText = document.getElementById("bulk-selected-text");
+    if (!bar) return;
+
+    const count = state.selectedProductIds.size;
+    if (count > 0) {
+        bar.style.display = "flex";
+        if (countBadge) countBadge.textContent = count;
+        if (countText) countText.textContent = count === 1 ? "product selected" : "products selected";
+    } else {
+        bar.style.display = "none";
+    }
+}
+
+function clearProductSelection() {
+    state.selectedProductIds.clear();
+    renderCatalog();
+}
+
+async function handleBulkPrintLabels() {
+    if (state.selectedProductIds.size === 0) {
+        window.showToast("No products selected");
+        return;
+    }
+    const selectedList = state.products.filter(p => state.selectedProductIds.has(p.id));
+    if (selectedList.length === 1) {
+        openBarcodeLabelModal(selectedList[0]);
+    } else {
+        // Multi-product batch print
+        openBarcodeLabelModal(selectedList[0]);
+        window.showToast(`Selected ${selectedList.length} products for label generation`);
+    }
+}
+
+async function handleBulkDeleteProducts() {
+    const count = state.selectedProductIds.size;
+    if (count === 0) {
+        window.showToast("No products selected");
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${count} selected products? This cannot be undone.`)) {
+        return;
+    }
+
+    window.showToast(`Deleting ${count} products...`);
+    const idsToDelete = Array.from(state.selectedProductIds);
+
+    for (const id of idsToDelete) {
+        try {
+            await fetch(`/api/billing/products/${id}`, { method: "DELETE" });
+        } catch (e) {
+            console.error("Delete failed for product ID:", id, e);
+        }
+    }
+
+    state.products = state.products.filter(p => !state.selectedProductIds.has(p.id));
+    state.filteredProducts = state.filteredProducts.filter(p => !state.selectedProductIds.has(p.id));
+    state.selectedProductIds.clear();
+    renderCatalog();
+    window.showToast(`${count} products deleted successfully!`);
+}
+
+// --- 3-DOTS ACTION MENU HANDLERS ---
+window.toggleProductActionMenu = (id, event) => {
+    if (event) event.stopPropagation();
+    const currentMenu = document.getElementById(`prod-menu-${id}`);
+    const isCurrentlyOpen = currentMenu && currentMenu.style.display === "flex";
+
+    closeAllProductMenus();
+
+    if (currentMenu && !isCurrentlyOpen) {
+        currentMenu.style.display = "flex";
+    }
+};
+
+window.closeAllProductMenus = () => {
+    document.querySelectorAll(".prod-action-dropdown").forEach(menu => {
+        menu.style.display = "none";
+    });
+};
+
+window.handleMenuPrintLabel = (id, event) => {
+    if (event) event.stopPropagation();
+    closeAllProductMenus();
+    const product = state.products.find(p => p.id === id);
+    if (product) openBarcodeLabelModal(product);
+};
+
+window.handleMenuDeleteProduct = async (id, event) => {
+    if (event) event.stopPropagation();
+    closeAllProductMenus();
+    const product = state.products.find(p => p.id === id);
+    if (!product) return;
+
+    if (!confirm(`Are you sure you want to delete "${product.name}"?`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/billing/products/${id}`, { method: "DELETE" });
+        if (res.ok) {
+            state.products = state.products.filter(p => p.id !== id);
+            state.filteredProducts = state.filteredProducts.filter(p => p.id !== id);
+            state.selectedProductIds.delete(id);
+            renderCatalog();
+            window.showToast(`Product "${product.name}" deleted`);
+        } else {
+            window.showToast("Failed to delete product");
+        }
+    } catch (e) {
+        console.error("Delete product error:", e);
+        window.showToast("Error deleting product");
+    }
+};
+
+window.handleMenuUpdateProduct = (id, event) => {
+    if (event) event.stopPropagation();
+    closeAllProductMenus();
+    const product = state.products.find(p => p.id === id);
+    if (product) openEditProductModal(product);
+};
+
+function openEditProductModal(product) {
+    const modal = document.getElementById("modal-add-product");
+    const form = document.getElementById("form-product-details");
+    form.reset();
+
+    document.getElementById("input-product-id").value = product.id;
+    document.getElementById("modal-product-title").textContent = "Update Product";
+    document.getElementById("btn-save-product-submit").textContent = "Update Product";
+
+    document.getElementById("input-prod-name").value = product.name || "";
+    document.getElementById("input-prod-sku").value = product.sku || "";
+    document.getElementById("input-prod-barcode").value = product.barcode || "";
+    document.getElementById("input-prod-category").value = product.category || "";
+    document.getElementById("input-prod-subcategory").value = product.subcategory || "";
+    document.getElementById("input-prod-price").value = product.price || "";
+    document.getElementById("input-prod-stock").value = product.stock || 0;
+    document.getElementById("input-prod-desc").value = product.description || "";
+    document.getElementById("desc-char-count").textContent = `${(product.description || "").length}/200`;
+
+    const previewImg = document.getElementById("r2-photo-preview");
+    const placeholder = document.getElementById("r2-photo-placeholder");
+    if (product.image_url) {
+        if (previewImg) {
+            previewImg.src = product.image_url;
+            previewImg.dataset.r2Url = product.image_url;
+            previewImg.style.display = "block";
+        }
+        if (placeholder) placeholder.style.display = "none";
+    } else {
+        if (previewImg) previewImg.style.display = "none";
+        if (placeholder) placeholder.style.display = "flex";
+    }
+
+    renderCategoryChips();
+    modal?.classList.add("active");
+}
+window.openEditProductModal = openEditProductModal;
 
 const BADGE_COLOR_PALETTES = [
     "badge-silk", "badge-sarees", "badge-cotton", "badge-banarasi", "badge-tussar", "badge-georgette"
@@ -657,7 +894,7 @@ function setupModalHandlers() {
         document.getElementById("current-customer-label").textContent = "Customer (Optional)";
         closeCustomerModal();
     });
-    document.getElementById("btn-save-customer")?.addEventListener("click", () => {
+    document.getElementById("btn-save-customer")?.addEventListener("click", async () => {
         const name = document.getElementById("cust-modal-name").value.trim();
         const phone = document.getElementById("cust-modal-phone").value.trim();
         const address = document.getElementById("cust-modal-address").value.trim();
@@ -665,6 +902,17 @@ function setupModalHandlers() {
         if (name || phone) {
             state.selectedCustomer = { name: name || "Customer", phone, address };
             document.getElementById("current-customer-label").textContent = name || phone;
+
+            // Also persist customer to database if new
+            try {
+                await fetch("/api/billing/customers", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: name || "Customer", phone, address })
+                });
+                await loadCustomers();
+            } catch (e) {}
+
             window.showToast("Customer attached to bill");
         }
         closeCustomerModal();
@@ -678,15 +926,23 @@ function setupModalHandlers() {
         await executeDirectPrintAndSettle(paymentMode);
     });
 
+    // Label Print Modal
     document.getElementById("btn-close-label-modal")?.addEventListener("click", closeBarcodeLabelModal);
     document.getElementById("btn-cancel-label-print")?.addEventListener("click", closeBarcodeLabelModal);
+    document.getElementById("select-label-product")?.addEventListener("change", (e) => {
+        const prodId = e.target.value;
+        const product = state.products.find(p => p.id === prodId);
+        if (product) updateLabelModalPreview(product);
+    });
     document.getElementById("btn-execute-label-print")?.addEventListener("click", async () => {
         const copies = Number(document.getElementById("input-label-copies").value || 1);
-        const productId = document.getElementById("modal-print-label").dataset.productId;
+        const productId = document.getElementById("select-label-product")?.value || document.getElementById("modal-print-label").dataset.productId;
         const product = state.products.find(p => p.id === productId);
         if (product) {
             await executePrint58mmLabelDirect(product, copies);
             closeBarcodeLabelModal();
+        } else {
+            window.showToast("Please select a product first");
         }
     });
 
@@ -701,6 +957,7 @@ function openAddProductModal() {
     form.reset();
     document.getElementById("input-product-id").value = "";
     document.getElementById("modal-product-title").textContent = "Add Product";
+    document.getElementById("btn-save-product-submit").textContent = "Save Product";
     const previewImg = document.getElementById("r2-photo-preview");
     if (previewImg) {
         previewImg.style.display = "none";
@@ -723,6 +980,7 @@ function closeAddProductModal() {
 
 async function submitAddProduct() {
     const saveBtn = document.getElementById("btn-save-product-submit");
+    const editId = document.getElementById("input-product-id").value.trim();
     const name = document.getElementById("input-prod-name").value.trim();
     const sku = document.getElementById("input-prod-sku").value.trim();
     const barcode = document.getElementById("input-prod-barcode").value.trim() || sku;
@@ -742,18 +1000,21 @@ async function submitAddProduct() {
 
     if (saveBtn) {
         saveBtn.disabled = true;
-        saveBtn.textContent = "Saving...";
+        saveBtn.textContent = editId ? "Updating..." : "Saving...";
     }
 
     try {
         let image_url = previewImg?.dataset?.r2Url || previewImg?.src || "";
-        // If image was not uploaded or is empty, use a clean silk saree default
         if (!image_url || image_url.startsWith("data:") || image_url === window.location.href) {
             image_url = "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
         }
 
-        const res = await fetch("/api/billing/products", {
-            method: "POST",
+        const isUpdate = Boolean(editId);
+        const url = isUpdate ? `/api/billing/products/${editId}` : "/api/billing/products";
+        const method = isUpdate ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+            method,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 name,
@@ -769,15 +1030,21 @@ async function submitAddProduct() {
         });
 
         if (res.ok) {
-            const created = await res.json();
-            state.products.unshift(created);
+            const saved = await res.json();
+            if (isUpdate) {
+                const idx = state.products.findIndex(p => p.id === editId);
+                if (idx !== -1) state.products[idx] = saved;
+                window.showToast("Product updated successfully!");
+            } else {
+                state.products.unshift(saved);
+                window.showToast("Product added successfully!");
+            }
             state.filteredProducts = [...state.products];
             renderCatalog();
             closeAddProductModal();
-            window.showToast("Product added successfully!");
 
-            if (shouldPrintLabel) {
-                setTimeout(() => openBarcodeLabelModal(created), 300);
+            if (shouldPrintLabel && !isUpdate) {
+                setTimeout(() => openBarcodeLabelModal(saved), 300);
             }
         } else {
             const errData = await res.json().catch(() => ({}));
@@ -789,7 +1056,7 @@ async function submitAddProduct() {
     } finally {
         if (saveBtn) {
             saveBtn.disabled = false;
-            saveBtn.textContent = "Save Product";
+            saveBtn.textContent = editId ? "Update Product" : "Save Product";
         }
     }
 }
@@ -850,6 +1117,31 @@ function closeReviewBillModal() {
 
 function openBarcodeLabelModal(product) {
     const modal = document.getElementById("modal-print-label");
+    const select = document.getElementById("select-label-product");
+
+    if (select) {
+        select.innerHTML = state.products.map(p => 
+            `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.sku)}) - ₹${p.price.toLocaleString("en-IN")}</option>`
+        ).join("");
+
+        if (product) {
+            select.value = product.id;
+        } else if (state.products.length > 0) {
+            select.value = state.products[0].id;
+            product = state.products[0];
+        }
+    }
+
+    if (product) {
+        updateLabelModalPreview(product);
+    }
+
+    modal?.classList.add("active");
+}
+window.openBarcodeLabelModal = openBarcodeLabelModal;
+
+function updateLabelModalPreview(product) {
+    const modal = document.getElementById("modal-print-label");
     modal.dataset.productId = product.id;
 
     document.getElementById("preview-label-store").textContent = state.storeSettings.store_name || "INDRITA FABRICS";
@@ -872,12 +1164,98 @@ function openBarcodeLabelModal(product) {
     } catch (e) {
         console.warn("JsBarcode preview error:", e);
     }
-
-    modal?.classList.add("active");
 }
+
 function closeBarcodeLabelModal() {
     document.getElementById("modal-print-label")?.classList.remove("active");
 }
+
+// --- CUSTOMERS DIRECTORY MANAGEMENT ---
+async function loadCustomers() {
+    try {
+        const res = await fetch("/api/billing/customers");
+        if (res.ok) {
+            state.customers = await res.json();
+            state.filteredCustomers = [...state.customers];
+            renderCustomersView();
+        }
+    } catch (e) {
+        console.warn("Could not load customers:", e);
+    }
+}
+
+function filterCustomers(query) {
+    const q = (query || "").toLowerCase().trim();
+    if (!q) {
+        state.filteredCustomers = [...state.customers];
+    } else {
+        state.filteredCustomers = state.customers.filter(c => 
+            (c.name && c.name.toLowerCase().includes(q)) ||
+            (c.phone && c.phone.includes(q)) ||
+            (c.address && c.address.toLowerCase().includes(q))
+        );
+    }
+    renderCustomersView();
+}
+
+function renderCustomersView() {
+    const container = document.getElementById("customers-list-container");
+    if (!container) return;
+
+    if (!state.customers.length) {
+        container.innerHTML = `
+            <div class="empty-catalog-box">
+                <div class="empty-catalog-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="empty-catalog-title">No Customers Found</div>
+                <div class="empty-catalog-desc">Customer profiles created during checkout will appear here. You can also add a customer profile now.</div>
+                <button type="button" class="btn-apple-primary" onclick="openCustomerModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Add New Customer</span>
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    if (!state.filteredCustomers.length) {
+        container.innerHTML = `
+            <div class="empty-catalog-box" style="padding: 24px;">
+                <div style="font-size:14px; font-weight:700; color:#475569;">No matching customers</div>
+                <div style="font-size:11px; color:#94A3B8; margin-top:4px;">Try searching by another phone number or name.</div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = state.filteredCustomers.map(c => `
+        <div class="product-row-card" style="cursor: pointer;" onclick="window.selectCustomerForBill('${c.id}')">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: #F3E8FF; color: #9333EA; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0;">
+                ${(c.name || "C")[0].toUpperCase()}
+            </div>
+            <div class="prod-info-block">
+                <div class="prod-title">${escapeHtml(c.name || "Walk-in Customer")}</div>
+                <div class="prod-sku-line">${escapeHtml(c.phone || "No phone")}</div>
+                <div class="prod-barcode-line">${escapeHtml(c.address || "No address on file")}</div>
+            </div>
+            <button type="button" class="btn-apple-primary" style="padding: 6px 12px; font-size: 11.5px; border-radius: 8px;">
+                Select
+            </button>
+        </div>
+    `).join("");
+}
+
+window.selectCustomerForBill = (customerId) => {
+    const customer = state.customers.find(c => c.id === customerId);
+    if (customer) {
+        state.selectedCustomer = customer;
+        const custLabel = document.getElementById("current-customer-label");
+        if (custLabel) custLabel.textContent = customer.name || customer.phone;
+        window.showToast(`Customer "${customer.name || customer.phone}" attached`);
+        switchView("new-bill");
+    }
+};
 
 function openPrinterSettingsModal() {
     document.getElementById("modal-printer-settings")?.classList.add("active");
@@ -1132,8 +1510,15 @@ function updatePrinterStatusUI() {
     const pill = document.getElementById("btn-header-printer-status");
     const pillText = document.getElementById("printer-pill-text");
     const pillDot = document.getElementById("printer-pill-dot");
+    
+    // Home Bluetooth Printer Card Elements
     const cardStatusText = document.getElementById("card-printer-status-text");
+    const cardStatusDot = document.getElementById("card-printer-status-dot");
+    const cardStatusLabel = document.getElementById("card-printer-status-label");
     const cardModelText = document.getElementById("card-printer-model-text");
+    const cardBtnText = document.getElementById("btn-card-connect-printer-text");
+
+    // More / Settings Elements
     const moreStatusText = document.getElementById("more-printer-status-text");
     const moreStatusBadge = document.getElementById("more-printer-status-badge");
     const quickHwStatus = document.getElementById("settings-quick-hardware-status");
@@ -1141,20 +1526,30 @@ function updatePrinterStatusUI() {
 
     if (state.printer.isConnected) {
         pill?.classList.remove("disconnected");
-        if (pillText) pillText.textContent = `${state.printer.deviceName || "DEV 2IN1"} Connected`;
+        if (pillText) pillText.textContent = "Connected";
         if (pillDot) pillDot.className = "pulse-dot";
-        if (cardStatusText) cardStatusText.innerHTML = `<span class="pulse-dot"></span> Connected`;
+        
+        if (cardStatusDot) cardStatusDot.className = "pulse-dot";
+        if (cardStatusLabel) cardStatusLabel.textContent = "Connected";
+        if (cardStatusText) cardStatusText.className = "printer-status-row online";
         if (cardModelText) cardModelText.textContent = `${state.printer.deviceName || "DEV 2IN1 632-L58P"} (203 DPI, 58mm)`;
+        if (cardBtnText) cardBtnText.textContent = "Printer Settings";
+
         if (moreStatusText) moreStatusText.textContent = `${state.printer.deviceName || "DEV 2IN1"} Connected`;
         if (moreStatusBadge) moreStatusBadge.className = "hardware-status-badge online";
         if (quickHwStatus) quickHwStatus.textContent = "Printer Online";
         if (quickHwPill) quickHwPill.style.borderColor = "#10B981";
     } else {
         pill?.classList.add("disconnected");
-        if (pillText) pillText.textContent = "Connect Printer";
+        if (pillText) pillText.textContent = "Not Connected";
         if (pillDot) pillDot.className = "pulse-dot red";
-        if (cardStatusText) cardStatusText.innerHTML = `<span class="pulse-dot red"></span> Disconnected (Tap to Pair)`;
-        if (cardModelText) cardModelText.textContent = "DEV 2IN1 632-L58P (203 DPI, 58mm)";
+
+        if (cardStatusDot) cardStatusDot.className = "pulse-dot red";
+        if (cardStatusLabel) cardStatusLabel.textContent = "Not Connected";
+        if (cardStatusText) cardStatusText.className = "printer-status-row";
+        if (cardModelText) cardModelText.textContent = "Tap to pair your printer";
+        if (cardBtnText) cardBtnText.textContent = "Connect Printer";
+
         if (moreStatusText) moreStatusText.textContent = "Web Bluetooth Ready (Disconnected)";
         if (moreStatusBadge) moreStatusBadge.className = "hardware-status-badge";
         if (quickHwStatus) quickHwStatus.textContent = "Printer Ready";

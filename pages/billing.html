@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Indrita Fabrics - POS & Thermal Billing System</title>
     <link rel="stylesheet" href="/src/billing/billing.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
@@ -17,23 +17,31 @@
         <header class="app-header">
             <div class="brand-section">
                 <div class="brand-logo-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 3c1.5 3 4.5 5 4.5 9a4.5 4.5 0 0 1-9 0c0-4 3-6 4.5-9z"/>
                         <path d="M16.5 12c2.5-1 4.5 0 4.5 3a4.5 4.5 0 0 1-7.5 3.3"/>
                         <path d="M7.5 12c-2.5-1-4.5 0-4.5 3a4.5 4.5 0 0 0 7.5 3.3"/>
                     </svg>
                 </div>
-                <div>
-                    <h1 class="brand-title" id="header-store-name">Indrita Fabrics</h1>
-                    <p class="brand-subtitle" id="header-tagline">Tradition in Every Drape</p>
+                <div class="brand-text-block">
+                    <h1 class="brand-title-main" id="header-store-name">Indrita<br>Fabrics</h1>
+                    <p class="brand-subtitle-main" id="header-tagline">Tradition in Every Drape</p>
                 </div>
             </div>
             <div class="header-actions">
-                <div id="btn-header-printer-status" class="printer-status-pill">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
-                    <span id="printer-pill-text">Printer Connected</span>
-                    <span class="pulse-dot" id="printer-pill-dot"></span>
+                <div id="btn-header-printer-status" class="printer-status-pill disconnected" title="Printer Connection Status">
+                    <div class="pill-icons-pair">
+                        <svg class="pill-icon-printer" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                        <svg class="pill-icon-bt" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+                    </div>
+                    <div class="pill-text-col">
+                        <span class="pill-title-txt">Printer</span>
+                        <div class="pill-status-line">
+                            <span class="pulse-dot red" id="printer-pill-dot"></span>
+                            <span id="printer-pill-text">Not Connected</span>
+                        </div>
+                    </div>
+                    <svg class="pill-chevron-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
                 <button id="btn-open-settings" class="btn-icon-header" title="Store & Printer Settings">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -43,98 +51,94 @@
 
         <!-- SCREEN 1: HOME DASHBOARD VIEW -->
         <main id="view-home" class="content-view active">
-            <div class="hero-banner">
-                <div class="hero-tag">Welcome!</div>
-                <h2 class="hero-title">Let&#39;s create a<br>new bill</h2>
-                <div class="hero-categories">SAREES | SUITS | DUPATTAS | MORE</div>
-                <p class="hero-subtext">Happy Customers Brighter Days</p>
+            <!-- Luxury Green Hero Banner -->
+            <div class="hero-banner" id="btn-hero-new-bill" title="Tap to create new bill">
+                <div class="hero-left-content">
+                    <div class="hero-tag">WELCOME!</div>
+                    <h2 class="hero-title">Let&#39;s Create<br>a <span class="hero-title-highlight">New Bill</span></h2>
+                    <div class="hero-gold-divider"></div>
+                    <div class="hero-categories">SAREES | SUITS | DUPATTAS | MORE</div>
+                    <div class="hero-subtext">
+                        <span>Happy Customers</span>
+                        <span>Brighter Days</span>
+                    </div>
+                </div>
+                
+                <div class="hero-right-visual">
+                    <div class="hero-tradition-stack">
+                        <span>TRADITION</span>
+                        <span>QUALITY</span>
+                        <span>STYLE</span>
+                        <span>ALWAYS</span>
+                    </div>
+                    <img src="/billing-hero-saree.png" alt="Indrita Traditional Saree" class="hero-saree-img">
+                    <div class="hero-carousel-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                </div>
             </div>
 
+            <!-- Primary 2-Column Action Cards Grid -->
             <div class="primary-actions-grid">
-                <div id="btn-home-new-bill" class="action-card action-card-green">
-                    <div>
-                        <div class="action-icon-box">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                <!-- Left Card: Generate Label -->
+                <div id="btn-home-generate-label" class="action-card action-card-green" role="button" tabindex="0">
+                    <div class="action-card-top">
+                        <div class="action-icon-box action-icon-glass">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                                <line x1="7" y1="7" x2="7.01" y2="7"/>
+                            </svg>
                         </div>
-                        <div class="action-card-title">New Bill</div>
-                        <div class="action-card-desc">Add items and generate bill</div>
+                        <h3 class="action-card-title">Generate<br>Label</h3>
+                        <p class="action-card-desc">Create and print<br>product label</p>
                     </div>
-                    <div class="action-card-arrow">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                    <div class="action-card-arrow action-arrow-green">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </div>
                 </div>
 
-                <div id="btn-home-scan-label" class="action-card action-card-mint">
-                    <div>
-                        <div class="action-icon-box">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h2"/><path d="M11 12h6"/></svg>
+                <!-- Right Card: Scan Label -->
+                <div id="btn-home-scan-label" class="action-card action-card-mint" role="button" tabindex="0">
+                    <div class="action-card-top">
+                        <div class="action-icon-box action-icon-mint">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+                                <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+                                <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+                                <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+                                <path d="M8 12h8"/>
+                            </svg>
                         </div>
-                        <div class="action-card-title">Scan Label</div>
-                        <div class="action-card-desc">Scan product QR / barcode</div>
+                        <h3 class="action-card-title">Scan Label</h3>
+                        <p class="action-card-desc">Scan product QR<br>or barcode</p>
                     </div>
-                    <div class="action-card-arrow">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                    <div class="action-card-arrow action-arrow-mint">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </div>
                 </div>
             </div>
 
-            <div class="secondary-menu-grid">
-                <div id="tile-products" class="menu-tile">
-                    <div class="menu-tile-icon tile-orange">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                    </div>
-                    <div class="menu-tile-title">Products</div>
-                    <div class="menu-tile-sub">View / Manage</div>
-                </div>
-
-                <div id="tile-customers" class="menu-tile">
-                    <div class="menu-tile-icon tile-purple">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                    <div class="menu-tile-title">Customers</div>
-                    <div class="menu-tile-sub">Add / View</div>
-                </div>
-
-                <div id="tile-bill-history" class="menu-tile">
-                    <div class="menu-tile-icon tile-pink">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
-                    </div>
-                    <div class="menu-tile-title">Bill History</div>
-                    <div class="menu-tile-sub">Recent Bills</div>
-                </div>
-
-                <div id="tile-reports" class="menu-tile">
-                    <div class="menu-tile-icon tile-blue">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                    </div>
-                    <div class="menu-tile-title">Reports</div>
-                    <div class="menu-tile-sub">Daily / Monthly</div>
-                </div>
-            </div>
-
-            <div class="printer-card">
+            <!-- Bluetooth Printer Status Bar Card -->
+            <div class="printer-card" id="card-bluetooth-printer">
                 <div class="printer-card-left">
                     <div class="printer-icon-circle">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F5132" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
                     </div>
-                    <div>
+                    <div class="printer-text-group">
                         <div class="printer-info-title">Bluetooth Printer</div>
-                        <div class="printer-info-status online" id="card-printer-status-text">
-                            <span class="pulse-dot" id="card-printer-status-dot"></span> Connected
+                        <div class="printer-status-row" id="card-printer-status-text">
+                            <span class="pulse-dot red" id="card-printer-status-dot"></span>
+                            <span class="status-label-text" id="card-printer-status-label">Not Connected</span>
                         </div>
-                        <div class="printer-info-mac" id="card-printer-model-text">DEV 2IN1 632-L58P (203 DPI, 58mm)</div>
+                        <div class="printer-info-mac" id="card-printer-model-text">Tap to pair your printer</div>
                     </div>
                 </div>
-                <button id="btn-card-printer-settings" class="btn-printer-settings">Printer Settings</button>
-            </div>
-
-            <div class="tip-banner" id="home-tip-banner">
-                <div class="tip-icon">💡</div>
-                <div class="tip-content">
-                    <div class="tip-title">Tip: Scan product labels for faster billing!</div>
-                    <div class="tip-text">Keep scanning multiple items, then tap Done.</div>
-                </div>
-                <button class="tip-close-btn" id="btn-close-tip">&times;</button>
+                <button type="button" id="btn-card-connect-printer" class="btn-connect-printer-cta">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+                    <span id="btn-card-connect-printer-text">Connect Printer</span>
+                </button>
             </div>
         </main>
 
@@ -249,6 +253,25 @@
                 <div class="search-input-wrapper">
                     <svg class="search-icon-inside" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="text" id="catalog-search-input" class="search-input-field" placeholder="Search by name, SKU, barcode...">
+                </div>
+
+                <!-- Bulk Selection Action Bar (Visible when multiple products are selected) -->
+                <div id="products-bulk-actions-bar" class="products-bulk-actions-bar" style="display: none;">
+                    <div class="bulk-selection-count">
+                        <span class="bulk-count-badge" id="bulk-selected-count">0</span>
+                        <span id="bulk-selected-text">selected</span>
+                        <button type="button" id="btn-bulk-deselect-all" class="btn-bulk-clear" title="Clear selection">Clear</button>
+                    </div>
+                    <div class="bulk-action-buttons">
+                        <button type="button" id="btn-bulk-print-labels" class="btn-bulk-action btn-bulk-print">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                            <span>Print Label</span>
+                        </button>
+                        <button type="button" id="btn-bulk-delete-products" class="btn-bulk-action btn-bulk-delete">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            <span>Delete Products</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -860,27 +883,72 @@
             </div>
         </main>
 
-        <!-- BOTTOM NAVIGATION BAR -->
+        <!-- SCREEN 7: CUSTOMERS DIRECTORY VIEW -->
+        <main id="view-customers" class="content-view">
+            <div class="screen-header-bar">
+                <div>
+                    <h2 class="screen-title">Customers</h2>
+                    <p class="screen-subtitle">Customer directory & billing history</p>
+                </div>
+                <button id="btn-open-add-customer-view" class="btn-add-product-green">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Add Customer</span>
+                </button>
+            </div>
+
+            <div class="products-top-bar">
+                <div class="search-input-wrapper">
+                    <svg class="search-icon-inside" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="customers-search-input" class="search-input-field" placeholder="Search customer by name, phone...">
+                </div>
+            </div>
+
+            <div id="customers-list-container" class="cart-items-list" style="margin-top: 14px;"></div>
+        </main>
+
+        <!-- BOTTOM NAVIGATION BAR (7 TABS MATCHING DESIGN) -->
         <nav class="bottom-nav-bar">
             <button class="nav-tab-item active" data-view="home">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                <span>Home</span>
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                </div>
+                <span class="nav-tab-label">Home</span>
             </button>
             <button class="nav-tab-item" data-view="new-bill">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                <span>New Bill</span>
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <span class="nav-tab-label">New Bill</span>
+            </button>
+            <button class="nav-tab-item" data-view="scan">
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 12h8"/></svg>
+                </div>
+                <span class="nav-tab-label">Scan</span>
             </button>
             <button class="nav-tab-item" data-view="products">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                <span>Products</span>
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                </div>
+                <span class="nav-tab-label">Products</span>
+            </button>
+            <button class="nav-tab-item" data-view="customers">
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <span class="nav-tab-label">Customers</span>
             </button>
             <button class="nav-tab-item" data-view="reports">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                <span>Reports</span>
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <span class="nav-tab-label">Reports</span>
             </button>
             <button class="nav-tab-item" data-view="more" id="btn-nav-more">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-                <span>More</span>
+                <div class="nav-tab-icon-wrap">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>
+                </div>
+                <span class="nav-tab-label">More</span>
             </button>
         </nav>
 
@@ -1088,13 +1156,20 @@
             <div class="modal-window">
                 <div class="modal-header-top">
                     <div>
-                        <div class="modal-head-title">Print Barcode Label</div>
-                        <div class="modal-head-sub">58mm Thermal Label (632-L58P)</div>
+                        <div class="modal-head-title">Generate & Print Label</div>
+                        <div class="modal-head-sub">58mm Thermal Label (DEV 2IN1 632-L58P)</div>
                     </div>
                     <button class="modal-close-icon" id="btn-close-label-modal">&times;</button>
                 </div>
                 <div class="modal-body-form" style="align-items:center;">
-                    <div id="label-preview-card" style="border: 2px dashed #94A3B8; background: white; padding: 12px; border-radius: 8px; width: 100%; max-width: 280px; text-align: center;">
+                    <div class="form-field-group" style="width: 100%;">
+                        <label class="field-label">Select Product</label>
+                        <select id="select-label-product" class="field-input">
+                            <option value="">-- Choose a Product --</option>
+                        </select>
+                    </div>
+
+                    <div id="label-preview-card" style="border: 2px dashed #94A3B8; background: white; padding: 12px; border-radius: 12px; width: 100%; max-width: 280px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                         <div id="preview-label-store" style="font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;">INDRITA FABRICS</div>
                         <svg id="preview-label-barcode-svg" style="width: 100%; max-height: 70px; margin: 4px 0;"></svg>
                         <div id="preview-label-name" style="font-size: 11px; font-weight: 700; color: #1E293B;">Kanchipuram Silk Saree</div>

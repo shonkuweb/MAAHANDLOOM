@@ -60,20 +60,34 @@ html, body {
 }
 
 /* Fluid App Container - Adapts seamlessly from Phone to iPad to Desktop */
+/* Fluid App Container - Adapts seamlessly from Phone to iPad to Desktop */
 .app-viewport {
   width: 100%;
-  max-width: 1100px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   background: var(--bg-system);
   display: flex;
   flex-direction: column;
   position: relative;
-  padding-bottom: 84px; /* Space for Bottom Bar on Mobile */
+  padding-bottom: 92px; /* Space for Bottom Bar */
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 900px) {
+  .app-viewport {
+    max-width: 520px;
+    margin: 20px auto;
+    min-height: calc(100vh - 40px);
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
 }
 
 /* =========================================================================
-   TOP APP BAR (Apple Glassmorphic Header)
+   TOP APP BAR (Exact Match to Reference Design)
    ========================================================================= */
 .app-header {
   position: sticky;
@@ -82,93 +96,133 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
-  background: var(--bg-glass);
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.2s var(--ease-apple);
 }
 
 .brand-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .brand-logo-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm);
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
   border: 1px solid #FDE68A;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: var(--shadow-subtle);
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.1);
 }
 
-.brand-title {
-  font-size: 18px;
+.brand-text-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title-main {
+  font-size: 17px;
   font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.4px;
-  line-height: 1.15;
+  color: #0F172A;
+  line-height: 1.1;
+  letter-spacing: -0.3px;
 }
 
-.brand-subtitle {
-  font-size: 11px;
-  color: var(--text-secondary);
+.brand-subtitle-main {
+  font-size: 10.5px;
+  color: #64748B;
   font-weight: 500;
+  margin-top: 1px;
   letter-spacing: -0.1px;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-/* Printer Status Pill (Apple Capsule Button) */
+/* Header Printer Status Pill (Pink disconnected / Mint connected) */
 .printer-status-pill {
   display: flex;
   align-items: center;
-  gap: 7px;
-  background: var(--primary-subtle);
-  border: 1px solid var(--primary-border);
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--primary);
+  gap: 8px;
+  background: #DCFCE7;
+  border: 1px solid #BBF7D0;
+  padding: 6px 10px;
+  border-radius: 20px;
   cursor: pointer;
-  box-shadow: var(--shadow-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: all 0.2s var(--ease-apple);
   user-select: none;
 }
 
-.printer-status-pill:hover {
-  background: #DCFCE7;
-  transform: translateY(-1px);
-}
-
-.printer-status-pill:active {
-  transform: scale(0.96);
-}
-
 .printer-status-pill.disconnected {
-  background: #FEE2E2;
-  border-color: #FECACA;
-  color: #991B1B;
+  background: #FFE8E8;
+  border-color: #FFD2D2;
+}
+
+.pill-icons-pair {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #1E293B;
+}
+
+.printer-status-pill.disconnected .pill-icons-pair {
+  color: #1E293B;
+}
+
+.pill-text-col {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.pill-title-txt {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.1;
+}
+
+.pill-status-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #15803D;
+  line-height: 1.1;
+}
+
+.printer-status-pill.disconnected .pill-status-line {
+  color: #DC2626;
+}
+
+.pill-chevron-icon {
+  color: #15803D;
+  margin-left: 2px;
+}
+
+.printer-status-pill.disconnected .pill-chevron-icon {
+  color: #DC2626;
 }
 
 .pulse-dot {
-  width: 7px;
-  height: 7px;
+  width: 6.5px;
+  height: 6.5px;
   border-radius: 50%;
-  background: var(--accent-emerald);
-  box-shadow: 0 0 6px var(--accent-emerald);
+  background: #10B981;
+  box-shadow: 0 0 6px #10B981;
 }
 
 .pulse-dot.red {
@@ -177,26 +231,26 @@ html, body {
 }
 
 .btn-icon-header {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid var(--border-subtle);
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
+  color: #1E293B;
   cursor: pointer;
   transition: all 0.15s var(--ease-apple);
 }
 
 .btn-icon-header:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--text-primary);
+  background: #F8FAFC;
+  border-color: #CBD5E1;
 }
 
 .btn-icon-header:active {
-  transform: scale(0.92);
+  transform: scale(0.94);
 }
 
 /* =========================================================================
@@ -204,21 +258,19 @@ html, body {
    ========================================================================= */
 .content-view {
   display: none;
-  padding: 20px;
+  padding: 16px;
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
 }
 
 .content-view.active {
   display: block;
-  animation: appleViewTransition 0.25s var(--ease-apple);
+  animation: appleViewTransition 0.22s var(--ease-apple);
 }
 
 @keyframes appleViewTransition {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
@@ -227,82 +279,166 @@ html, body {
 }
 
 /* =========================================================================
-   SCREEN 1: HOME DASHBOARD (Apple Hero & Bento Grid)
+   SCREEN 1: HOME DASHBOARD (Exact Match to Mockup)
    ========================================================================= */
 .hero-banner {
-  background: linear-gradient(135deg, #092c1f 0%, #0f5132 55%, #157347 100%);
+  background: linear-gradient(135deg, #072e1d 0%, #0c3e27 45%, #072a1a 100%);
   color: white;
-  border-radius: var(--radius-xl);
-  padding: 28px 24px;
+  border-radius: 26px;
+  padding: 22px 18px 20px 20px;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-float);
-  margin-bottom: 20px;
+  box-shadow: 0 12px 32px -4px rgba(7, 46, 29, 0.25);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease-apple);
 }
 
-.hero-banner::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: -10px;
-  width: 220px;
-  height: 100%;
-  background: url("https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=500&q=80") center/cover no-repeat;
-  opacity: 0.28;
-  mask-image: linear-gradient(to right, transparent, black);
-  -webkit-mask-image: linear-gradient(to right, transparent, black);
+.hero-banner:hover {
+  transform: translateY(-2px);
+}
+
+.hero-left-content {
+  flex: 1.15;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .hero-tag {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  opacity: 0.9;
-  margin-bottom: 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 2.2px;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
 .hero-title {
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.5px;
-  margin-bottom: 14px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 29px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.4px;
+  color: #FFFFFF;
+}
+
+.hero-title-highlight {
+  color: #FEF3C7;
+}
+
+.hero-gold-divider {
+  width: 36px;
+  height: 2px;
+  background: #D4AF37;
+  margin: 12px 0 10px 0;
+  border-radius: 2px;
 }
 
 .hero-categories {
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: 800;
-  letter-spacing: 1.8px;
+  letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: #A7F3D0;
-  margin-bottom: 6px;
+  color: #86EFAC;
+  margin-bottom: 8px;
 }
 
 .hero-subtext {
-  font-size: 12px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 13.5px;
   font-style: italic;
-  opacity: 0.85;
+  color: #FEF3C7;
+  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Primary 2-Column Action Cards */
+.hero-right-visual {
+  flex: 0.85;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.hero-tradition-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  text-align: right;
+  z-index: 3;
+}
+
+.hero-saree-img {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  bottom: -10px;
+  width: 140px;
+  height: 110%;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 0 20px 20px 0;
+  pointer-events: none;
+  z-index: 2;
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.85) 30%, black 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.85) 30%, black 100%);
+}
+
+.hero-carousel-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 3;
+  margin-top: auto;
+}
+
+.hero-carousel-dots .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.hero-carousel-dots .dot.active {
+  background: #FFFFFF;
+  width: 7px;
+  height: 7px;
+}
+
+/* =========================================================================
+   PRIMARY 2-COLUMN ACTION CARDS
+   ========================================================================= */
 .primary-actions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
 .action-card {
-  padding: 20px;
-  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  border-radius: 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 150px;
+  min-height: 185px;
   cursor: pointer;
   position: relative;
   transition: all 0.2s var(--ease-apple);
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
 }
 
 .action-card:hover {
@@ -313,240 +449,189 @@ html, body {
   transform: scale(0.97);
 }
 
+/* Left Card: Generate Label (Dark Emerald Green with Waves) */
 .action-card-green {
-  background: linear-gradient(135deg, #0F5132 0%, #16523E 100%);
+  background: linear-gradient(155deg, #083b23 0%, #052616 100%);
   color: white;
+  overflow: hidden;
 }
 
+.action-card-green::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: radial-gradient(ellipse at bottom, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Right Card: Scan Label (Crisp Soft Mint / White) */
 .action-card-mint {
-  background: var(--bg-surface);
-  border: 1.5px solid #BBF7D0;
-  color: var(--primary);
+  background: #FFFFFF;
+  border: 1.5px solid #E5EFE8;
+  color: #064E3B;
 }
 
 .action-icon-box {
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-md);
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 14px;
 }
 
-.action-card-green .action-icon-box {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+.action-icon-glass {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
 }
 
-.action-card-mint .action-icon-box {
-  background: #E8F5E9;
-  color: var(--primary);
+.action-icon-mint {
+  background: #E4F7ED;
+  color: #064E3B;
 }
 
 .action-card-title {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 800;
-  margin-bottom: 4px;
-  letter-spacing: -0.3px;
+  line-height: 1.15;
+  letter-spacing: -0.4px;
+}
+
+.action-card-green .action-card-title {
+  color: #FFFFFF;
+}
+
+.action-card-mint .action-card-title {
+  color: #064E3B;
 }
 
 .action-card-desc {
-  font-size: 12px;
-  opacity: 0.85;
-  line-height: 1.25;
+  font-size: 11.5px;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
+.action-card-green .action-card-desc {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.action-card-mint .action-card-desc {
+  color: #64748B;
 }
 
 .action-card-arrow {
-  position: absolute;
-  right: 16px;
-  bottom: 16px;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  align-self: flex-end;
+  margin-top: auto;
 }
 
-.action-card-green .action-card-arrow {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+.action-arrow-green {
+  background: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
 }
 
-.action-card-mint .action-card-arrow {
-  background: #E8F5E9;
-  color: var(--primary);
+.action-arrow-mint {
+  background: #E4F7ED;
+  color: #064E3B;
 }
 
-/* Secondary 4-Column Grid */
-.secondary-menu-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.menu-tile {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 16px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  cursor: pointer;
-  box-shadow: var(--shadow-subtle);
-  transition: all 0.2s var(--ease-apple);
-}
-
-.menu-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
-}
-
-.menu-tile:active {
-  transform: scale(0.95);
-}
-
-.menu-tile-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.tile-orange { background: #FFF4E5; color: #EA580C; }
-.tile-purple { background: #F3E8FF; color: #9333EA; }
-.tile-pink { background: #FFE4E6; color: #E11D48; }
-.tile-blue { background: #E0F2FE; color: #0284C7; }
-
-.menu-tile-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 2px;
-}
-
-.menu-tile-sub {
-  font-size: 10px;
-  color: var(--text-secondary);
-}
-
-/* Bluetooth Printer Card */
+/* =========================================================================
+   BLUETOOTH PRINTER STATUS CARD (Horizontal Match to Mockup)
+   ========================================================================= */
 .printer-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
+  background: #FFFFFF;
+  border: 1.5px solid #E8EFEA;
+  border-radius: 18px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-subtle);
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 }
 
 .printer-card-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .printer-icon-circle {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--primary-subtle);
-  color: var(--primary);
+  background: #E4F7ED;
+  color: #064E3B;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.printer-info-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text-primary);
+.printer-text-group {
+  display: flex;
+  flex-direction: column;
 }
 
-.printer-info-status {
-  font-size: 12px;
-  font-weight: 600;
+.printer-info-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.2;
+}
+
+.printer-status-row {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #DC2626;
   margin-top: 2px;
-  color: var(--accent-emerald);
+}
+
+.printer-status-row.online {
+  color: #15803D;
 }
 
 .printer-info-mac {
-  font-size: 11px;
-  color: var(--text-tertiary);
+  font-size: 10.5px;
+  color: #64748B;
   margin-top: 1px;
 }
 
-.btn-printer-settings {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  font-size: 12px;
+.btn-connect-printer-cta {
+  background: #083D24;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
   transition: all 0.15s var(--ease-apple);
+  box-shadow: 0 2px 8px rgba(8, 61, 36, 0.2);
 }
 
-.btn-printer-settings:hover {
-  background: #F1F5F9;
-  color: var(--text-primary);
+.btn-connect-printer-cta:hover {
+  background: #0B4E2E;
+  transform: translateY(-1px);
 }
 
-/* Tip Banner */
-.tip-banner {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.tip-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.tip-content {
-  flex: 1;
-}
-
-.tip-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #92400E;
-  margin-bottom: 2px;
-}
-
-.tip-text {
-  font-size: 12px;
-  color: #B45309;
-  line-height: 1.35;
-}
-
-.tip-close-btn {
-  background: none;
-  border: none;
-  color: #92400E;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0 4px;
+.btn-connect-printer-cta:active {
+  transform: scale(0.96);
 }
 
 /* =========================================================================
@@ -1079,29 +1164,110 @@ input:checked + .switch-slider:before {
   border-color: var(--primary);
 }
 
-/* Product Cards Grid (Responsive 1-col on mobile, 2-col on desktop/tablet) */
+/* Product Cards Grid */
 .products-list-container {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
+.products-bulk-actions-bar {
+  background: #F0FDF4;
+  border: 1.5px solid #86EFAC;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  animation: appleSlideDown 0.2s var(--ease-apple);
+}
 
-@media (min-width: 680px) {
-  .products-list-container {
-    grid-template-columns: 1fr 1fr;
-  }
+@keyframes appleSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bulk-selection-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.bulk-count-badge {
+  background: #15803D;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+
+.btn-bulk-clear {
+  background: none;
+  border: none;
+  color: #64748B;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-left: 4px;
+}
+
+.bulk-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-bulk-action {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-apple);
+}
+
+.btn-bulk-print {
+  background: #0F5132;
+  color: #FFFFFF;
+}
+
+.btn-bulk-print:hover {
+  background: #0B4228;
+}
+
+.btn-bulk-delete {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.btn-bulk-delete:hover {
+  background: #FCA5A5;
+  color: #7F1D1D;
 }
 
 .product-row-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 14px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   box-shadow: var(--shadow-subtle);
   cursor: pointer;
+  position: relative;
   transition: all 0.2s var(--ease-apple);
 }
 
@@ -1110,9 +1276,56 @@ input:checked + .switch-slider:before {
   box-shadow: var(--shadow-card);
 }
 
+.product-row-card.selected {
+  border-color: #10B981;
+  background: #F0FDF4;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15);
+}
+
+/* Custom Checkbox for Multi-Select */
+.prod-select-checkbox-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 2px;
+}
+
+.prod-select-checkbox {
+  display: none;
+}
+
+.custom-prod-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid #CBD5E1;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s var(--ease-apple);
+}
+
+.prod-select-checkbox:checked + .custom-prod-checkbox {
+  background: #0F5132;
+  border-color: #0F5132;
+}
+
+.prod-select-checkbox:checked + .custom-prod-checkbox::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
 .prod-thumb-img {
-  width: 64px;
-  height: 64px;
+  width: 58px;
+  height: 58px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   background: #F1F5F9;
@@ -1125,7 +1338,7 @@ input:checked + .switch-slider:before {
 }
 
 .prod-title {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 2px;
@@ -1135,15 +1348,15 @@ input:checked + .switch-slider:before {
 }
 
 .prod-sku-line {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-secondary);
   margin-bottom: 1px;
 }
 
 .prod-barcode-line {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-tertiary);
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .prod-tag-badges {
@@ -1153,9 +1366,9 @@ input:checked + .switch-slider:before {
 }
 
 .prod-badge {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 4px;
 }
 
@@ -1171,32 +1384,99 @@ input:checked + .switch-slider:before {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .prod-price {
-  font-size: 16px;
-  font-weight: 900;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--text-primary);
 }
 
 .prod-stock-tag {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--accent-emerald);
+}
+
+/* 3-Dots Menu Container & Popup Dropdown */
+.prod-menu-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .prod-menu-btn {
   background: none;
   border: none;
-  color: var(--text-tertiary);
+  color: #94A3B8;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s var(--ease-apple);
 }
 
 .prod-menu-btn:hover {
   background: #F1F5F9;
-  color: var(--text-primary);
+  color: #1E293B;
+}
+
+.prod-action-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  min-width: 145px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: appleScaleIn 0.15s var(--ease-apple);
+}
+
+@keyframes appleScaleIn {
+  from { opacity: 0; transform: scale(0.92) translateY(-6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.prod-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1E293B;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s var(--ease-apple);
+  width: 100%;
+}
+
+.prod-dropdown-item:hover {
+  background: #F1F5F9;
+  color: #0F5132;
+}
+
+.prod-dropdown-item.delete:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.prod-dropdown-item.update:hover {
+  background: #E0F2FE;
+  color: #0284C7;
 }
 
 /* =========================================================================
@@ -1835,49 +2115,84 @@ input:checked + .switch-slider:before {
 }
 
 /* =========================================================================
-   BOTTOM DOCK NAVIGATION (Apple Floating Dock)
+   BOTTOM DOCK NAVIGATION (7 Tabs Matching Reference Design)
    ========================================================================= */
 .bottom-nav-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 1100px;
+  max-width: 480px;
   margin: 0 auto;
-  background: var(--bg-glass);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   justify-content: space-around;
-  padding: 10px 16px 14px;
+  align-items: center;
+  padding: 8px 6px 12px;
   z-index: 50;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+}
+
+@media (min-width: 900px) {
+  .bottom-nav-bar {
+    max-width: 520px;
+    border-bottom-left-radius: 32px;
+    border-bottom-right-radius: 32px;
+  }
 }
 
 .nav-tab-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: none;
   border: none;
-  color: var(--text-secondary);
-  font-size: 12px;
+  color: #64748B;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
-  padding: 6px 16px;
-  border-radius: var(--radius-full);
-  transition: all 0.2s var(--ease-apple);
+  padding: 4px 6px;
+  border-radius: 16px;
+  transition: all 0.18s var(--ease-apple);
+  flex: 1;
+  max-width: 65px;
+}
+
+.nav-tab-icon-wrap {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-tab-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.1px;
 }
 
 .nav-tab-item:hover {
-  color: var(--text-primary);
+  color: #0F172A;
 }
 
 .nav-tab-item.active {
-  color: var(--primary);
-  background: var(--primary-subtle);
+  color: #064E3B;
+  background: #D8F3E5;
   font-weight: 800;
+  border-radius: 20px;
+  padding: 5px 8px;
+}
+
+.nav-tab-item.active .nav-tab-label {
+  font-weight: 800;
+  color: #064E3B;
 }
 
 /* Toast Notification (Apple Floating Capsule) */
