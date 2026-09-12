@@ -132,6 +132,56 @@ function initDb() {
             passcode TEXT NOT NULL,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`,
+        `CREATE TABLE IF NOT EXISTS billing_products (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            sku TEXT NOT NULL,
+            barcode TEXT,
+            category TEXT NOT NULL,
+            subcategory TEXT,
+            price REAL NOT NULL,
+            stock INTEGER DEFAULT 0,
+            description TEXT,
+            image_url TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS billing_invoices (
+            id TEXT PRIMARY KEY,
+            customer_name TEXT,
+            customer_phone TEXT,
+            customer_address TEXT,
+            subtotal REAL NOT NULL,
+            discount REAL DEFAULT 0,
+            gst_rate REAL DEFAULT 0,
+            gst_amount REAL DEFAULT 0,
+            total REAL NOT NULL,
+            payment_method TEXT DEFAULT 'CASH',
+            items TEXT NOT NULL,
+            status TEXT DEFAULT 'PAID',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS billing_customers (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            phone TEXT,
+            email TEXT,
+            address TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS billing_settings (
+            id INTEGER PRIMARY KEY,
+            store_name TEXT DEFAULT 'Indrita Fabrics',
+            tagline TEXT DEFAULT 'Tradition in Every Drape',
+            address TEXT DEFAULT 'Kolkata, West Bengal, India',
+            phone TEXT DEFAULT '+91 9876543210',
+            gst_number TEXT DEFAULT '19AAAAA0000A1Z5',
+            printer_model TEXT DEFAULT 'DEV 2IN1 632-L58P',
+            printer_paper_width INTEGER DEFAULT 58,
+            printer_dpi INTEGER DEFAULT 203,
+            default_gst_rate REAL DEFAULT 18,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS colors TEXT;`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS display_index INTEGER DEFAULT 999;`

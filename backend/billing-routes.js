@@ -50,8 +50,8 @@ export function createBillingRouter(db) {
                     stock INTEGER DEFAULT 0,
                     description TEXT,
                     image_url TEXT,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
 
@@ -66,10 +66,10 @@ export function createBillingRouter(db) {
                     gst_rate REAL DEFAULT 0,
                     gst_amount REAL DEFAULT 0,
                     total REAL NOT NULL,
-                    payment_method TEXT DEFAULT "CASH",
+                    payment_method TEXT DEFAULT 'CASH',
                     items TEXT NOT NULL,
-                    status TEXT DEFAULT "PAID",
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    status TEXT DEFAULT 'PAID',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
 
@@ -80,23 +80,23 @@ export function createBillingRouter(db) {
                     phone TEXT,
                     email TEXT,
                     address TEXT,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
 
             await runQuery(`
                 CREATE TABLE IF NOT EXISTS billing_settings (
                     id INTEGER PRIMARY KEY,
-                    store_name TEXT DEFAULT "Indrita Fabrics",
-                    tagline TEXT DEFAULT "Tradition in Every Drape",
-                    address TEXT DEFAULT "Kolkata, West Bengal, India",
-                    phone TEXT DEFAULT "+91 9876543210",
-                    gst_number TEXT DEFAULT "19AAAAA0000A1Z5",
-                    printer_model TEXT DEFAULT "DEV 2IN1 632-L58P",
+                    store_name TEXT DEFAULT 'Indrita Fabrics',
+                    tagline TEXT DEFAULT 'Tradition in Every Drape',
+                    address TEXT DEFAULT 'Kolkata, West Bengal, India',
+                    phone TEXT DEFAULT '+91 9876543210',
+                    gst_number TEXT DEFAULT '19AAAAA0000A1Z5',
+                    printer_model TEXT DEFAULT 'DEV 2IN1 632-L58P',
                     printer_paper_width INTEGER DEFAULT 58,
                     printer_dpi INTEGER DEFAULT 203,
                     default_gst_rate REAL DEFAULT 18,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
 
@@ -127,7 +127,18 @@ export function createBillingRouter(db) {
         }
     };
 
-    initBillingTables();
+    let tablesReady = false;
+    router.use(async (req, res, next) => {
+        if (!tablesReady) {
+            try {
+                await initBillingTables();
+                tablesReady = true;
+            } catch (err) {
+                console.error("[BILLING] Table ensure error:", err);
+            }
+        }
+        next();
+    });
 
     // --- R2 PHOTO UPLOAD ---
     router.post("/upload", async (req, res) => {
