@@ -2222,23 +2222,23 @@ input:checked + .switch-slider:before {
 }
 
 /* =========================================================================
-   50MM x 25MM LABEL PREVIEW MOCKUP (EXACT MATCH TO DESIGN)
+   50MM x 30MM LABEL PREVIEW MOCKUP (EXACT MATCH TO DESIGN)
    ========================================================================= */
 .label-preview-wrapper {
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 10px 0;
+  margin: 10px auto;
 }
 
 .label-mockup-card {
   width: 280px;
-  height: 140px; /* Exact 2:1 ratio matching 50mm x 25mm */
+  height: 168px; /* Exact 5:3 ratio matching 50mm x 30mm */
   background: #FFFFFF;
   border: 2px dashed #8F9CAE;
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -2247,6 +2247,7 @@ input:checked + .switch-slider:before {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .label-mockup-store {
@@ -2267,14 +2268,14 @@ input:checked + .switch-slider:before {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 2px;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .label-mockup-qr-col {
-  width: 82px;
-  height: 82px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2282,8 +2283,8 @@ input:checked + .switch-slider:before {
 }
 
 .label-mockup-qr-col canvas {
-  width: 82px !important;
-  height: 82px !important;
+  width: 96px !important;
+  height: 96px !important;
   display: block;
 }
 
@@ -2314,28 +2315,36 @@ input:checked + .switch-slider:before {
   font-size: 13px;
   font-weight: 600;
   color: #526079;
-  margin-top: 3px;
+  margin-top: 4px;
   letter-spacing: 0.2px;
 }
 
 .label-mockup-price {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 24px;
+  font-size: 25px;
   font-weight: 900;
   color: #065F46;
-  margin-top: 4px;
+  margin-top: 6px;
   line-height: 1;
   letter-spacing: -0.5px;
 }
 
 /* =========================================================================
-   58MM THERMAL PRINTER & 50MM x 25MM LABEL PRINT STYLES
+   58MM THERMAL PRINTER & 50MM x 30MM LABEL PRINT STYLES
    ========================================================================= */
 #thermal-print-container {
   display: none;
 }
 
 @media print {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 50mm !important;
+    height: 30mm !important;
+    overflow: hidden !important;
+  }
+
   body * {
     visibility: hidden;
   }
@@ -2345,11 +2354,15 @@ input:checked + .switch-slider:before {
     print-color-adjust: exact !important;
   }
   #thermal-print-container {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     left: 0;
     top: 0;
-    margin: 0;
+    width: 50mm;
+    margin: 0 auto;
     padding: 0;
     background: white;
     color: black;
@@ -2362,17 +2375,20 @@ input:checked + .switch-slider:before {
     font-family: "Courier New", Courier, monospace, sans-serif;
     font-size: 11px;
     line-height: 1.2;
+    display: block !important;
   }
 
-  /* 50mm x 25mm Label Print Configuration */
+  /* 50mm x 30mm Label Print Configuration */
+  #thermal-print-container.mode-label-50x30,
   #thermal-print-container.mode-label-50x25 {
     width: 50mm;
     padding: 0;
+    margin: 0 auto;
   }
 
   @page {
-    size: 50mm 25mm;
-    margin: 0;
+    size: 50mm 30mm;
+    margin: 0mm;
   }
 }
 
@@ -2420,10 +2436,11 @@ input:checked + .switch-slider:before {
   margin-top: 6px;
 }
 
-/* 50mm x 25mm Exact Physical Label Output */
+/* 50mm x 30mm Exact Physical Label Output */
+.print-label-50x30-wrapper,
 .print-label-50x25-wrapper {
   width: 50mm;
-  height: 25mm;
+  height: 30mm;
   page-break-after: always;
   page-break-inside: avoid;
   break-after: page;
@@ -2431,18 +2448,20 @@ input:checked + .switch-slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
+  margin: 0 auto;
   padding: 0;
   overflow: hidden;
 }
 
+.print-label-50x30,
 .print-label-50x25 {
-  width: 50mm;
-  height: 24mm;
-  max-width: 50mm;
-  max-height: 24mm;
+  width: 48mm;
+  height: 28mm;
+  max-width: 48mm;
+  max-height: 28mm;
   box-sizing: border-box;
-  padding: 0.8mm 1.5mm 0.8mm 1.5mm;
+  margin: auto;
+  padding: 1mm 1.5mm;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -2458,7 +2477,7 @@ input:checked + .switch-slider:before {
 
 .print-label-store {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 7pt;
+  font-size: 7.5pt;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -2473,16 +2492,16 @@ input:checked + .switch-slider:before {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   flex: 1;
-  gap: 1.2mm;
-  margin-top: 0.4mm;
+  gap: 1.5mm;
+  margin: auto 0;
 }
 
 .print-label-qr-wrap {
-  width: 14mm;
-  height: 14mm;
+  width: 18mm;
+  height: 18mm;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2490,8 +2509,8 @@ input:checked + .switch-slider:before {
 }
 
 .print-label-qr-wrap canvas {
-  width: 14mm !important;
-  height: 14mm !important;
+  width: 18mm !important;
+  height: 18mm !important;
   display: block;
 }
 
@@ -2507,10 +2526,10 @@ input:checked + .switch-slider:before {
 
 .print-label-name {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 7.5pt;
+  font-size: 8pt;
   font-weight: 900;
   color: #000000;
-  line-height: 1.1;
+  line-height: 1.15;
   max-width: 28mm;
   white-space: nowrap;
   overflow: hidden;
@@ -2519,19 +2538,19 @@ input:checked + .switch-slider:before {
 
 .print-label-sku {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 5.5pt;
+  font-size: 6pt;
   font-weight: 600;
   color: #334155;
-  margin-top: 0.4mm;
+  margin-top: 0.5mm;
   line-height: 1;
 }
 
 .print-label-price {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 9.5pt;
+  font-size: 10.5pt;
   font-weight: 900;
   color: #000000;
-  margin-top: 0.8mm;
+  margin-top: 1mm;
   line-height: 1;
 }
 
