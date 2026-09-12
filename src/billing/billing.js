@@ -40,7 +40,7 @@ const state = {
     }
 };
 
-// --- AUDIO BEEP FOR BARCODE SCAN ---
+// --- AUDIO BEEP & HAPTICS FOR BARCODE SCAN ---
 function playBeep() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -49,13 +49,20 @@ function playBeep() {
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.type = "sine";
-        osc.frequency.setValueAtTime(1800, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.12);
+        
+        const now = audioCtx.currentTime;
+        osc.frequency.setValueAtTime(880, now); // A5
+        osc.frequency.exponentialRampToValueAtTime(1760, now + 0.08); // A6
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        osc.start(now);
+        osc.stop(now + 0.14);
+        
+        if (navigator.vibrate) {
+            navigator.vibrate([30, 40, 60]);
+        }
     } catch (e) {
-        console.log("Audio feedback ready");
+        console.log("Audio/Haptic feedback active");
     }
 }
 
@@ -201,8 +208,8 @@ async function loadProducts() {
         const res = await fetch("/api/billing/products");
         if (res.ok) {
             state.products = await res.json();
-            state.filteredProducts = [...state.products];
-            renderCatalog();
+            renderCategoryChips();
+            filterCatalog();
         }
     } catch (e) {
         console.error("Failed to load billing products:", e);
@@ -232,103 +239,75 @@ function setupCartHandlers() {
     // Direct Print Button
     document.getElementById("btn-print-bill-direct")?.addEventListener("click", async () => {
         if (!state.cart.length) {
-            window.showToast("Please add items to bill first");
+            window.showToast("Your bill is empty! Add products first.");
             return;
         }
         await executeDirectPrintAndSettle("CASH");
     });
 }
 
-function addToCart(product, quantity = 1) {
+function addToCart(product, qty = 1) {
     const existing = state.cart.find(item => item.id === product.id);
     if (existing) {
-        existing.qty += quantity;
+        existing.qty += qty;
     } else {
         state.cart.push({
             id: product.id,
             name: product.name,
             sku: product.sku,
-            barcode: product.barcode,
             price: Number(product.price),
-            image_url: product.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80",
-            qty: quantity
+            qty: qty,
+            barcode: product.barcode,
+            category: product.category,
+            image_url: product.image_url
         });
     }
-
-    playBeep();
+    state.lastScannedProduct = product;
+    calculateBillTotals();
     renderCart();
+    updateScannerCartSummary();
+    playBeep();
     window.showToast(`Added ${product.name} to bill`);
 }
 
-function updateCartItemQty(productId, delta) {
-    const item = state.cart.find(i => i.id === productId);
-    if (!item) return;
-    item.qty += delta;
-    if (item.qty <= 0) {
-        state.cart = state.cart.filter(i => i.id !== productId);
+function updateCartItemQty(productId, newQty) {
+    if (newQty <= 0) {
+        state.cart = state.cart.filter(item => item.id !== productId);
+    } else {
+        const item = state.cart.find(item => item.id === productId);
+        if (item) item.qty = newQty;
     }
+    calculateBillTotals();
     renderCart();
+    updateScannerCartSummary();
 }
 
 function removeCartItem(productId) {
-    state.cart = state.cart.filter(i => i.id !== productId);
+    state.cart = state.cart.filter(item => item.id !== productId);
+    calculateBillTotals();
     renderCart();
+    updateScannerCartSummary();
     window.showToast("Item removed from bill");
 }
-
-function renderCart() {
-    const container = document.getElementById("cart-items-container");
-    if (!container) return;
-
-    if (state.cart.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 32px 16px; background: white; border-radius: var(--radius-md); border: 1px dashed #CBD5E1;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5" style="margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                <div style="font-size: 14px; font-weight: 700; color: #475569;">Your bill is empty</div>
-                <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Scan product labels or search catalog to add items</div>
-            </div>
-        `;
-    } else {
-        container.innerHTML = state.cart.map(item => `
-            <div class="cart-item-card">
-                <img class="cart-item-img" src="${item.image_url}" alt="${item.name}">
-                <div class="cart-item-details">
-                    <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-meta">
-                        <span class="sku">#${item.sku}</span> | <span class="price">₹ ${(item.price).toLocaleString("en-IN")}</span>
-                    </div>
-                </div>
-                <div class="qty-stepper">
-                    <button class="qty-btn" onclick="window.updateCartQty('${item.id}', -1)">-</button>
-                    <span class="qty-val">${item.qty}</span>
-                    <button class="qty-btn" onclick="window.updateCartQty('${item.id}', 1)">+</button>
-                </div>
-                <button class="btn-trash" onclick="window.removeCartItem('${item.id}')" title="Remove Item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
-            </div>
-        `).join("");
-    }
-
-    calculateBillTotals();
-}
-
-window.updateCartQty = (id, delta) => updateCartItemQty(id, delta);
-window.removeCartItem = (id) => removeCartItem(id);
 
 function calculateBillTotals() {
     let subtotal = 0;
     let totalItems = 0;
 
     state.cart.forEach(item => {
-        subtotal += item.price * item.qty;
+        subtotal += (item.price * item.qty);
         totalItems += item.qty;
     });
 
-    const discount = state.discountAmount || 0;
-    const taxableAmount = Math.max(0, subtotal - discount);
-    const gstAmount = state.isGstEnabled ? Math.round(taxableAmount * (state.gstRate / 100)) : 0;
-    const grandTotal = taxableAmount + gstAmount;
+    state.subtotal = subtotal;
+
+    if (state.isGstEnabled) {
+        state.gstAmount = Math.round((subtotal * (state.gstRate / 100)));
+    } else {
+        state.gstAmount = 0;
+    }
+
+    state.grandTotal = Math.max(0, subtotal - state.discountAmount + state.gstAmount);
 
     const summaryCount = document.getElementById("summary-items-count");
     const summarySub = document.getElementById("summary-subtotal");
@@ -337,17 +316,80 @@ function calculateBillTotals() {
     const summaryTotal = document.getElementById("summary-grand-total");
     const step1Sub = document.getElementById("btn-step1-sub");
     const scanDoneSub = document.getElementById("scan-done-items-sub");
+    const homeSub = document.getElementById("home-cart-summary-sub");
 
-    if (summaryCount) summaryCount.textContent = `${totalItems} items`;
+    if (summaryCount) summaryCount.textContent = `${totalItems} item${totalItems === 1 ? '' : 's'}`;
     if (summarySub) summarySub.textContent = `₹ ${subtotal.toLocaleString("en-IN")}`;
-    if (summaryDisc) summaryDisc.textContent = `- ₹ ${discount.toLocaleString("en-IN")}`;
-    if (summaryGst) summaryGst.textContent = `₹ ${gstAmount.toLocaleString("en-IN")}`;
-    if (summaryTotal) summaryTotal.textContent = `₹ ${grandTotal.toLocaleString("en-IN")}`;
-    if (step1Sub) step1Sub.textContent = `${totalItems} items • ₹ ${subtotal.toLocaleString("en-IN")}`;
+    if (summaryDisc) summaryDisc.textContent = `- ₹ ${(state.discountAmount || 0).toLocaleString("en-IN")}`;
+    if (summaryGst) summaryGst.textContent = `₹ ${state.gstAmount.toLocaleString("en-IN")}`;
+    if (summaryTotal) summaryTotal.textContent = `₹ ${state.grandTotal.toLocaleString("en-IN")}`;
+    if (step1Sub) step1Sub.textContent = `${totalItems} item${totalItems === 1 ? '' : 's'} • ₹ ${state.grandTotal.toLocaleString("en-IN")}`;
     if (scanDoneSub) scanDoneSub.textContent = `Review Bill (${totalItems} items)`;
+    if (homeSub) {
+        homeSub.textContent = `${totalItems} items added • ₹ ${state.grandTotal.toLocaleString("en-IN")}`;
+    }
 
-    return { subtotal, discount, gstAmount, grandTotal, totalItems };
+    updateScannerCartSummary();
+
+    return { subtotal, discount: state.discountAmount || 0, gstAmount: state.gstAmount, grandTotal: state.grandTotal, totalItems };
 }
+
+function renderCart() {
+    const container = document.getElementById("cart-items-container");
+    if (!container) return;
+
+    if (!state.cart.length) {
+        container.innerHTML = `
+            <div class="cart-empty-state" style="text-align: center; padding: 32px 16px; background: white; border-radius: var(--radius-md); border: 1px dashed #CBD5E1;">
+                <div class="empty-icon-circle" style="margin-bottom:8px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                </div>
+                <div class="empty-title" style="font-size: 14px; font-weight: 700; color: #475569;">Cart is empty</div>
+                <div class="empty-desc" style="font-size: 11px; color: #94A3B8; margin-top: 2px;">Scan product barcode or tap search above to add sarees to bill</div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = state.cart.map(item => `
+        <div class="cart-item-card">
+            <img class="cart-item-img" src="${item.image_url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80'}" alt="${item.name}">
+            <div class="cart-item-details">
+                <div class="cart-item-title">${item.name}</div>
+                <div class="cart-item-meta">
+                    <span>SKU: ${item.sku}</span>
+                    <span>•</span>
+                    <span>₹ ${(item.price).toLocaleString("en-IN")} each</span>
+                </div>
+                <div class="cart-item-line-total">₹ ${(item.price * item.qty).toLocaleString("en-IN")}</div>
+            </div>
+            
+            <div class="cart-qty-ctrl qty-stepper">
+                <button type="button" class="btn-qty qty-btn" onclick="window.handleQtyMinus('${item.id}')">&minus;</button>
+                <span class="qty-val">${item.qty}</span>
+                <button type="button" class="btn-qty qty-btn" onclick="window.handleQtyPlus('${item.id}')">&plus;</button>
+            </div>
+            <button class="btn-trash" onclick="window.removeCartItem('${item.id}')" title="Remove Item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+        </div>
+    `).join("");
+
+    calculateBillTotals();
+}
+
+window.handleQtyMinus = (id) => {
+    const item = state.cart.find(i => i.id === id);
+    if (item) updateCartItemQty(id, item.qty - 1);
+};
+
+window.handleQtyPlus = (id) => {
+    const item = state.cart.find(i => i.id === id);
+    if (item) updateCartItemQty(id, item.qty + 1);
+};
+
+window.updateCartQty = (id, delta) => updateCartItemQty(id, delta);
+window.removeCartItem = (id) => removeCartItem(id);
 
 // --- PRODUCTS CATALOG SCREEN ---
 function setupCatalogHandlers() {
@@ -357,16 +399,36 @@ function setupCatalogHandlers() {
         filterCatalog();
     });
 
-    document.querySelectorAll(".cat-chip").forEach(chip => {
+    document.getElementById("btn-open-add-product")?.addEventListener("click", () => openAddProductModal());
+}
+
+function renderCategoryChips() {
+    const container = document.getElementById("catalog-category-chips");
+    if (!container) return;
+
+    const categories = Array.from(new Set(state.products.map(p => p.category).filter(Boolean)));
+    
+    let html = `<button class="cat-chip ${state.currentCategory === 'All' ? 'active' : ''}" data-cat="All">All</button>`;
+    categories.forEach(cat => {
+        const isAct = state.currentCategory === cat ? 'active' : '';
+        html += `<button class="cat-chip ${isAct}" data-cat="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`;
+    });
+    container.innerHTML = html;
+
+    container.querySelectorAll(".cat-chip").forEach(chip => {
         chip.addEventListener("click", () => {
-            document.querySelectorAll(".cat-chip").forEach(c => c.classList.remove("active"));
+            container.querySelectorAll(".cat-chip").forEach(c => c.classList.remove("active"));
             chip.classList.add("active");
             state.currentCategory = chip.dataset.cat;
             filterCatalog();
         });
     });
 
-    document.getElementById("btn-open-add-product")?.addEventListener("click", () => openAddProductModal());
+    // Populate category datalist for Add Product modal
+    const datalist = document.getElementById("category-datalist");
+    if (datalist) {
+        datalist.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}"></option>`).join("");
+    }
 }
 
 function filterCatalog() {
@@ -399,7 +461,7 @@ function renderCatalog() {
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                 </div>
                 <div class="empty-catalog-title">No Products in Catalog</div>
-                <div class="empty-catalog-desc">Your POS catalog is clean and ready. Tap below to add your first product, saree, or suit.</div>
+                <div class="empty-catalog-desc">Your POS catalog is clean and ready. Tap below to add your first product, saree, or fabric.</div>
                 <button type="button" class="btn-apple-primary" onclick="window.openAddProductModal()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     <span>Add First Product</span>
@@ -447,16 +509,28 @@ function renderCatalog() {
     }).join("");
 }
 
+const BADGE_COLOR_PALETTES = [
+    "badge-silk", "badge-sarees", "badge-cotton", "badge-banarasi", "badge-tussar", "badge-georgette"
+];
+
 function getBadgeClass(tag) {
     if (!tag) return "badge-silk";
-    const lower = tag.toLowerCase();
-    if (lower.includes("saree")) return "badge-sarees";
-    if (lower.includes("silk")) return "badge-silk";
-    if (lower.includes("cotton")) return "badge-cotton";
-    if (lower.includes("banarasi")) return "badge-banarasi";
-    if (lower.includes("tussar")) return "badge-tussar";
-    if (lower.includes("georgette")) return "badge-georgette";
-    return "badge-silk";
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) {
+        hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % BADGE_COLOR_PALETTES.length;
+    return BADGE_COLOR_PALETTES[index];
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 window.handleProductCardClick = (id) => {
@@ -586,8 +660,6 @@ function setupModalHandlers() {
     document.getElementById("btn-close-printer-modal")?.addEventListener("click", closePrinterSettingsModal);
     document.getElementById("btn-close-printer-settings")?.addEventListener("click", closePrinterSettingsModal);
     document.getElementById("btn-connect-bluetooth")?.addEventListener("click", connectWebBluetoothPrinter);
-    document.getElementById("btn-test-print-receipt")?.addEventListener("click", () => executeTestPrint58mmReceipt());
-    document.getElementById("btn-test-print-label")?.addEventListener("click", () => executeTestPrint58mmLabel());
 }
 
 function openAddProductModal() {
@@ -604,6 +676,10 @@ function openAddProductModal() {
     }
     document.getElementById("r2-photo-placeholder").style.display = "flex";
     document.getElementById("desc-char-count").textContent = "0/200";
+    
+    // Refresh category datalist
+    renderCategoryChips();
+    
     modal?.classList.add("active");
 }
 window.openAddProductModal = openAddProductModal;
@@ -617,7 +693,7 @@ async function submitAddProduct() {
     const name = document.getElementById("input-prod-name").value.trim();
     const sku = document.getElementById("input-prod-sku").value.trim();
     const barcode = document.getElementById("input-prod-barcode").value.trim() || sku;
-    const category = document.getElementById("select-prod-category").value;
+    const category = (document.getElementById("input-prod-category")?.value || "General").trim();
     const subcategory = document.getElementById("input-prod-subcategory").value.trim();
     const rawPrice = document.getElementById("input-prod-price").value;
     const price = Number(rawPrice);
@@ -786,21 +862,96 @@ function handlePrinterButtonClick() {
 }
 
 // --- SCANNER SCREEN & CAMERA LOGIC ---
+let scannerFacingMode = "environment";
+
 function setupScannerTools() {
     document.getElementById("btn-toggle-flash")?.addEventListener("click", toggleCameraFlash);
 
+    // Flip camera (back <-> front)
+    document.getElementById("btn-flip-camera")?.addEventListener("click", async () => {
+        scannerFacingMode = scannerFacingMode === "environment" ? "user" : "environment";
+        stopCameraScanner();
+        await startCameraScanner();
+        window.showToast(`Switched to ${scannerFacingMode === "user" ? "Front" : "Back"} camera`);
+    });
+
+    // Scanner cart pill click -> jump to review bill
+    document.getElementById("scanner-cart-pill")?.addEventListener("click", () => {
+        stopCameraScanner();
+        switchView("new-bill");
+    });
+
+    // Quick Manual SKU search in Scanner HUD
+    document.getElementById("form-quick-sku-scan")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const input = document.getElementById("input-quick-sku-val");
+        const code = input ? input.value.trim() : "";
+        if (!code) return;
+        handleScannedBarcode(code);
+        if (input) input.value = "";
+    });
+
+    // Scan Barcode from Photo / Gallery
     const galleryInput = document.getElementById("scanner-gallery-input");
     document.getElementById("btn-upload-gallery")?.addEventListener("click", () => galleryInput?.click());
     
-    galleryInput?.addEventListener("change", (e) => {
+    galleryInput?.addEventListener("change", async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        simulateScanProduct();
+
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = async () => {
+            if ("BarcodeDetector" in window) {
+                try {
+                    const detector = new window.BarcodeDetector({
+                        formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e"]
+                    });
+                    const barcodes = await detector.detect(img);
+                    if (barcodes && barcodes.length > 0) {
+                        handleScannedBarcode(barcodes[0].rawValue);
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Photo barcode detect error:", err);
+                }
+            }
+            window.showToast("No barcode/QR found in selected image.");
+        };
     });
 
-    document.getElementById("btn-scan-simulate")?.addEventListener("click", () => simulateScanProduct());
+    // Scanned Bottom Sheet Quantity Stepper
+    document.getElementById("btn-scanned-qty-minus")?.addEventListener("click", () => {
+        if (state.lastScannedProduct) {
+            const item = state.cart.find(c => c.id === state.lastScannedProduct.id);
+            if (item) {
+                updateCartItemQty(item.id, item.qty - 1);
+                const updated = state.cart.find(c => c.id === state.lastScannedProduct.id);
+                const qtyNum = document.getElementById("scanned-qty-number");
+                if (qtyNum) qtyNum.textContent = updated ? updated.qty : 0;
+            }
+        }
+    });
+
+    document.getElementById("btn-scanned-qty-plus")?.addEventListener("click", () => {
+        if (state.lastScannedProduct) {
+            const item = state.cart.find(c => c.id === state.lastScannedProduct.id);
+            if (item) {
+                updateCartItemQty(item.id, item.qty + 1);
+                const updated = state.cart.find(c => c.id === state.lastScannedProduct.id);
+                const qtyNum = document.getElementById("scanned-qty-number");
+                if (qtyNum) qtyNum.textContent = updated ? updated.qty : 1;
+            } else {
+                addToCart(state.lastScannedProduct, 1);
+                const qtyNum = document.getElementById("scanned-qty-number");
+                if (qtyNum) qtyNum.textContent = 1;
+            }
+        }
+    });
 
     document.getElementById("btn-scan-next-product")?.addEventListener("click", () => {
+        const sheet = document.getElementById("scanner-bottom-sheet");
+        if (sheet) sheet.style.display = "none";
         window.showToast("Ready for next scan");
     });
 
@@ -808,18 +959,19 @@ function setupScannerTools() {
         stopCameraScanner();
         switchView("new-bill");
     });
+}
 
-    document.getElementById("btn-scanned-remove")?.addEventListener("click", () => {
-        if (state.cart.length > 0) {
-            const lastItem = state.cart[state.cart.length - 1];
-            removeCartItem(lastItem.id);
-        }
-    });
-
-    document.getElementById("btn-scanned-edit-qty")?.addEventListener("click", () => {
-        stopCameraScanner();
-        switchView("new-bill");
-    });
+function updateScannerCartSummary() {
+    const totalCount = state.cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+    const totalPrice = state.cart.reduce((sum, item) => sum + ((item.price || 0) * (item.qty || 1)), 0);
+    const pillText = document.getElementById("scanner-cart-summary-text");
+    if (pillText) {
+        pillText.textContent = `${totalCount} item${totalCount === 1 ? '' : 's'} • ₹ ${totalPrice.toLocaleString("en-IN")}`;
+    }
+    const doneSub = document.getElementById("scan-done-items-sub");
+    if (doneSub) {
+        doneSub.textContent = `Review Bill (${totalCount} item${totalCount === 1 ? '' : 's'})`;
+    }
 }
 
 async function startCameraScanner() {
@@ -831,7 +983,7 @@ async function startCameraScanner() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: "environment",
+                facingMode: scannerFacingMode,
                 width: { ideal: 1280 },
                 height: { ideal: 720 }
             },
@@ -886,26 +1038,20 @@ async function detectBarcodeLoop(video) {
 }
 
 function handleScannedBarcode(barcodeVal) {
-    const product = state.products.find(p => p.barcode === barcodeVal || p.sku === barcodeVal);
+    const cleanVal = barcodeVal.trim().toLowerCase();
+    const product = state.products.find(p => 
+        (p.barcode && p.barcode.toLowerCase() === cleanVal) || 
+        (p.sku && p.sku.toLowerCase() === cleanVal)
+    );
     
     if (!product) {
-        window.showToast(`Product with barcode "${barcodeVal}" not found in catalog.`);
+        window.showToast(`Product "${barcodeVal}" not found in catalog.`);
         return;
     }
 
     playBeep();
     addToCart(product, 1);
     updateScannerBottomSheet(product);
-}
-
-function simulateScanProduct() {
-    if (!state.products.length) {
-        window.showToast("No products in catalog yet. Please add a product first.");
-        return;
-    }
-    const randomIndex = Math.floor(Math.random() * state.products.length);
-    const sample = state.products[randomIndex];
-    handleScannedBarcode(sample.barcode || sample.sku);
 }
 
 function updateScannerBottomSheet(product) {
@@ -916,9 +1062,12 @@ function updateScannerBottomSheet(product) {
     document.getElementById("scanned-item-name").textContent = product.name;
     document.getElementById("scanned-item-sku").textContent = `SKU: ${product.sku}`;
     document.getElementById("scanned-item-price").textContent = `₹ ${(product.price).toLocaleString("en-IN")}`;
-    const totalItemsCount = state.cart.reduce((sum, item) => sum + (item.qty || 1), 0);
-    const countEl = document.getElementById("scan-done-items-sub");
-    if (countEl) countEl.textContent = `Review Bill (${totalItemsCount} item${totalItemsCount === 1 ? '' : 's'})`;
+    
+    const itemInCart = state.cart.find(c => c.id === product.id);
+    const qtyNum = document.getElementById("scanned-qty-number");
+    if (qtyNum) qtyNum.textContent = itemInCart ? itemInCart.qty : 1;
+
+    updateScannerCartSummary();
 }
 
 async function toggleCameraFlash() {
@@ -1294,41 +1443,7 @@ async function executePrint58mmLabelDirect(product, copies = 1) {
     }
 }
 
-async function executeTestPrint58mmReceipt() {
-    const testInvoice = {
-        id: "TEST-0001",
-        customer_name: "Test Customer",
-        customer_phone: "9876543210",
-        subtotal: 8950,
-        discount: 0,
-        gst_rate: 18,
-        gst_amount: 1611,
-        total: 10561,
-        payment_method: "CASH",
-        items: [
-            { id: "p1", name: "Kanchipuram Silk Saree", sku: "KS00123", price: 8950, qty: 1 }
-        ]
-    };
-
-    try {
-        const bytes = build58mmEscPosReceipt(testInvoice, state.storeSettings);
-        await sendRawBytesToPrinter(bytes);
-        window.showToast("Test 58mm receipt printed successfully!");
-    } catch (e) {
-        window.showToast("Bluetooth not paired. Click 'Pair Bluetooth' to connect DEV 2IN1 printer.");
-    }
-}
-
-async function executeTestPrint58mmLabel() {
-    const testProduct = {
-        id: "test",
-        name: "Kanchipuram Silk Saree",
-        sku: "KS00123",
-        barcode: "8901234567890",
-        price: 8950
-    };
-    await executePrint58mmLabelDirect(testProduct, 1);
-}
+// Direct thermal receipt fallback renderer
 
 function print58mmThermalReceiptFallback(invoice) {
     const store = state.storeSettings;
@@ -1553,10 +1668,17 @@ function setupMoreSettingsHandlers() {
         }
     });
 
-    // Hardware Pair & Test Print from More Screen
+    // Hardware Pair from More Screen
     document.getElementById("btn-more-pair-printer")?.addEventListener("click", connectWebBluetoothPrinter);
-    document.getElementById("btn-more-test-receipt")?.addEventListener("click", () => executeTestPrint58mmReceipt());
-    document.getElementById("btn-more-test-label")?.addEventListener("click", () => executeTestPrint58mmLabel());
+
+    // Executive A4 PDF Document Exports
+    document.getElementById("btn-export-invoices-pdf")?.addEventListener("click", () => {
+        window.open("/api/billing/export/invoices-pdf", "_blank");
+    });
+
+    document.getElementById("btn-export-products-pdf")?.addEventListener("click", () => {
+        window.open("/api/billing/export/products-pdf", "_blank");
+    });
 
     // Clear Invoices
     document.getElementById("btn-clear-invoices-data")?.addEventListener("click", async () => {

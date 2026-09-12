@@ -504,6 +504,536 @@ export function createBillingRouter(db) {
         }
     });
 
+    // --- EXECUTIVE A4 PDF EXPORT: INVOICES REPORT ---
+    router.get("/export/invoices-pdf", async (req, res) => {
+        try {
+            const invoices = await runQuery("SELECT * FROM billing_invoices ORDER BY created_at DESC");
+            const settingsRows = await runQuery("SELECT * FROM billing_settings WHERE id = 1");
+            const settings = settingsRows[0] || {
+                store_name: "Indrita Fabrics",
+                tagline: "Tradition in Every Drape",
+                address: "Main Road, Fabric Market, Kolkata - 700001",
+                phone: "+91 9876543210",
+                gst_number: "19AAAAA0000A1Z5"
+            };
+
+            let grandTotal = 0;
+            let totalGst = 0;
+            let totalItemsSold = 0;
+
+            const tableRows = invoices.map((inv, idx) => {
+                grandTotal += Number(inv.total || 0);
+                totalGst += Number(inv.gst_amount || 0);
+                let itemsList = [];
+                try {
+                    itemsList = JSON.parse(inv.items);
+                    itemsList.forEach(it => totalItemsSold += Number(it.qty || 1));
+                } catch {}
+
+                const dateStr = inv.created_at ? new Date(inv.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "-";
+                const itemsSummary = itemsList.map(it => `${it.qty || 1}x ${it.name} (₹${it.price})`).join("<br>");
+
+                return `
+                    <tr>
+                        <td style="text-align:center; font-weight:700;">${idx + 1}</td>
+                        <td>
+                            <strong style="color:#0F5132;">${inv.id}</strong><br>
+                            <span style="font-size:10px; color:#64748B;">${dateStr}</span>
+                        </td>
+                        <td>
+                            <strong>${inv.customer_name || "Walk-in Customer"}</strong><br>
+                            <span style="font-size:10px; color:#64748B;">${inv.customer_phone || "-"}</span>
+                        </td>
+                        <td style="font-size:11px; color:#334155;">${itemsSummary || "1x Items"}</td>
+                        <td style="text-align:center;">
+                            <span style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700; background:#ECFDF5; color:#065F46;">
+                                ${inv.payment_method || "CASH"}
+                            </span>
+                        </td>
+                        <td style="text-align:right;">₹ ${(inv.gst_amount || 0).toLocaleString("en-IN")}</td>
+                        <td style="text-align:right; font-weight:800; color:#0F172A;">₹ ${(inv.total || 0).toLocaleString("en-IN")}</td>
+                    </tr>
+                `;
+            }).join("");
+
+            const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoices Report - ${settings.store_name}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm 15mm;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #0F172A;
+            background: #FFF;
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .header-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #0F5132;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+        }
+        .store-brand h1 {
+            font-size: 24px;
+            font-weight: 900;
+            color: #0F5132;
+            letter-spacing: -0.5px;
+        }
+        .store-brand p {
+            font-size: 11px;
+            color: #64748B;
+            margin-top: 2px;
+        }
+        .report-meta {
+            text-align: right;
+            font-size: 11px;
+            color: #475569;
+        }
+        .report-meta .doc-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1E293B;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .kpi-card {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+        .kpi-label { font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700; }
+        .kpi-value { font-size: 16px; font-weight: 900; color: #0F5132; margin-top: 2px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 16px;
+        }
+        th {
+            background: #0F5132;
+            color: #FFFFFF;
+            text-align: left;
+            padding: 8px 10px;
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #E2E8F0;
+            vertical-align: top;
+        }
+        tr:nth-child(even) td { background: #FAFAFA; }
+        .footer-note {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid #E2E8F0;
+            font-size: 10px;
+            color: #94A3B8;
+        }
+        .signature-box {
+            text-align: center;
+            width: 160px;
+            border-top: 1px solid #0F172A;
+            padding-top: 4px;
+            font-weight: 700;
+            color: #0F172A;
+        }
+        .no-print-bar {
+            position: sticky;
+            top: 0;
+            background: #1E293B;
+            color: white;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-print-now {
+            background: #10B981;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        @media print {
+            .no-print-bar { display: none !important; }
+            body { padding: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print-bar">
+        <span>📄 <strong>Sales & Invoices Executive Report</strong> (${invoices.length} invoices)</span>
+        <button class="btn-print-now" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+
+    <div class="header-wrap">
+        <div class="store-brand">
+            <h1>${settings.store_name}</h1>
+            <p>${settings.tagline || ""}</p>
+            <p style="margin-top:4px;">${settings.address || ""} | Ph: ${settings.phone || ""}</p>
+            ${settings.gst_number ? `<p><strong>GSTIN:</strong> ${settings.gst_number}</p>` : ""}
+        </div>
+        <div class="report-meta">
+            <div class="doc-title">Sales Audit Statement</div>
+            <p>Generated: ${new Date().toLocaleString("en-IN")}</p>
+            <p>Scope: Complete History</p>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total Invoices</div>
+            <div class="kpi-value">${invoices.length}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Items Sold</div>
+            <div class="kpi-value">${totalItemsSold}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Total GST Tax</div>
+            <div class="kpi-value">₹ ${totalGst.toLocaleString("en-IN")}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Total Revenue</div>
+            <div class="kpi-value">₹ ${grandTotal.toLocaleString("en-IN")}</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:30px; text-align:center;">#</th>
+                <th style="width:110px;">Invoice & Date</th>
+                <th style="width:130px;">Customer</th>
+                <th>Items Breakdown</th>
+                <th style="width:70px; text-align:center;">Payment</th>
+                <th style="width:80px; text-align:right;">GST</th>
+                <th style="width:90px; text-align:right;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${tableRows || `<tr><td colspan="7" style="text-align:center; padding:20px; color:#94A3B8;">No invoices on record.</td></tr>`}
+        </tbody>
+    </table>
+
+    <div class="footer-note">
+        <div>
+            <p>This is a computer-generated tax & sales statement for ${settings.store_name}.</p>
+            <p>Page 1 of 1 • Internal Audit Copy</p>
+        </div>
+        <div class="signature-box">
+            Authorized Signatory
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() { window.print(); }, 400);
+        };
+    </script>
+</body>
+</html>
+            `;
+
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
+            res.send(html);
+        } catch (err) {
+            res.status(500).send("PDF Report Generation failed: " + err.message);
+        }
+    });
+
+    // --- EXECUTIVE A4 PDF EXPORT: PRODUCTS CATALOG INVENTORY ---
+    router.get("/export/products-pdf", async (req, res) => {
+        try {
+            const products = await runQuery("SELECT * FROM billing_products ORDER BY category ASC, name ASC");
+            const settingsRows = await runQuery("SELECT * FROM billing_settings WHERE id = 1");
+            const settings = settingsRows[0] || {
+                store_name: "Indrita Fabrics",
+                tagline: "Tradition in Every Drape",
+                address: "Main Road, Fabric Market, Kolkata - 700001",
+                phone: "+91 9876543210",
+                gst_number: "19AAAAA0000A1Z5"
+            };
+
+            let totalStockQty = 0;
+            let totalValuation = 0;
+            const distinctCategories = new Set();
+
+            const tableRows = products.map((p, idx) => {
+                const stock = Number(p.stock || 0);
+                const price = Number(p.price || 0);
+                const itemVal = stock * price;
+                totalStockQty += stock;
+                totalValuation += itemVal;
+                if (p.category) distinctCategories.add(p.category);
+
+                return `
+                    <tr>
+                        <td style="text-align:center; font-weight:700;">${idx + 1}</td>
+                        <td style="width:40px; text-align:center;">
+                            ${p.image_url ? `<img src="${p.image_url}" style="width:36px; height:36px; object-fit:cover; border-radius:4px; border:1px solid #E2E8F0;" alt="item">` : `<div style="width:36px; height:36px; background:#F1F5F9; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; color:#94A3B8;">No Img</div>`}
+                        </td>
+                        <td>
+                            <strong>${p.name}</strong><br>
+                            <span style="font-size:10px; color:#64748B;">SKU: ${p.sku || "-"} | Barcode: ${p.barcode || "-"}</span>
+                        </td>
+                        <td>
+                            <span style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600; background:#F1F5F9; color:#334155;">
+                                ${p.category || "General"}
+                            </span>
+                            ${p.subcategory ? `<br><span style="font-size:10px; color:#64748B;">${p.subcategory}</span>` : ""}
+                        </td>
+                        <td style="text-align:center; font-weight:700;">${stock}</td>
+                        <td style="text-align:right; font-weight:700;">₹ ${price.toLocaleString("en-IN")}</td>
+                        <td style="text-align:right; font-weight:800; color:#0F5132;">₹ ${itemVal.toLocaleString("en-IN")}</td>
+                    </tr>
+                `;
+            }).join("");
+
+            const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory Audit Statement - ${settings.store_name}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm 15mm;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #0F172A;
+            background: #FFF;
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .header-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #0F5132;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+        }
+        .store-brand h1 {
+            font-size: 24px;
+            font-weight: 900;
+            color: #0F5132;
+            letter-spacing: -0.5px;
+        }
+        .store-brand p {
+            font-size: 11px;
+            color: #64748B;
+            margin-top: 2px;
+        }
+        .report-meta {
+            text-align: right;
+            font-size: 11px;
+            color: #475569;
+        }
+        .report-meta .doc-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1E293B;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .kpi-card {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+        .kpi-label { font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700; }
+        .kpi-value { font-size: 16px; font-weight: 900; color: #0F5132; margin-top: 2px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 16px;
+        }
+        th {
+            background: #0F5132;
+            color: #FFFFFF;
+            text-align: left;
+            padding: 8px 10px;
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #E2E8F0;
+            vertical-align: middle;
+        }
+        tr:nth-child(even) td { background: #FAFAFA; }
+        .footer-note {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid #E2E8F0;
+            font-size: 10px;
+            color: #94A3B8;
+        }
+        .signature-box {
+            text-align: center;
+            width: 160px;
+            border-top: 1px solid #0F172A;
+            padding-top: 4px;
+            font-weight: 700;
+            color: #0F172A;
+        }
+        .no-print-bar {
+            position: sticky;
+            top: 0;
+            background: #1E293B;
+            color: white;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-print-now {
+            background: #10B981;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        @media print {
+            .no-print-bar { display: none !important; }
+            body { padding: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print-bar">
+        <span>📦 <strong>Product Catalog & Inventory Valuation</strong> (${products.length} products)</span>
+        <button class="btn-print-now" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+
+    <div class="header-wrap">
+        <div class="store-brand">
+            <h1>${settings.store_name}</h1>
+            <p>${settings.tagline || ""}</p>
+            <p style="margin-top:4px;">${settings.address || ""} | Ph: ${settings.phone || ""}</p>
+            ${settings.gst_number ? `<p><strong>GSTIN:</strong> ${settings.gst_number}</p>` : ""}
+        </div>
+        <div class="report-meta">
+            <div class="doc-title">Inventory Valuation Audit</div>
+            <p>Generated: ${new Date().toLocaleString("en-IN")}</p>
+            <p>Active SKUs: ${products.length}</p>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total SKUs</div>
+            <div class="kpi-value">${products.length}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Total Units in Stock</div>
+            <div class="kpi-value">${totalStockQty}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Unique Categories</div>
+            <div class="kpi-value">${distinctCategories.size}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Stock Valuation</div>
+            <div class="kpi-value">₹ ${totalValuation.toLocaleString("en-IN")}</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:30px; text-align:center;">#</th>
+                <th style="width:40px; text-align:center;">Img</th>
+                <th>Product Name & Codes</th>
+                <th style="width:130px;">Category</th>
+                <th style="width:70px; text-align:center;">In Stock</th>
+                <th style="width:90px; text-align:right;">Unit Price</th>
+                <th style="width:110px; text-align:right;">Total Valuation</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${tableRows || `<tr><td colspan="7" style="text-align:center; padding:20px; color:#94A3B8;">No products in catalog.</td></tr>`}
+        </tbody>
+    </table>
+
+    <div class="footer-note">
+        <div>
+            <p>This is a computer-generated stock & inventory statement for ${settings.store_name}.</p>
+            <p>Page 1 of 1 • Internal Audit Copy</p>
+        </div>
+        <div class="signature-box">
+            Authorized Signatory
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() { window.print(); }, 400);
+        };
+    </script>
+</body>
+</html>
+            `;
+
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
+            res.send(html);
+        } catch (err) {
+            res.status(500).send("PDF Report Generation failed: " + err.message);
+        }
+    });
+
     // --- CLEAR PRODUCTS OR INVOICES ---
     router.post("/clear-data", async (req, res) => {
         try {

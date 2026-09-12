@@ -254,110 +254,111 @@
 
             <div class="category-chips-scroll" id="catalog-category-chips">
                 <button class="cat-chip active" data-cat="All">All</button>
-                <button class="cat-chip" data-cat="Sarees">Sarees</button>
-                <button class="cat-chip" data-cat="Suits">Suits</button>
-                <button class="cat-chip" data-cat="Dupattas">Dupattas</button>
-                <button class="cat-chip" data-cat="Lehengas">Lehengas</button>
-                <button class="cat-chip" data-cat="Cotton Varieties">Cotton Varieties</button>
-                <button class="cat-chip" data-cat="Others">Others</button>
             </div>
 
             <div id="catalog-products-list" class="products-list-container"></div>
         </main>
 
-        <!-- SCREEN 4: SCAN PRODUCT CAMERA VIEW -->
+        <!-- SCREEN 4: NEXT-GEN APPLE SCANNER HUD -->
         <div id="view-scan" class="content-view" style="padding: 0;">
             <div class="scan-camera-screen">
+                <!-- Top HUD Controls -->
                 <div class="scanner-top-bar">
-                    <button id="btn-scan-back-home" class="btn-scanner-back">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    <button id="btn-scan-back-home" class="btn-scanner-glass-icon" title="Back to Home">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     </button>
-                    <div class="scanner-title-group">
-                        <div class="scanner-title">Scan Product</div>
-                        <div class="scanner-sub">Scan barcode or QR to add to bill</div>
+                    
+                    <div class="scanner-hud-center">
+                        <div class="scanner-live-badge">
+                            <span class="pulse-dot-emerald"></span>
+                            <span>LIVE SCANNER</span>
+                        </div>
+                        <div id="scanner-cart-pill" class="scanner-mini-cart-pill">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            <span id="scanner-cart-summary-text">0 items • ₹0</span>
+                        </div>
                     </div>
-                    <div class="printer-status-pill" style="background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); color: white;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-                        <span class="pulse-dot"></span>
+
+                    <div class="scanner-hud-actions">
+                        <button id="btn-toggle-flash" class="btn-scanner-glass-icon" title="Toggle Flashlight">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        </button>
+                        <button id="btn-flip-camera" class="btn-scanner-glass-icon" title="Flip Camera">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                        </button>
                     </div>
                 </div>
 
+                <!-- Main Viewfinder Area -->
                 <div class="camera-viewfinder-area">
                     <video id="camera-video-feed" autoplay playsinline muted></video>
-                    <div class="scanner-instruction-tag">Align the barcode or QR within the frame</div>
+                    
+                    <!-- Quick Manual SKU Input Capsule -->
+                    <form id="form-quick-sku-scan" class="scanner-quick-search-capsule">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="input-quick-sku-val" placeholder="Type SKU or barcode..." autocomplete="off">
+                        <button type="submit" class="btn-quick-sku-add">Add</button>
+                    </form>
 
-                    <div class="scanner-target-reticle">
+                    <!-- Instruction Tag -->
+                    <div id="scanner-instruction-tag" class="scanner-instruction-tag">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                        <span>Point camera at saree barcode or QR label</span>
+                    </div>
+
+                    <!-- Target Reticle with Animated Laser -->
+                    <div class="scanner-target-reticle" id="scanner-reticle-box">
                         <div class="reticle-corner corner-tl"></div>
                         <div class="reticle-corner corner-tr"></div>
                         <div class="reticle-corner corner-bl"></div>
                         <div class="reticle-corner corner-br"></div>
+                        <div class="reticle-crosshair">+</div>
                         <div class="laser-scan-line"></div>
                     </div>
 
+                    <!-- Side Tools Floating Glass Bar -->
                     <div class="scanner-side-tools">
-                        <button id="btn-toggle-flash" class="tool-circle-btn">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                            <span>Flash</span>
-                        </button>
-                        <button id="btn-upload-gallery" class="tool-circle-btn">
+                        <button id="btn-upload-gallery" class="tool-circle-btn" title="Scan Barcode from Photo">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            <span>Gallery</span>
+                            <span>Photo</span>
                         </button>
                         <input type="file" id="scanner-gallery-input" accept="image/*" style="display: none;">
-                        <button id="btn-scan-simulate" class="tool-circle-btn">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            <span>Pick Item</span>
-                        </button>
-                    </div>
-
-                    <div class="floating-scan-tip">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
-                        <div>
-                            <div style="font-size: 11px; font-weight: 700;">Keep scanning multiple items</div>
-                            <div style="font-size: 10px; color: #A7F3D0;">Items will be added automatically</div>
-                        </div>
                     </div>
                 </div>
 
+                <!-- SLIDE-UP SCANNED ITEM CARD WITH QUANTITY STEPPER -->
                 <div class="scanner-bottom-sheet" id="scanner-bottom-sheet" style="display: none;">
                     <div class="sheet-handle-pill"></div>
+                    
                     <div class="scanned-product-preview-card">
                         <div class="scanned-preview-left">
-                            <img id="scanned-item-img" class="prod-thumb-img" src="" alt="Scanned item" style="background:#F1F5F9;">
+                            <img id="scanned-item-img" class="prod-thumb-img" src="" alt="Scanned item" style="background:#F1F5F9; border-radius:12px;">
                             <div>
-                                <div id="scanned-item-name" style="font-size: 14px; font-weight: 700; color: #0F172A;">--</div>
-                                <div id="scanned-item-sku" style="font-size: 11px; color: #64748B;">SKU: --</div>
-                                <div id="scanned-item-price" style="font-size: 14px; font-weight: 800; color: #059669; margin-top: 2px;">₹ 0</div>
+                                <div id="scanned-item-name" style="font-size: 15px; font-weight: 800; color: #0F172A; line-height: 1.2;">--</div>
+                                <div id="scanned-item-sku" style="font-size: 11px; color: #64748B; margin-top:2px;">SKU: --</div>
+                                <div id="scanned-item-price" style="font-size: 16px; font-weight: 900; color: #059669; margin-top: 4px;">₹ 0</div>
                             </div>
                         </div>
-                        <div class="scanned-badge-added">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Added to Bill</span>
+
+                        <!-- Stepper in Sheet -->
+                        <div class="scanned-qty-controller">
+                            <button type="button" class="btn-sheet-qty" id="btn-scanned-qty-minus">&minus;</button>
+                            <span id="scanned-qty-number" style="font-size: 14px; font-weight: 800; min-width: 20px; text-align: center;">1</span>
+                            <button type="button" class="btn-sheet-qty" id="btn-scanned-qty-plus">&plus;</button>
                         </div>
                     </div>
 
-                    <div class="scanned-actions-row">
-                        <button id="btn-scanned-edit-qty" class="btn-sheet-sub">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                            <span>Edit Item</span>
-                        </button>
-                        <button id="btn-scanned-remove" class="btn-sheet-sub" style="color: #DC2626;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            <span>Remove</span>
-                        </button>
-                    </div>
-
-                    <div class="scanner-footer-actions">
-                        <button id="btn-scan-next-product" class="btn-scan-next">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                    <div class="scanner-footer-actions" style="margin-top: 14px;">
+                        <button type="button" id="btn-scan-next-product" class="btn-scan-next">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
                             <div>
-                                <div style="font-size: 12px; font-weight: 700;">Scan Next Product</div>
-                                <div style="font-size: 10px; color: #15803D;">Camera will stay open</div>
+                                <div style="font-size: 12px; font-weight: 800;">Scan Next Product</div>
+                                <div style="font-size: 10px; color: #15803D;">Camera stays active</div>
                             </div>
                         </button>
-                        <button id="btn-scan-finish-done" class="btn-scan-done">
+                        <button type="button" id="btn-scan-finish-done" class="btn-scan-done">
                             <div>
-                                <div style="font-size: 13px; font-weight: 800;">Done &rarr;</div>
+                                <div style="font-size: 14px; font-weight: 800;">Done &rarr;</div>
                                 <div id="scan-done-items-sub" style="font-size: 10px; color: #A7F3D0;">Review Bill (0 items)</div>
                             </div>
                         </button>
@@ -474,17 +475,6 @@
                             <span>Pair Printer</span>
                         </button>
                     </div>
-
-                    <div class="printer-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
-                        <button type="button" id="btn-more-test-receipt" class="btn-hardware-action">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                            <span>Print Test Receipt (58mm)</span>
-                        </button>
-                        <button type="button" id="btn-more-test-label" class="btn-hardware-action">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            <span>Print Test Label (TSPL)</span>
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -577,14 +567,25 @@
                 </div>
 
                 <div class="settings-card-body">
+                    <div class="data-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <button type="button" id="btn-export-invoices-pdf" class="btn-apple-primary" style="background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); justify-content: center;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            <span>Invoices Report (PDF)</span>
+                        </button>
+                        <button type="button" id="btn-export-products-pdf" class="btn-apple-primary" style="background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); justify-content: center;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                            <span>Catalog Inventory (PDF)</span>
+                        </button>
+                    </div>
+
                     <div class="data-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                         <a href="/api/billing/export/invoices-csv" class="btn-apple-secondary" download style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span>Export Invoices (CSV)</span>
+                            <span>Invoices (CSV)</span>
                         </a>
                         <a href="/api/billing/export/products-csv" class="btn-apple-secondary" download style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span>Export Products (CSV)</span>
+                            <span>Products (CSV)</span>
                         </a>
                     </div>
 
@@ -707,14 +708,8 @@
                     <div class="form-grid-2">
                         <div class="form-field-group">
                             <label class="field-label">Category <span class="req">*</span></label>
-                            <select id="select-prod-category" class="field-input" required>
-                                <option value="Sarees">Sarees</option>
-                                <option value="Suits">Suits</option>
-                                <option value="Dupattas">Dupattas</option>
-                                <option value="Lehengas">Lehengas</option>
-                                <option value="Cotton Varieties">Cotton Varieties</option>
-                                <option value="Others">Others</option>
-                            </select>
+                            <input type="text" id="input-prod-category" list="category-datalist" class="field-input" placeholder="e.g. Sarees, Fabrics, Kurtis..." required>
+                            <datalist id="category-datalist"></datalist>
                         </div>
                         <div class="form-field-group">
                             <label class="field-label">Sub Category (Optional)</label>
@@ -853,10 +848,8 @@
                     </div>
 
                     <div style="display:flex; gap:8px;">
-                        <button type="button" id="btn-connect-bluetooth" class="btn-modal-save" style="flex:1; background:#0F5132;">Pair Bluetooth</button>
-                        <button type="button" id="btn-test-print-receipt" class="btn-modal-cancel" style="flex:1;">Test Receipt</button>
+                        <button type="button" id="btn-connect-bluetooth" class="btn-modal-save" style="width:100%; background:#0F5132;">Pair Bluetooth Printer</button>
                     </div>
-                    <button type="button" id="btn-test-print-label" class="btn-modal-cancel" style="width:100%; margin-top:8px;">Test Print Barcode Label (TSPL / CSS)</button>
                 </div>
                 <div class="modal-footer-btns">
                     <button type="button" id="btn-close-printer-settings" class="btn-modal-cancel" style="grid-column: span 2;">Done</button>
