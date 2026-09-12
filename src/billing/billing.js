@@ -824,6 +824,8 @@ function setupScannerTools() {
 
 async function startCameraScanner() {
     const video = document.getElementById("camera-video-feed");
+    const sheet = document.getElementById("scanner-bottom-sheet");
+    if (sheet) sheet.style.display = "none";
     if (!video) return;
 
     try {
@@ -884,43 +886,39 @@ async function detectBarcodeLoop(video) {
 }
 
 function handleScannedBarcode(barcodeVal) {
-    playBeep();
-    let product = state.products.find(p => p.barcode === barcodeVal || p.sku === barcodeVal);
+    const product = state.products.find(p => p.barcode === barcodeVal || p.sku === barcodeVal);
     
     if (!product) {
-        product = state.products[0] || {
-            id: "p_" + Date.now(),
-            name: "Scanned Saree Item",
-            sku: barcodeVal,
-            barcode: barcodeVal,
-            price: 4999,
-            image_url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80"
-        };
+        window.showToast(`Product with barcode "${barcodeVal}" not found in catalog.`);
+        return;
     }
 
+    playBeep();
     addToCart(product, 1);
     updateScannerBottomSheet(product);
 }
 
 function simulateScanProduct() {
-    const randomIndex = Math.floor(Math.random() * (state.products.length || 1));
-    const sample = state.products[randomIndex] || {
-        id: "p_sim",
-        name: "Kanchipuram Silk Saree",
-        sku: "KS00123",
-        barcode: "8901234567890",
-        price: 8950,
-        image_url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80"
-    };
-
+    if (!state.products.length) {
+        window.showToast("No products in catalog yet. Please add a product first.");
+        return;
+    }
+    const randomIndex = Math.floor(Math.random() * state.products.length);
+    const sample = state.products[randomIndex];
     handleScannedBarcode(sample.barcode || sample.sku);
 }
 
 function updateScannerBottomSheet(product) {
-    document.getElementById("scanned-item-img").src = product.image_url || "";
+    const sheet = document.getElementById("scanner-bottom-sheet");
+    if (sheet) sheet.style.display = "block";
+    const imgEl = document.getElementById("scanned-item-img");
+    if (imgEl) imgEl.src = product.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
     document.getElementById("scanned-item-name").textContent = product.name;
     document.getElementById("scanned-item-sku").textContent = `SKU: ${product.sku}`;
     document.getElementById("scanned-item-price").textContent = `₹ ${(product.price).toLocaleString("en-IN")}`;
+    const totalItemsCount = state.cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+    const countEl = document.getElementById("scan-done-items-sub");
+    if (countEl) countEl.textContent = `Review Bill (${totalItemsCount} item${totalItemsCount === 1 ? '' : 's'})`;
 }
 
 async function toggleCameraFlash() {
