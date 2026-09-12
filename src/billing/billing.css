@@ -2222,7 +2222,114 @@ input:checked + .switch-slider:before {
 }
 
 /* =========================================================================
-   58MM DEV 2IN1 THERMAL PRINTER FALLBACK STYLES
+   50MM x 25MM LABEL PREVIEW MOCKUP (EXACT MATCH TO DESIGN)
+   ========================================================================= */
+.label-preview-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.label-mockup-card {
+  width: 280px;
+  height: 140px; /* Exact 2:1 ratio matching 50mm x 25mm */
+  background: #FFFFFF;
+  border: 2px dashed #8F9CAE;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.label-mockup-store {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  color: #06172D;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  width: 100%;
+  line-height: 1.2;
+}
+
+.label-mockup-body {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.label-mockup-qr-col {
+  width: 82px;
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.label-mockup-qr-col canvas {
+  width: 82px !important;
+  height: 82px !important;
+  display: block;
+}
+
+.label-mockup-info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.label-mockup-name {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 21px;
+  font-weight: 900;
+  color: #0A192F;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 145px;
+}
+
+.label-mockup-sku {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #526079;
+  margin-top: 3px;
+  letter-spacing: 0.2px;
+}
+
+.label-mockup-price {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  color: #065F46;
+  margin-top: 4px;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+/* =========================================================================
+   58MM THERMAL PRINTER & 50MM x 25MM LABEL PRINT STYLES
    ========================================================================= */
 #thermal-print-container {
   display: none;
@@ -2240,17 +2347,28 @@ input:checked + .switch-slider:before {
     position: absolute;
     left: 0;
     top: 0;
-    width: 58mm;
     margin: 0;
-    padding: 2mm;
+    padding: 0;
     background: white;
     color: black;
+  }
+
+  /* Receipt Print Configuration */
+  #thermal-print-container.mode-receipt {
+    width: 58mm;
+    padding: 2mm;
     font-family: "Courier New", Courier, monospace, sans-serif;
     font-size: 11px;
     line-height: 1.2;
   }
+
+  /* 50mm x 25mm Label Print Configuration */
+  #thermal-print-container.mode-label-50x25 {
+    width: 50mm;
+    padding: 0;
+  }
+
   @page {
-    size: 58mm auto;
     margin: 0;
   }
 }
@@ -2299,44 +2417,118 @@ input:checked + .switch-slider:before {
   margin-top: 6px;
 }
 
-.print-label-58mm {
-  width: 54mm;
-  height: 38mm;
-  margin: 0 auto;
-  padding: 2mm;
+/* 50mm x 25mm Exact Physical Label Output */
+.print-label-50x25-wrapper {
+  width: 50mm;
+  height: 25mm;
+  page-break-after: always;
+  page-break-inside: avoid;
+  break-after: page;
   box-sizing: border-box;
-  text-align: center;
-  font-family: sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.print-label-50x25 {
+  width: 50mm;
+  height: 25mm;
+  max-width: 50mm;
+  max-height: 25mm;
+  box-sizing: border-box;
+  padding: 1.5mm 2mm 1.5mm 2mm;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
+  background: #FFFFFF;
+  color: #000000;
+  border: 1px dashed #718096;
+  border-radius: 2mm;
+  overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
-.label-store-name {
-  font-size: 11px;
+.print-label-store {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-size: 7.5pt;
   font-weight: 900;
-  letter-spacing: 0.5px;
   text-transform: uppercase;
-}
-
-.label-barcode-svg {
+  letter-spacing: 0.3px;
+  text-align: center;
   width: 100%;
-  max-height: 18mm;
+  color: #000000;
+  line-height: 1;
+  margin-top: 0.2mm;
 }
 
-.label-product-name {
-  font-size: 10px;
-  font-weight: 700;
+.print-label-body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex: 1;
+  gap: 1.5mm;
+}
+
+.print-label-qr-wrap {
+  width: 15.5mm;
+  height: 15.5mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.print-label-qr-wrap canvas {
+  width: 15.5mm !important;
+  height: 15.5mm !important;
+  display: block;
+}
+
+.print-label-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.print-label-name {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-size: 7.5pt;
+  font-weight: 900;
+  color: #000000;
+  line-height: 1.1;
+  max-width: 28mm;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
 }
 
-.label-price-tag {
-  font-size: 13px;
+.print-label-sku {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-size: 5.5pt;
+  font-weight: 600;
+  color: #334155;
+  margin-top: 0.4mm;
+  line-height: 1;
+}
+
+.print-label-price {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-size: 9.5pt;
   font-weight: 900;
+  color: #000000;
+  margin-top: 0.8mm;
+  line-height: 1;
 }
 
 /* =========================================================================

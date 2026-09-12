@@ -646,9 +646,8 @@ async function handleBulkPrintLabels() {
     if (selectedList.length === 1) {
         openBarcodeLabelModal(selectedList[0]);
     } else {
-        // Multi-product batch print
-        openBarcodeLabelModal(selectedList[0]);
-        window.showToast(`Selected ${selectedList.length} products for label generation`);
+        openBarcodeLabelModal(selectedList[0], selectedList);
+        window.showToast(`Loaded ${selectedList.length} selected products for printing`);
     }
 }
 
@@ -931,18 +930,31 @@ function setupModalHandlers() {
     document.getElementById("btn-cancel-label-print")?.addEventListener("click", closeBarcodeLabelModal);
     document.getElementById("select-label-product")?.addEventListener("change", (e) => {
         const prodId = e.target.value;
-        const product = state.products.find(p => p.id === prodId);
-        if (product) updateLabelModalPreview(product);
+        if (prodId === "__ALL_SELECTED__") {
+            if (state.multiSelectedForPrint && state.multiSelectedForPrint.length > 0) {
+                updateLabelModalPreview(state.multiSelectedForPrint[0]);
+            }
+        } else {
+            const product = state.products.find(p => p.id === prodId);
+            if (product) updateLabelModalPreview(product);
+        }
     });
     document.getElementById("btn-execute-label-print")?.addEventListener("click", async () => {
-        const copies = Number(document.getElementById("input-label-copies").value || 1);
-        const productId = document.getElementById("select-label-product")?.value || document.getElementById("modal-print-label").dataset.productId;
-        const product = state.products.find(p => p.id === productId);
-        if (product) {
-            await executePrint58mmLabelDirect(product, copies);
+        const copies = Math.max(1, Number(document.getElementById("input-label-copies").value || 1));
+        const selectVal = document.getElementById("select-label-product")?.value;
+        
+        if (selectVal === "__ALL_SELECTED__" && state.multiSelectedForPrint?.length > 0) {
+            await executePrint50x25mmLabelDirect(state.multiSelectedForPrint, copies);
             closeBarcodeLabelModal();
         } else {
-            window.showToast("Please select a product first");
+            const productId = selectVal || document.getElementById("modal-print-label").dataset.productId;
+            const product = state.products.find(p => p.id === productId);
+            if (product) {
+                await executePrint50x25mmLabelDirect(product, copies);
+                closeBarcodeLabelModal();
+            } else {
+                window.showToast("Please select a product first");
+            }
         }
     });
 
@@ -1115,16 +1127,26 @@ function closeReviewBillModal() {
     document.getElementById("modal-review-bill")?.classList.remove("active");
 }
 
-function openBarcodeLabelModal(product) {
+function openBarcodeLabelModal(product, multiProducts = null) {
     const modal = document.getElementById("modal-print-label");
     const select = document.getElementById("select-label-product");
+    state.multiSelectedForPrint = multiProducts || null;
 
     if (select) {
-        select.innerHTML = state.products.map(p => 
+        let optionsHtml = "";
+        if (multiProducts && multiProducts.length > 1) {
+            optionsHtml += `<option value="__ALL_SELECTED__">✨ Print All (${multiProducts.length} Selected Products)</option>`;
+        }
+        optionsHtml += state.products.map(p => 
             `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.sku)}) - ₹${p.price.toLocaleString("en-IN")}</option>`
         ).join("");
 
-        if (product) {
+        select.innerHTML = optionsHtml;
+
+        if (multiProducts && multiProducts.length > 1) {
+            select.value = "__ALL_SELECTED__";
+            product = multiProducts[0];
+        } else if (product) {
             select.value = product.id;
         } else if (state.products.length > 0) {
             select.value = state.products[0].id;
@@ -1142,31 +1164,39 @@ window.openBarcodeLabelModal = openBarcodeLabelModal;
 
 function updateLabelModalPreview(product) {
     const modal = document.getElementById("modal-print-label");
+    if (!modal || !product) return;
     modal.dataset.productId = product.id;
 
-    document.getElementById("preview-label-store").textContent = state.storeSettings.store_name || "INDRITA FABRICS";
-    document.getElementById("preview-label-name").textContent = product.name;
-    document.getElementById("preview-label-sku").textContent = `SKU: ${product.sku}`;
-    document.getElementById("preview-label-price").textContent = `₹ ${(product.price).toLocaleString("en-IN")}`;
+    const storeEl = document.getElementById("preview-label-store");
+    const nameEl = document.getElementById("preview-label-name");
+    const skuEl = document.getElementById("preview-label-sku");
+    const priceEl = document.getElementById("preview-label-price");
 
-    const barcodeVal = product.barcode || product.sku || "8901234567890";
-    try {
-        if (window.JsBarcode) {
-            JsBarcode("#preview-label-barcode-svg", barcodeVal, {
-                format: "CODE128",
-                width: 1.8,
-                height: 45,
-                displayValue: true,
-                fontSize: 12,
-                margin: 4
-            });
-        }
-    } catch (e) {
-        console.warn("JsBarcode preview error:", e);
+    if (storeEl) storeEl.textContent = (state.storeSettings.store_name || "INDRITA FABRICS").toUpperCase();
+    if (nameEl) nameEl.textContent = product.name || "Product";
+    if (skuEl) skuEl.textContent = `SKU: ${product.sku || "IF001"}`;
+    if (priceEl) priceEl.textContent = `₹ ${(product.price || 0).toLocaleString("en-IN")}`;
+
+    const qrData = product.barcode || product.sku || product.id || "IF001";
+    const qrCanvas = document.getElementById("preview-label-qr-canvas");
+
+    if (qrCanvas && window.QRCode) {
+        QRCode.toCanvas(qrCanvas, String(qrData), {
+            width: 110,
+            margin: 0,
+            color: {
+                dark: "#000000",
+                light: "#ffffff"
+            },
+            errorCorrectionLevel: "M"
+        }, function(err) {
+            if (err) console.warn("QRCode preview error:", err);
+        });
     }
 }
 
 function closeBarcodeLabelModal() {
+    state.multiSelectedForPrint = null;
     document.getElementById("modal-print-label")?.classList.remove("active");
 }
 
@@ -1788,19 +1818,25 @@ function build58mmEscPosReceipt(invoice, store) {
     return esc.build();
 }
 
-// Generate TSPL Direct Command Bytes for 58mm Label Mode (Model 632-L58P)
-function build58mmTsplLabel(product, store) {
-    const barcodeVal = product.barcode || product.sku || "8901234567890";
+// Generate TSPL Direct Command Bytes for 50mm x 25mm Label Mode (Model 632-L58P)
+function build50x25mmTsplLabel(product, store) {
+    const qrData = product.barcode || product.sku || product.id || "IF001";
+    const storeName = (store?.store_name || "INDRITA FABRICS").toUpperCase();
+    const prodName = (product.name || "Product").substring(0, 22);
+    const skuStr = `SKU: ${product.sku || "IF001"}`;
+    const priceStr = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
+
+    // 50mm width = 400 dots @ 203 DPI, 25mm height = 200 dots @ 203 DPI
     const tsplCommands = 
-        `SIZE 54 mm, 38 mm\r\n` +
+        `SIZE 50 mm, 25 mm\r\n` +
         `GAP 2 mm, 0 mm\r\n` +
         `DIRECTION 1\r\n` +
         `CLS\r\n` +
-        `TEXT 200, 20, "3", 0, 1, 1, "${store.store_name || "INDRITA FABRICS"}"\r\n` +
-        `BARCODE 40, 60, "128", 55, 1, 0, 2, 2, "${barcodeVal}"\r\n` +
-        `TEXT 200, 145, "2", 0, 1, 1, "${product.name}"\r\n` +
-        `TEXT 200, 175, "2", 0, 1, 1, "SKU: ${product.sku}"\r\n` +
-        `TEXT 200, 210, "3", 0, 1, 1, "Rs. ${product.price}"\r\n` +
+        `TEXT 200, 10, "3", 0, 1, 1, 2, "${storeName}"\r\n` +
+        `QRCODE 24, 40, M, 4, A, 0, M2, S7, "${qrData}"\r\n` +
+        `TEXT 175, 46, "3", 0, 1, 1, "${prodName}"\r\n` +
+        `TEXT 175, 88, "2", 0, 1, 1, "${skuStr}"\r\n` +
+        `TEXT 175, 124, "3", 0, 1, 1, "${priceStr}"\r\n` +
         `PRINT 1\r\n`;
 
     return new TextEncoder().encode(tsplCommands);
@@ -1862,29 +1898,34 @@ async function executeDirectPrintAndSettle(paymentMethod = "CASH") {
     }
 }
 
-// Execute Direct 58mm Label Print for DEV 2IN1 Printer
-async function executePrint58mmLabelDirect(product, copies = 1) {
+// Execute Direct 50mm x 25mm Label Print for DEV 2IN1 Printer
+async function executePrint50x25mmLabelDirect(productOrList, copies = 1) {
+    const products = Array.isArray(productOrList) ? productOrList : [productOrList];
+    const totalLabels = products.length * copies;
+
     try {
-        window.showToast(`Printing ${copies} barcode label(s)...`);
+        window.showToast(`Printing ${totalLabels} label(s)...`);
         
-        for (let i = 0; i < copies; i++) {
-            const labelBytes = build58mmTsplLabel(product, state.storeSettings);
-            try {
-                await sendRawBytesToPrinter(labelBytes);
-            } catch (bleErr) {
-                // If Bluetooth not paired, fallback to visual print
-                print58mmHtmlLabelFallback(product, copies);
-                return;
+        for (const prod of products) {
+            for (let i = 0; i < copies; i++) {
+                const labelBytes = build50x25mmTsplLabel(prod, state.storeSettings);
+                try {
+                    await sendRawBytesToPrinter(labelBytes);
+                } catch (bleErr) {
+                    // If Bluetooth not paired, fallback to visual print
+                    print50x25mmHtmlLabelFallback(productOrList, copies);
+                    return;
+                }
             }
         }
-        window.showToast(`Printed ${copies} label(s) on DEV 2IN1!`);
+        window.showToast(`Printed ${totalLabels} label(s) on DEV 2IN1!`);
     } catch (e) {
         console.error("Label print error:", e);
+        print50x25mmHtmlLabelFallback(productOrList, copies);
     }
 }
 
 // Direct thermal receipt fallback renderer
-
 function print58mmThermalReceiptFallback(invoice) {
     const store = state.storeSettings;
     const items = invoice.items || [];
@@ -1893,6 +1934,7 @@ function print58mmThermalReceiptFallback(invoice) {
     const printContainer = document.getElementById("thermal-print-container");
     if (!printContainer) return;
 
+    printContainer.className = "mode-receipt";
     printContainer.innerHTML = `
         <div class="print-receipt-58mm">
             <div class="receipt-header-center">
@@ -1966,46 +2008,65 @@ function print58mmThermalReceiptFallback(invoice) {
     }, 150);
 }
 
-function print58mmHtmlLabelFallback(product, copies = 1) {
+// 50mm x 25mm Exact Visual Thermal Label Renderer
+function print50x25mmHtmlLabelFallback(productOrList, copies = 1) {
     const store = state.storeSettings;
-    const barcodeVal = product.barcode || product.sku || "8901234567890";
+    const storeName = (store.store_name || "INDRITA FABRICS").toUpperCase();
+    const products = Array.isArray(productOrList) ? productOrList : [productOrList];
     const printContainer = document.getElementById("thermal-print-container");
     if (!printContainer) return;
 
+    printContainer.className = "mode-label-50x25";
     let labelsHtml = "";
-    for (let i = 0; i < copies; i++) {
-        labelsHtml += `
-            <div class="print-label-58mm" style="page-break-after: always;">
-                <div class="label-store-name">${store.store_name || "INDRITA FABRICS"}</div>
-                <svg id="print-label-svg-${i}" class="label-barcode-svg"></svg>
-                <div class="label-product-name">${product.name}</div>
-                <div style="font-size:9px; font-weight:600;">SKU: ${product.sku}</div>
-                <div class="label-price-tag">₹ ${(product.price).toLocaleString("en-IN")}</div>
-            </div>
-        `;
+    const renderTasks = [];
+    let idx = 0;
+
+    for (const prod of products) {
+        const qrData = prod.barcode || prod.sku || prod.id || "IF001";
+        for (let c = 0; c < copies; c++) {
+            const canvasId = `print-label-qr-${idx}`;
+            labelsHtml += `
+                <div class="print-label-50x25-wrapper">
+                    <div class="print-label-50x25">
+                        <div class="print-label-store">${escapeHtml(storeName)}</div>
+                        <div class="print-label-body">
+                            <div class="print-label-qr-wrap">
+                                <canvas id="${canvasId}" width="120" height="120"></canvas>
+                            </div>
+                            <div class="print-label-info">
+                                <div class="print-label-name">${escapeHtml(prod.name)}</div>
+                                <div class="print-label-sku">SKU: ${escapeHtml(prod.sku || "IF001")}</div>
+                                <div class="print-label-price">₹ ${Number(prod.price || 0).toLocaleString("en-IN")}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            renderTasks.push({ canvasId, qrData });
+            idx++;
+        }
     }
 
     printContainer.innerHTML = labelsHtml;
 
     setTimeout(() => {
-        for (let i = 0; i < copies; i++) {
-            try {
-                if (window.JsBarcode) {
-                    JsBarcode(`#print-label-svg-${i}`, barcodeVal, {
-                        format: "CODE128",
-                        width: 1.6,
-                        height: 38,
-                        displayValue: true,
-                        fontSize: 10,
-                        margin: 2
-                    });
-                }
-            } catch (e) {
-                console.warn("Label barcode error:", e);
+        for (const task of renderTasks) {
+            const canvas = document.getElementById(task.canvasId);
+            if (canvas && window.QRCode) {
+                QRCode.toCanvas(canvas, String(task.qrData), {
+                    width: 120,
+                    margin: 0,
+                    color: { dark: "#000000", light: "#ffffff" },
+                    errorCorrectionLevel: "M"
+                }, (err) => {
+                    if (err) console.warn("QR canvas print error:", err);
+                });
             }
         }
-        window.print();
-    }, 100);
+        setTimeout(() => {
+            window.print();
+        }, 80);
+    }, 50);
 }
 
 // --- REPORTS & BILL HISTORY SCREEN ---
@@ -2178,25 +2239,18 @@ function setupMoreSettingsHandlers() {
     document.getElementById("btn-test-label-print")?.addEventListener("click", async () => {
         const testProduct = {
             id: 99999,
-            name: "Sample Silk Saree",
-            sku: "KS00123",
-            barcode: "8901234567890",
+            name: "Test",
+            sku: "IF001",
+            barcode: "IF001",
             category: "Sarees",
-            price: 8950
+            price: 9900
         };
 
         try {
-            window.showToast("Sending test TSPL barcode label...");
-            const labelBytes = build58mmTsplLabel(testProduct, state.storeSettings);
-            if (state.printer.isConnected) {
-                await sendRawBytesToPrinter(labelBytes);
-                window.showToast("Test 58mm label printed!");
-            } else {
-                openPrintLabelModal(testProduct);
-            }
+            await executePrint50x25mmLabelDirect(testProduct, 1);
         } catch (err) {
             console.error("Test label error:", err);
-            openPrintLabelModal(testProduct);
+            openBarcodeLabelModal(testProduct);
         }
     });
 
