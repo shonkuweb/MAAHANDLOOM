@@ -1,5 +1,6 @@
 // INDRITA FABRICS - BILLING POS & DEV 2IN1 THERMAL PRINTER SYSTEM
 // Model: 632-L58P (203 DPI, 58mm Width) - Direct Bluetooth & Thermal Hardware Engine
+import QRCode from "qrcode";
 
 // --- STATE ---
 const state = {
@@ -1172,16 +1173,16 @@ function updateLabelModalPreview(product) {
     const skuEl = document.getElementById("preview-label-sku");
     const priceEl = document.getElementById("preview-label-price");
 
-    if (storeEl) storeEl.textContent = (state.storeSettings.store_name || "INDRITA FABRICS").toUpperCase();
+    if (storeEl) storeEl.textContent = (state.storeSettings?.store_name || "INDRITA FABRICS").toUpperCase();
     if (nameEl) nameEl.textContent = product.name || "Product";
     if (skuEl) skuEl.textContent = `SKU: ${product.sku || "IF001"}`;
     if (priceEl) priceEl.textContent = `₹ ${(product.price || 0).toLocaleString("en-IN")}`;
 
-    const qrData = product.barcode || product.sku || product.id || "IF001";
+    const qrData = String(product.barcode || product.sku || product.id || "IF001");
     const qrCanvas = document.getElementById("preview-label-qr-canvas");
 
-    if (qrCanvas && window.QRCode) {
-        QRCode.toCanvas(qrCanvas, String(qrData), {
+    if (qrCanvas && QRCode) {
+        QRCode.toCanvas(qrCanvas, qrData, {
             width: 110,
             margin: 0,
             color: {
@@ -1818,28 +1819,117 @@ function build58mmEscPosReceipt(invoice, store) {
     return esc.build();
 }
 
-// Generate TSPL Direct Command Bytes for 50mm x 25mm Label Mode (Model 632-L58P)
-function build50x25mmTsplLabel(product, store) {
-    const qrData = product.barcode || product.sku || product.id || "IF001";
-    const storeName = (store?.store_name || "INDRITA FABRICS").toUpperCase();
-    const prodName = (product.name || "Product").substring(0, 22);
-    const skuStr = `SKU: ${product.sku || "IF001"}`;
-    const priceStr = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
+// Render 50mm x 25mm label onto an offscreen canvas and convert to standard ESC/POS raster bitmap bytes
+async function renderLabelToEscPosRaster(product, store) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 384; // Standard 58mm thermal head width (48 bytes)
+    canvas.height = 192; // 24mm height
+    const ctx = canvas.getContext("2d");
 
-    // 50mm width = 400 dots @ 203 DPI, 25mm height = 200 dots @ 203 DPI
-    const tsplCommands = 
-        `SIZE 50 mm, 25 mm\r\n` +
-        `GAP 2 mm, 0 mm\r\n` +
-        `DIRECTION 1\r\n` +
-        `CLS\r\n` +
-        `TEXT 200, 10, "3", 0, 1, 1, 2, "${storeName}"\r\n` +
-        `QRCODE 24, 40, M, 4, A, 0, M2, S7, "${qrData}"\r\n` +
-        `TEXT 175, 46, "3", 0, 1, 1, "${prodName}"\r\n` +
-        `TEXT 175, 88, "2", 0, 1, 1, "${skuStr}"\r\n` +
-        `TEXT 175, 124, "3", 0, 1, 1, "${priceStr}"\r\n` +
-        `PRINT 1\r\n`;
+    // Pure white background
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, 384, 192);
 
-    return new TextEncoder().encode(tsplCommands);
+    // Dashed outer border matching mockup
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(4, 4, 376, 184);
+    ctx.setLineDash([]);
+
+    // Store Name Header (Centered, bold uppercase)
+    ctx.fillStyle = "#000000";
+    ctx.font = "bold 18px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText((store?.store_name || "INDRITA FABRICS").toUpperCase(), 192, 10);
+
+    // Render QR Code image
+    const qrData = String(product.barcode || product.sku || product.id || "IF001");
+    try {
+        const qrDataUrl = await QRCode.toDataURL(qrData, {
+            width: 140,
+            margin: 0,
+            errorCorrectionLevel: "M"
+        });
+        const qrImg = new Image();
+        await new Promise((resolve, reject) => {
+            qrImg.onload = resolve;
+            qrImg.onerror = reject;
+            qrImg.src = qrDataUrl;
+        });
+        ctx.drawImage(qrImg, 14, 36, 142, 142);
+    } catch (e) {
+        console.warn("QR Code render error on canvas:", e);
+    }
+
+    // Right Column Info
+    ctx.fillStyle = "#000000";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Product Name (replaces "Test")
+    ctx.font = "bold 24px Arial, sans-serif";
+    const prodName = (product.name || "Test").substring(0, 16);
+    ctx.fillText(prodName, 275, 62, 180);
+
+    // SKU
+    ctx.font = "bold 15px Arial, sans-serif";
+    ctx.fillStyle = "#333333";
+    const skuText = `SKU: ${product.sku || "IF001"}`;
+    ctx.fillText(skuText, 275, 102, 180);
+
+    // Price
+    ctx.font = "bold 28px Arial, sans-serif";
+    ctx.fillStyle = "#000000";
+    const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
+    ctx.fillText(priceText, 275, 146, 180);
+
+    // Convert Canvas to ESC/POS Raster Bytes (GS v 0)
+    const imgData = ctx.getImageData(0, 0, 384, 192);
+    const data = imgData.data;
+    const widthBytes = 48; // 384 / 8
+    const height = 192;
+    const rasterBytes = [];
+
+    // ESC @ (Initialize)
+    rasterBytes.push(0x1B, 0x40);
+    // Align Center
+    rasterBytes.push(0x1B, 0x61, 0x01);
+
+    // GS v 0 0 xL xH yL yH
+    rasterBytes.push(
+        0x1D, 0x76, 0x30, 0x00,
+        widthBytes & 0xFF,
+        (widthBytes >> 8) & 0xFF,
+        height & 0xFF,
+        (height >> 8) & 0xFF
+    );
+
+    // 1 bit per pixel: 1 = black, 0 = white
+    for (let y = 0; y < height; y++) {
+        for (let xByte = 0; xByte < widthBytes; xByte++) {
+            let byteVal = 0;
+            for (let bit = 0; bit < 8; bit++) {
+                const x = xByte * 8 + bit;
+                const idx = (y * 384 + x) * 4;
+                const r = data[idx];
+                const g = data[idx + 1];
+                const b = data[idx + 2];
+                const a = data[idx + 3];
+                const brightness = (0.299 * r + 0.587 * g + 0.114 * b);
+                if (a > 50 && brightness < 170) {
+                    byteVal |= (0x80 >> bit);
+                }
+            }
+            rasterBytes.push(byteVal);
+        }
+    }
+
+    // Feed lines to clear the print head
+    rasterBytes.push(0x1B, 0x64, 0x02);
+
+    return new Uint8Array(rasterBytes);
 }
 
 // Execute Direct Print Bill & Settle Invoice
@@ -1898,22 +1988,22 @@ async function executeDirectPrintAndSettle(paymentMethod = "CASH") {
     }
 }
 
-// Execute Direct 50mm x 25mm Label Print for DEV 2IN1 Printer
+// Execute Direct 50mm x 25mm Graphic Label Print for DEV 2IN1 Printer
 async function executePrint50x25mmLabelDirect(productOrList, copies = 1) {
     const products = Array.isArray(productOrList) ? productOrList : [productOrList];
     const totalLabels = products.length * copies;
 
     try {
-        window.showToast(`Printing ${totalLabels} label(s)...`);
+        window.showToast(`Printing ${totalLabels} graphic label(s)...`);
         
         for (const prod of products) {
             for (let i = 0; i < copies; i++) {
-                const labelBytes = build50x25mmTsplLabel(prod, state.storeSettings);
+                const labelBytes = await renderLabelToEscPosRaster(prod, state.storeSettings);
                 try {
                     await sendRawBytesToPrinter(labelBytes);
                 } catch (bleErr) {
-                    // If Bluetooth not paired, fallback to visual print
-                    print50x25mmHtmlLabelFallback(productOrList, copies);
+                    // If Bluetooth not paired, fallback to visual browser print
+                    await print50x25mmHtmlLabelFallback(productOrList, copies);
                     return;
                 }
             }
@@ -1921,7 +2011,7 @@ async function executePrint50x25mmLabelDirect(productOrList, copies = 1) {
         window.showToast(`Printed ${totalLabels} label(s) on DEV 2IN1!`);
     } catch (e) {
         console.error("Label print error:", e);
-        print50x25mmHtmlLabelFallback(productOrList, copies);
+        await print50x25mmHtmlLabelFallback(productOrList, copies);
     }
 }
 
@@ -2009,9 +2099,9 @@ function print58mmThermalReceiptFallback(invoice) {
 }
 
 // 50mm x 25mm Exact Visual Thermal Label Renderer
-function print50x25mmHtmlLabelFallback(productOrList, copies = 1) {
+async function print50x25mmHtmlLabelFallback(productOrList, copies = 1) {
     const store = state.storeSettings;
-    const storeName = (store.store_name || "INDRITA FABRICS").toUpperCase();
+    const storeName = (store?.store_name || "INDRITA FABRICS").toUpperCase();
     const products = Array.isArray(productOrList) ? productOrList : [productOrList];
     const printContainer = document.getElementById("thermal-print-container");
     if (!printContainer) return;
@@ -2022,7 +2112,7 @@ function print50x25mmHtmlLabelFallback(productOrList, copies = 1) {
     let idx = 0;
 
     for (const prod of products) {
-        const qrData = prod.barcode || prod.sku || prod.id || "IF001";
+        const qrData = String(prod.barcode || prod.sku || prod.id || "IF001");
         for (let c = 0; c < copies; c++) {
             const canvasId = `print-label-qr-${idx}`;
             labelsHtml += `
@@ -2031,10 +2121,10 @@ function print50x25mmHtmlLabelFallback(productOrList, copies = 1) {
                         <div class="print-label-store">${escapeHtml(storeName)}</div>
                         <div class="print-label-body">
                             <div class="print-label-qr-wrap">
-                                <canvas id="${canvasId}" width="120" height="120"></canvas>
+                                <canvas id="${canvasId}" width="110" height="110"></canvas>
                             </div>
                             <div class="print-label-info">
-                                <div class="print-label-name">${escapeHtml(prod.name)}</div>
+                                <div class="print-label-name">${escapeHtml(prod.name || "Test")}</div>
                                 <div class="print-label-sku">SKU: ${escapeHtml(prod.sku || "IF001")}</div>
                                 <div class="print-label-price">₹ ${Number(prod.price || 0).toLocaleString("en-IN")}</div>
                             </div>
@@ -2049,24 +2139,26 @@ function print50x25mmHtmlLabelFallback(productOrList, copies = 1) {
 
     printContainer.innerHTML = labelsHtml;
 
-    setTimeout(() => {
-        for (const task of renderTasks) {
-            const canvas = document.getElementById(task.canvasId);
-            if (canvas && window.QRCode) {
-                QRCode.toCanvas(canvas, String(task.qrData), {
-                    width: 120,
+    // Render all QR codes on canvases
+    for (const task of renderTasks) {
+        const canvas = document.getElementById(task.canvasId);
+        if (canvas && QRCode) {
+            try {
+                await QRCode.toCanvas(canvas, task.qrData, {
+                    width: 110,
                     margin: 0,
                     color: { dark: "#000000", light: "#ffffff" },
                     errorCorrectionLevel: "M"
-                }, (err) => {
-                    if (err) console.warn("QR canvas print error:", err);
                 });
+            } catch (e) {
+                console.warn("QR canvas print error:", e);
             }
         }
-        setTimeout(() => {
-            window.print();
-        }, 80);
-    }, 50);
+    }
+
+    setTimeout(() => {
+        window.print();
+    }, 120);
 }
 
 // --- REPORTS & BILL HISTORY SCREEN ---

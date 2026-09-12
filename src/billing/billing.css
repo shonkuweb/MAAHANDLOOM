@@ -2341,6 +2341,8 @@ input:checked + .switch-slider:before {
   }
   #thermal-print-container, #thermal-print-container * {
     visibility: visible;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   #thermal-print-container {
     display: block !important;
@@ -2369,6 +2371,7 @@ input:checked + .switch-slider:before {
   }
 
   @page {
+    size: 50mm 25mm;
     margin: 0;
   }
 }
