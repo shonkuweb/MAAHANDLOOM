@@ -186,6 +186,37 @@ function updateHeaderBranding() {
     if (tagEl) tagEl.textContent = state.storeSettings.tagline || "Tradition in Every Drape";
 }
 
+function updateReceiptLivePreview() {
+    const s = state.storeSettings || {};
+    const nameInput = document.getElementById("setting-store-name");
+    const tagInput = document.getElementById("setting-store-tagline");
+    const phoneInput = document.getElementById("setting-store-phone");
+    const gstInput = document.getElementById("setting-store-gst");
+    const addrInput = document.getElementById("setting-store-address");
+    const footerInput = document.getElementById("setting-receipt-footer");
+
+    const sName = (nameInput ? nameInput.value.trim() : "") || s.store_name || "Indrita Fabrics";
+    const sTag = (tagInput ? tagInput.value.trim() : "") || s.tagline || "Tradition in Every Drape";
+    const sPhone = (phoneInput ? phoneInput.value.trim() : "") || s.phone || "+91 9876543210";
+    const sGst = (gstInput ? gstInput.value.trim().toUpperCase() : "") || s.gst_number || "19AAAAA0000A1Z5";
+    const sAddr = (addrInput ? addrInput.value.trim() : "") || s.address || "Main Road, Fabric Market, Kolkata - 700001";
+    const sFooter = (footerInput ? footerInput.value.trim() : "") || "Thank you for shopping with us! • Goods once sold can be exchanged within 7 days.";
+
+    const pStore = document.getElementById("preview-receipt-store");
+    const pTag = document.getElementById("preview-receipt-tagline");
+    const pAddr = document.getElementById("preview-receipt-address");
+    const pPhone = document.getElementById("preview-receipt-phone");
+    const pGst = document.getElementById("preview-receipt-gst");
+    const pFooter = document.getElementById("preview-receipt-footer");
+
+    if (pStore) pStore.textContent = sName;
+    if (pTag) pTag.textContent = sTag;
+    if (pAddr) pAddr.textContent = sAddr;
+    if (pPhone) pPhone.textContent = sPhone ? `Ph: ${sPhone}` : "";
+    if (pGst) pGst.textContent = sGst ? `GSTIN: ${sGst}` : "";
+    if (pFooter) pFooter.textContent = sFooter;
+}
+
 function syncMoreTabInputs() {
     const s = state.storeSettings;
     const nameInput = document.getElementById("setting-store-name");
@@ -201,6 +232,8 @@ function syncMoreTabInputs() {
     if (gstInput) gstInput.value = s.gst_number || "";
     if (addrInput) addrInput.value = s.address || "";
     if (gstRateSelect && s.default_gst_rate !== undefined) gstRateSelect.value = String(s.default_gst_rate);
+
+    updateReceiptLivePreview();
 }
 
 async function loadProducts() {
@@ -1101,6 +1134,10 @@ function updatePrinterStatusUI() {
     const pillDot = document.getElementById("printer-pill-dot");
     const cardStatusText = document.getElementById("card-printer-status-text");
     const cardModelText = document.getElementById("card-printer-model-text");
+    const moreStatusText = document.getElementById("more-printer-status-text");
+    const moreStatusBadge = document.getElementById("more-printer-status-badge");
+    const quickHwStatus = document.getElementById("settings-quick-hardware-status");
+    const quickHwPill = document.getElementById("settings-quick-hardware-pill");
 
     if (state.printer.isConnected) {
         pill?.classList.remove("disconnected");
@@ -1108,12 +1145,20 @@ function updatePrinterStatusUI() {
         if (pillDot) pillDot.className = "pulse-dot";
         if (cardStatusText) cardStatusText.innerHTML = `<span class="pulse-dot"></span> Connected`;
         if (cardModelText) cardModelText.textContent = `${state.printer.deviceName || "DEV 2IN1 632-L58P"} (203 DPI, 58mm)`;
+        if (moreStatusText) moreStatusText.textContent = `${state.printer.deviceName || "DEV 2IN1"} Connected`;
+        if (moreStatusBadge) moreStatusBadge.className = "hardware-status-badge online";
+        if (quickHwStatus) quickHwStatus.textContent = "Printer Online";
+        if (quickHwPill) quickHwPill.style.borderColor = "#10B981";
     } else {
         pill?.classList.add("disconnected");
         if (pillText) pillText.textContent = "Connect Printer";
         if (pillDot) pillDot.className = "pulse-dot red";
         if (cardStatusText) cardStatusText.innerHTML = `<span class="pulse-dot red"></span> Disconnected (Tap to Pair)`;
         if (cardModelText) cardModelText.textContent = "DEV 2IN1 632-L58P (203 DPI, 58mm)";
+        if (moreStatusText) moreStatusText.textContent = "Web Bluetooth Ready (Disconnected)";
+        if (moreStatusBadge) moreStatusBadge.className = "hardware-status-badge";
+        if (quickHwStatus) quickHwStatus.textContent = "Printer Ready";
+        if (quickHwPill) quickHwPill.style.borderColor = "var(--border-subtle)";
     }
 }
 
@@ -1630,12 +1675,34 @@ window.reprintInvoice = async (invoiceId) => {
 
 // --- MORE TAB & SYSTEM SETTINGS CONTROLLER ---
 function setupMoreSettingsHandlers() {
+    // Real-time live receipt preview updates
+    document.querySelectorAll(".live-receipt-input").forEach(input => {
+        input.addEventListener("input", updateReceiptLivePreview);
+    });
+
+    // Category Tabs Filtering
+    document.querySelectorAll("#settings-category-tabs .settings-nav-pill").forEach(pill => {
+        pill.addEventListener("click", () => {
+            document.querySelectorAll("#settings-category-tabs .settings-nav-pill").forEach(p => p.classList.remove("active"));
+            pill.classList.add("active");
+            const target = pill.getAttribute("data-target");
+            document.querySelectorAll(".settings-apple-card").forEach(card => {
+                const cat = card.getAttribute("data-category");
+                if (target === "all" || cat === target) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    });
+
     // Save Store Profile
     document.getElementById("btn-save-store-settings")?.addEventListener("click", async () => {
         const store_name = document.getElementById("setting-store-name")?.value.trim() || "Indrita Fabrics";
         const tagline = document.getElementById("setting-store-tagline")?.value.trim() || "Tradition in Every Drape";
         const phone = document.getElementById("setting-store-phone")?.value.trim() || "";
-        const gst_number = document.getElementById("setting-store-gst")?.value.trim() || "";
+        const gst_number = document.getElementById("setting-store-gst")?.value.trim().toUpperCase() || "";
         const address = document.getElementById("setting-store-address")?.value.trim() || "";
         const default_gst_rate = Number(document.getElementById("setting-default-gst")?.value || 18);
 
@@ -1660,6 +1727,7 @@ function setupMoreSettingsHandlers() {
                 const updated = await res.json();
                 state.storeSettings = { ...state.storeSettings, ...updated };
                 updateHeaderBranding();
+                updateReceiptLivePreview();
                 window.showToast("Store profile updated successfully!");
             }
         } catch (e) {
@@ -1668,8 +1736,86 @@ function setupMoreSettingsHandlers() {
         }
     });
 
-    // Hardware Pair from More Screen
+    // Hardware Pair & Config from Settings Screen
     document.getElementById("btn-more-pair-printer")?.addEventListener("click", connectWebBluetoothPrinter);
+    document.getElementById("btn-open-printer-modal-from-settings")?.addEventListener("click", openPrinterSettingsModal);
+
+    // Test Audio Chime
+    document.getElementById("btn-test-beep-audio")?.addEventListener("click", () => {
+        playBeep();
+        window.showToast("Played barcode scanner chime 🔔");
+    });
+
+    // Test Receipt Print
+    document.getElementById("btn-test-receipt-print")?.addEventListener("click", async () => {
+        const testInvoice = {
+            id: "TEST-" + Math.floor(1000 + Math.random() * 9000),
+            customer_name: "Walk-in Guest",
+            customer_phone: "9876543210",
+            payment_mode: "CASH",
+            created_at: new Date().toISOString(),
+            items: [
+                { name: "Sample Banarasi Silk Saree", price: 8950, quantity: 1, gst_rate: 18 },
+                { name: "Sample Cotton Kurti", price: 1200, quantity: 2, gst_rate: 5 }
+            ],
+            subtotal: 11350,
+            discount_amount: 0,
+            gst_amount: 1731,
+            final_total: 11350
+        };
+
+        try {
+            window.showToast("Sending test receipt to 58mm printer...");
+            const receiptBytes = build58mmEscPosReceipt(testInvoice, state.storeSettings);
+            if (state.printer.isConnected) {
+                await sendRawBytesToPrinter(receiptBytes);
+                window.showToast("Test receipt printed successfully!");
+            } else {
+                print58mmThermalReceiptFallback(testInvoice);
+            }
+        } catch (err) {
+            console.error("Test print error:", err);
+            print58mmThermalReceiptFallback(testInvoice);
+        }
+    });
+
+    // Test Label Print
+    document.getElementById("btn-test-label-print")?.addEventListener("click", async () => {
+        const testProduct = {
+            id: 99999,
+            name: "Sample Silk Saree",
+            sku: "KS00123",
+            barcode: "8901234567890",
+            category: "Sarees",
+            price: 8950
+        };
+
+        try {
+            window.showToast("Sending test TSPL barcode label...");
+            const labelBytes = build58mmTsplLabel(testProduct, state.storeSettings);
+            if (state.printer.isConnected) {
+                await sendRawBytesToPrinter(labelBytes);
+                window.showToast("Test 58mm label printed!");
+            } else {
+                openPrintLabelModal(testProduct);
+            }
+        } catch (err) {
+            console.error("Test label error:", err);
+            openPrintLabelModal(testProduct);
+        }
+    });
+
+    // System Diagnostics check
+    const diagBluetooth = document.getElementById("diag-bluetooth-status");
+    if (diagBluetooth) {
+        if (navigator.bluetooth) {
+            diagBluetooth.textContent = "Supported (Web BLE Ready)";
+            diagBluetooth.style.color = "#059669";
+        } else {
+            diagBluetooth.textContent = "Unavailable (Use Chrome/Edge)";
+            diagBluetooth.style.color = "#DC2626";
+        }
+    }
 
     // Executive A4 PDF Document Exports
     document.getElementById("btn-export-invoices-pdf")?.addEventListener("click", () => {
