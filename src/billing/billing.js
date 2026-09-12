@@ -1823,32 +1823,32 @@ function build58mmEscPosReceipt(invoice, store) {
 async function renderLabelToEscPosRaster(product, store) {
     const canvas = document.createElement("canvas");
     canvas.width = 384; // Standard 58mm thermal head width (48 bytes)
-    canvas.height = 192; // 24mm height
+    canvas.height = 152; // Compact height calibrated for 50x25mm sticker printable area
     const ctx = canvas.getContext("2d");
 
     // Pure white background
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, 384, 192);
+    ctx.fillRect(0, 0, 384, 152);
 
-    // Dashed outer border matching mockup
+    // Dashed outer border tightly aligned to top
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 2;
-    ctx.setLineDash([6, 4]);
-    ctx.strokeRect(4, 4, 376, 184);
+    ctx.setLineDash([5, 3]);
+    ctx.strokeRect(3, 1, 378, 148);
     ctx.setLineDash([]);
 
-    // Store Name Header (Centered, bold uppercase)
+    // Store Name Header (Top-aligned, bold uppercase)
     ctx.fillStyle = "#000000";
-    ctx.font = "bold 18px Arial, sans-serif";
+    ctx.font = "bold 16px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillText((store?.store_name || "INDRITA FABRICS").toUpperCase(), 192, 10);
+    ctx.fillText((store?.store_name || "INDRITA FABRICS").toUpperCase(), 192, 4);
 
-    // Render QR Code image
+    // Render QR Code image (shifted up to y=22, sized 114x114 so bottom is at y=136)
     const qrData = String(product.barcode || product.sku || product.id || "IF001");
     try {
         const qrDataUrl = await QRCode.toDataURL(qrData, {
-            width: 140,
+            width: 120,
             margin: 0,
             errorCorrectionLevel: "M"
         });
@@ -1858,38 +1858,38 @@ async function renderLabelToEscPosRaster(product, store) {
             qrImg.onerror = reject;
             qrImg.src = qrDataUrl;
         });
-        ctx.drawImage(qrImg, 14, 36, 142, 142);
+        ctx.drawImage(qrImg, 14, 24, 114, 114);
     } catch (e) {
         console.warn("QR Code render error on canvas:", e);
     }
 
-    // Right Column Info
+    // Right Column Info (shifted up)
     ctx.fillStyle = "#000000";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
     // Product Name (replaces "Test")
-    ctx.font = "bold 24px Arial, sans-serif";
+    ctx.font = "bold 22px Arial, sans-serif";
     const prodName = (product.name || "Test").substring(0, 16);
-    ctx.fillText(prodName, 275, 62, 180);
+    ctx.fillText(prodName, 268, 44, 185);
 
     // SKU
-    ctx.font = "bold 15px Arial, sans-serif";
+    ctx.font = "bold 13px Arial, sans-serif";
     ctx.fillStyle = "#333333";
     const skuText = `SKU: ${product.sku || "IF001"}`;
-    ctx.fillText(skuText, 275, 102, 180);
+    ctx.fillText(skuText, 268, 78, 185);
 
     // Price
-    ctx.font = "bold 28px Arial, sans-serif";
+    ctx.font = "bold 26px Arial, sans-serif";
     ctx.fillStyle = "#000000";
     const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
-    ctx.fillText(priceText, 275, 146, 180);
+    ctx.fillText(priceText, 268, 116, 185);
 
     // Convert Canvas to ESC/POS Raster Bytes (GS v 0)
-    const imgData = ctx.getImageData(0, 0, 384, 192);
+    const imgData = ctx.getImageData(0, 0, 384, 152);
     const data = imgData.data;
     const widthBytes = 48; // 384 / 8
-    const height = 192;
+    const height = 152;
     const rasterBytes = [];
 
     // ESC @ (Initialize)
@@ -1926,8 +1926,8 @@ async function renderLabelToEscPosRaster(product, store) {
         }
     }
 
-    // Feed lines to clear the print head
-    rasterBytes.push(0x1B, 0x64, 0x02);
+    // Single line feed at the end for clean gap transition
+    rasterBytes.push(0x1B, 0x64, 0x01);
 
     return new Uint8Array(rasterBytes);
 }

@@ -2438,11 +2438,11 @@ input:checked + .switch-slider:before {
 
 .print-label-50x25 {
   width: 50mm;
-  height: 25mm;
+  height: 24mm;
   max-width: 50mm;
-  max-height: 25mm;
+  max-height: 24mm;
   box-sizing: border-box;
-  padding: 1.5mm 2mm 1.5mm 2mm;
+  padding: 0.8mm 1.5mm 0.8mm 1.5mm;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -2458,7 +2458,7 @@ input:checked + .switch-slider:before {
 
 .print-label-store {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 7.5pt;
+  font-size: 7pt;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -2466,7 +2466,7 @@ input:checked + .switch-slider:before {
   width: 100%;
   color: #000000;
   line-height: 1;
-  margin-top: 0.2mm;
+  margin-top: 0;
 }
 
 .print-label-body {
@@ -2476,12 +2476,13 @@ input:checked + .switch-slider:before {
   justify-content: space-between;
   width: 100%;
   flex: 1;
-  gap: 1.5mm;
+  gap: 1.2mm;
+  margin-top: 0.4mm;
 }
 
 .print-label-qr-wrap {
-  width: 15.5mm;
-  height: 15.5mm;
+  width: 14mm;
+  height: 14mm;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2489,8 +2490,8 @@ input:checked + .switch-slider:before {
 }
 
 .print-label-qr-wrap canvas {
-  width: 15.5mm !important;
-  height: 15.5mm !important;
+  width: 14mm !important;
+  height: 14mm !important;
   display: block;
 }
 
