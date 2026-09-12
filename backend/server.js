@@ -10,6 +10,7 @@ import axios from 'axios';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
+import { createBillingRouter } from './billing-routes.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '../.env') }); // Load .env from root
 
@@ -87,6 +88,20 @@ app.get('/admin', (req, res) => {
 
     res.sendFile(filePath, (err) => {
         if (err) res.status(404).send('Admin Panel not found. Check build.');
+    });
+});
+
+// --- BILLING POS ROUTE & API ---
+app.use('/api/billing', createBillingRouter(db));
+
+app.get('/billing', (req, res) => {
+    const isProd = process.env.NODE_ENV === 'production';
+    const filePath = isProd
+        ? path.join(__dirname, '../dist/pages/billing.html')
+        : path.join(__dirname, '../pages/billing.html');
+
+    res.sendFile(filePath, (err) => {
+        if (err) res.status(404).send('Billing POS not found. Check build.');
     });
 });
 

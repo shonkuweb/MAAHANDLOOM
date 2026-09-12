@@ -23,6 +23,7 @@ export default defineConfig({
                 shantipuriSpecial: resolve(__dirname, 'pages/shantipuri-special.html'),
                 suratSilk: resolve(__dirname, 'pages/surat-silk.html'),
                 orderConfirmation: resolve(__dirname, 'pages/order-confirmation.html'),
+                billing: resolve(__dirname, 'pages/billing.html'),
             },
         },
     },
