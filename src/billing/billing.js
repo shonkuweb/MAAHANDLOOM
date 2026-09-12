@@ -1,5 +1,5 @@
 // INDRITA FABRICS - BILLING POS & DEV 2IN1 THERMAL PRINTER SYSTEM
-// Model: 632-L58P (203 DPI, 58mm Width)
+// Model: 632-L58P (203 DPI, 58mm Width) - Direct Bluetooth & Thermal Hardware Engine
 
 // --- STATE ---
 const state = {
@@ -24,11 +24,11 @@ const state = {
         printer_dpi: 203,
     },
     printer: {
-        isConnected: true,
+        isConnected: false,
         device: null,
         server: null,
         characteristic: null,
-        mode: "bluetooth",
+        deviceName: "DEV 2IN1 632-L58P",
     },
     scanner: {
         stream: null,
@@ -67,7 +67,7 @@ window.showToast = function(msg) {
     toast.classList.add("visible");
     setTimeout(() => {
         toast.classList.remove("visible");
-    }, 2400);
+    }, 2800);
 };
 
 // --- INITIALIZATION ---
@@ -90,7 +90,6 @@ async function initApp() {
 
 // --- NAVIGATION & VIEW SWITCHING ---
 function setupNavigation() {
-    // Bottom Nav items
     document.querySelectorAll(".nav-tab-item").forEach(tab => {
         tab.addEventListener("click", () => {
             const targetView = tab.dataset.view;
@@ -98,7 +97,6 @@ function setupNavigation() {
         });
     });
 
-    // Home Action Cards
     document.getElementById("btn-home-new-bill")?.addEventListener("click", () => switchView("new-bill"));
     document.getElementById("btn-home-scan-label")?.addEventListener("click", () => switchView("scan"));
     document.getElementById("tile-products")?.addEventListener("click", () => switchView("products"));
@@ -106,18 +104,15 @@ function setupNavigation() {
     document.getElementById("tile-bill-history")?.addEventListener("click", () => switchView("reports"));
     document.getElementById("tile-reports")?.addEventListener("click", () => switchView("reports"));
 
-    // Header buttons
-    document.getElementById("btn-header-printer-status")?.addEventListener("click", openPrinterSettingsModal);
+    document.getElementById("btn-header-printer-status")?.addEventListener("click", handlePrinterButtonClick);
     document.getElementById("btn-card-printer-settings")?.addEventListener("click", openPrinterSettingsModal);
     document.getElementById("btn-open-settings")?.addEventListener("click", openPrinterSettingsModal);
 
-    // Tip close button
     document.getElementById("btn-close-tip")?.addEventListener("click", () => {
         const banner = document.getElementById("home-tip-banner");
         if (banner) banner.style.display = "none";
     });
 
-    // Scanner back button
     document.getElementById("btn-scan-back-home")?.addEventListener("click", () => {
         stopCameraScanner();
         switchView("home");
@@ -127,12 +122,10 @@ function setupNavigation() {
 function switchView(viewName) {
     state.currentView = viewName;
 
-    // Handle camera stream stop if leaving scanner
     if (viewName !== "scan") {
         stopCameraScanner();
     }
 
-    // Update bottom nav active state
     document.querySelectorAll(".nav-tab-item").forEach(tab => {
         if (tab.dataset.view === viewName) {
             tab.classList.add("active");
@@ -141,7 +134,6 @@ function switchView(viewName) {
         }
     });
 
-    // Hide all views & show current
     document.querySelectorAll(".content-view").forEach(view => {
         view.classList.remove("active");
     });
@@ -151,7 +143,6 @@ function switchView(viewName) {
         target.classList.add("active");
     }
 
-    // View specific activations
     if (viewName === "scan") {
         startCameraScanner();
     } else if (viewName === "new-bill") {
@@ -199,7 +190,6 @@ async function loadProducts() {
 
 // --- CART & LIVE BILLING LOGIC ---
 function setupCartHandlers() {
-    // GST Toggle
     const gstToggle = document.getElementById("toggle-gst");
     const gstSelect = document.getElementById("select-gst-rate");
     
@@ -213,23 +203,18 @@ function setupCartHandlers() {
         calculateBillTotals();
     });
 
-    // Search and Scan buttons on New Bill
     document.getElementById("btn-bill-scan")?.addEventListener("click", () => switchView("scan"));
     document.getElementById("btn-bill-search")?.addEventListener("click", () => switchView("products"));
-
-    // Customer selector
     document.getElementById("btn-select-customer")?.addEventListener("click", openCustomerModal);
-
-    // Step 1: Review Bill
     document.getElementById("btn-review-bill")?.addEventListener("click", openReviewBillModal);
 
-    // Step 2: Print Bill Direct
-    document.getElementById("btn-print-bill-direct")?.addEventListener("click", () => {
+    // Direct Print Button
+    document.getElementById("btn-print-bill-direct")?.addEventListener("click", async () => {
         if (!state.cart.length) {
             window.showToast("Please add items to bill first");
             return;
         }
-        executePrintBillAndSettle("CASH");
+        await executeDirectPrintAndSettle("CASH");
     });
 }
 
@@ -532,20 +517,20 @@ function setupModalHandlers() {
 
     document.getElementById("btn-close-review-modal")?.addEventListener("click", closeReviewBillModal);
     document.getElementById("btn-review-back")?.addEventListener("click", closeReviewBillModal);
-    document.getElementById("btn-review-confirm-print")?.addEventListener("click", () => {
+    document.getElementById("btn-review-confirm-print")?.addEventListener("click", async () => {
         const paymentMode = document.getElementById("review-payment-mode")?.value || "CASH";
         closeReviewBillModal();
-        executePrintBillAndSettle(paymentMode);
+        await executeDirectPrintAndSettle(paymentMode);
     });
 
     document.getElementById("btn-close-label-modal")?.addEventListener("click", closeBarcodeLabelModal);
     document.getElementById("btn-cancel-label-print")?.addEventListener("click", closeBarcodeLabelModal);
-    document.getElementById("btn-execute-label-print")?.addEventListener("click", () => {
+    document.getElementById("btn-execute-label-print")?.addEventListener("click", async () => {
         const copies = Number(document.getElementById("input-label-copies").value || 1);
         const productId = document.getElementById("modal-print-label").dataset.productId;
         const product = state.products.find(p => p.id === productId);
         if (product) {
-            executePrint58mmLabel(product, copies);
+            await executePrint58mmLabelDirect(product, copies);
             closeBarcodeLabelModal();
         }
     });
@@ -719,6 +704,14 @@ function closePrinterSettingsModal() {
     document.getElementById("modal-printer-settings")?.classList.remove("active");
 }
 
+function handlePrinterButtonClick() {
+    if (!state.printer.isConnected) {
+        connectWebBluetoothPrinter();
+    } else {
+        openPrinterSettingsModal();
+    }
+}
+
 // --- SCANNER SCREEN & CAMERA LOGIC ---
 function setupScannerTools() {
     document.getElementById("btn-toggle-flash")?.addEventListener("click", toggleCameraFlash);
@@ -782,7 +775,7 @@ async function startCameraScanner() {
             detectBarcodeLoop(video);
         }
     } catch (err) {
-        console.warn("Camera permission or environment issue:", err);
+        console.warn("Camera access:", err);
     }
 }
 
@@ -809,7 +802,7 @@ async function detectBarcodeLoop(video) {
             }
         }
     } catch (err) {
-        // frame detect issue
+        // frame decode
     }
 
     if (state.scanner.isScanning) {
@@ -873,7 +866,10 @@ async function toggleCameraFlash() {
     }
 }
 
-// --- DEV 2IN1 58MM THERMAL PRINTER DRIVER (MODEL 632-L58P, 203 DPI) ---
+// =========================================================================
+// DEV 2IN1 58MM THERMAL PRINTER HARDWARE ENGINE (MODEL: 632-L58P, 203 DPI)
+// DIRECT WEB BLUETOOTH ESC/POS & TSPL RAW BYTE SENDER
+// =========================================================================
 
 function setupPrinterControls() {
     updatePrinterStatusUI();
@@ -884,58 +880,274 @@ function updatePrinterStatusUI() {
     const pillText = document.getElementById("printer-pill-text");
     const pillDot = document.getElementById("printer-pill-dot");
     const cardStatusText = document.getElementById("card-printer-status-text");
+    const cardModelText = document.getElementById("card-printer-model-text");
 
     if (state.printer.isConnected) {
         pill?.classList.remove("disconnected");
-        if (pillText) pillText.textContent = "Printer Connected";
+        if (pillText) pillText.textContent = `${state.printer.deviceName || "DEV 2IN1"} Connected`;
         if (pillDot) pillDot.className = "pulse-dot";
         if (cardStatusText) cardStatusText.innerHTML = `<span class="pulse-dot"></span> Connected`;
+        if (cardModelText) cardModelText.textContent = `${state.printer.deviceName || "DEV 2IN1 632-L58P"} (203 DPI, 58mm)`;
     } else {
         pill?.classList.add("disconnected");
-        if (pillText) pillText.textContent = "Printer Offline";
+        if (pillText) pillText.textContent = "Connect Printer";
         if (pillDot) pillDot.className = "pulse-dot red";
-        if (cardStatusText) cardStatusText.innerHTML = `<span class="pulse-dot red"></span> Disconnected`;
+        if (cardStatusText) cardStatusText.innerHTML = `<span class="pulse-dot red"></span> Disconnected (Tap to Pair)`;
+        if (cardModelText) cardModelText.textContent = "DEV 2IN1 632-L58P (203 DPI, 58mm)";
     }
 }
 
+// Web Bluetooth Direct Pairing
 async function connectWebBluetoothPrinter() {
     if (!navigator.bluetooth) {
-        window.showToast("Web Bluetooth not supported on this browser (Chrome / Android recommended). Using 58mm Thermal Print engine.");
-        return;
+        window.showToast("Web Bluetooth requires Chrome / Edge on Android, Mac, or Windows.");
+        return false;
     }
 
     try {
         window.showToast("Searching for DEV 2IN1 632-L58P...");
+        
+        // Scan for printer with standard Bluetooth thermal printer services
         const device = await navigator.bluetooth.requestDevice({
-            filters: [
-                { namePrefix: "632" },
-                { namePrefix: "DEV" },
-                { namePrefix: "XP" },
-                { namePrefix: "MPT" },
-                { namePrefix: "RP" },
-                { namePrefix: "POS" },
-                { services: ["000018f0-0000-1000-8000-00805f9b34fb"] }
-            ],
+            acceptAllDevices: true,
             optionalServices: [
                 "000018f0-0000-1000-8000-00805f9b34fb",
+                "49535343-fe7d-4ae5-8fa9-9fafd205e455",
                 "e7810a71-73ae-499d-8c15-faa9aef0c3f2",
-                "49535343-fe7d-4ae5-8fa9-9fafd205e455"
+                "0000ff00-0000-1000-8000-00805f9b34fb",
+                "0000ae00-0000-1000-8000-00805f9b34fb",
+                "0000fee7-0000-1000-8000-00805f9b34fb",
+                "0000fff0-0000-1000-8000-00805f9b34fb"
             ]
         });
 
+        window.showToast(`Connecting to ${device.name || "printer"}...`);
         const server = await device.gatt.connect();
+        
+        // Find write characteristic
+        let writeChar = null;
+        const services = await server.getPrimaryServices();
+        
+        for (const service of services) {
+            try {
+                const chars = await service.getCharacteristics();
+                for (const char of chars) {
+                    if (char.properties.write || char.properties.writeWithoutResponse) {
+                        writeChar = char;
+                        break;
+                    }
+                }
+            } catch (e) {}
+            if (writeChar) break;
+        }
+
+        if (!writeChar) {
+            throw new Error("Could not find writable printer characteristic");
+        }
+
         state.printer.device = device;
         state.printer.server = server;
+        state.printer.characteristic = writeChar;
+        state.printer.deviceName = device.name || "DEV 2IN1 632-L58P";
         state.printer.isConnected = true;
+
+        device.addEventListener("gattserverdisconnected", () => {
+            state.printer.isConnected = false;
+            state.printer.characteristic = null;
+            updatePrinterStatusUI();
+            window.showToast("Printer disconnected");
+        });
+
         updatePrinterStatusUI();
-        window.showToast(`Paired with ${device.name || "DEV 2IN1 632-L58P"}`);
+        window.showToast(`Connected to ${state.printer.deviceName}! Ready to print.`);
+        return true;
     } catch (err) {
         console.error("Bluetooth Pairing Error:", err);
-        window.showToast("Bluetooth pairing ready.");
+        window.showToast(err.name === "NotFoundError" ? "Pairing cancelled" : "Connection failed: " + err.message);
+        return false;
     }
 }
 
-async function executePrintBillAndSettle(paymentMethod = "CASH") {
+// Send Raw Byte Chunks directly to Bluetooth GATT Characteristic
+async function sendRawBytesToPrinter(uint8Array) {
+    if (!state.printer.isConnected || !state.printer.characteristic) {
+        const connected = await connectWebBluetoothPrinter();
+        if (!connected) {
+            throw new Error("Printer not connected");
+        }
+    }
+
+    const characteristic = state.printer.characteristic;
+    const CHUNK_SIZE = 64; // Standard BLE MTU safe packet size
+    
+    for (let offset = 0; offset < uint8Array.length; offset += CHUNK_SIZE) {
+        const chunk = uint8Array.slice(offset, offset + CHUNK_SIZE);
+        if (characteristic.properties.writeWithoutResponse) {
+            await characteristic.writeValueWithoutResponse(chunk);
+        } else {
+            await characteristic.writeValueWithResponse(chunk);
+        }
+        await new Promise(r => setTimeout(r, 15)); // Short delay to prevent buffer overflow
+    }
+}
+
+// ESC/POS Command Byte Encoder Class
+class EscPosBuilder {
+    constructor() {
+        this.bytes = [];
+    }
+    init() {
+        this.bytes.push(0x1B, 0x40); // ESC @
+        return this;
+    }
+    alignCenter() {
+        this.bytes.push(0x1B, 0x61, 0x01);
+        return this;
+    }
+    alignLeft() {
+        this.bytes.push(0x1B, 0x61, 0x00);
+        return this;
+    }
+    alignRight() {
+        this.bytes.push(0x1B, 0x61, 0x02);
+        return this;
+    }
+    bold(on = true) {
+        this.bytes.push(0x1B, 0x45, on ? 1 : 0);
+        return this;
+    }
+    doubleSize() {
+        this.bytes.push(0x1D, 0x21, 0x11); // Double width + double height
+        return this;
+    }
+    normalSize() {
+        this.bytes.push(0x1D, 0x21, 0x00);
+        return this;
+    }
+    text(str) {
+        const encoder = new TextEncoder();
+        const encoded = encoder.encode(str);
+        for (let i = 0; i < encoded.length; i++) {
+            this.bytes.push(encoded[i]);
+        }
+        return this;
+    }
+    line(str = "") {
+        this.text(str + "\n");
+        return this;
+    }
+    feed(n = 3) {
+        this.bytes.push(0x1B, 0x64, n);
+        return this;
+    }
+    cut() {
+        this.bytes.push(0x1D, 0x56, 0x42, 0x00);
+        return this;
+    }
+    build() {
+        return new Uint8Array(this.bytes);
+    }
+}
+
+// Generate Raw 58mm ESC/POS Receipt Bytes (32 columns width for 58mm roll)
+function build58mmEscPosReceipt(invoice, store) {
+    const esc = new EscPosBuilder();
+    const items = invoice.items || [];
+    const dateStr = new Date().toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" });
+
+    esc.init()
+       .alignCenter()
+       .bold(true)
+       .doubleSize()
+       .line(store.store_name || "INDRITA FABRICS")
+       .normalSize()
+       .line(store.tagline || "Tradition in Every Drape")
+       .bold(false)
+       .line(store.address || "Kolkata, West Bengal")
+       .line(`Ph: ${store.phone || "+91 9876543210"}`);
+
+    if (store.gst_number) {
+        esc.line(`GSTIN: ${store.gst_number}`);
+    }
+
+    esc.line("--------------------------------")
+       .alignLeft()
+       .line(`Bill No : ${invoice.id || "INV-0001"}`)
+       .line(`Date    : ${dateStr}`)
+       .line(`Customer: ${invoice.customer_name || "Walk-in Customer"}`);
+
+    if (invoice.customer_phone) {
+        esc.line(`Phone   : ${invoice.customer_phone}`);
+    }
+
+    esc.line(`Payment : ${invoice.payment_method || "CASH"}`)
+       .line("--------------------------------")
+       .bold(true)
+       .line("ITEM              QTY     AMOUNT")
+       .line("--------------------------------")
+       .bold(false);
+
+    // 32 Characters wide row helper
+    items.forEach(it => {
+        const name = (it.name || "Item").substring(0, 32);
+        esc.bold(true).line(name).bold(false);
+
+        const skuPart = (`#${it.sku || ""}`).padEnd(12, " ");
+        const qtyPart = (`${it.qty} x ${Number(it.price)}`).padEnd(10, " ");
+        const totalPart = (`Rs.${Number(it.qty * it.price)}`).padStart(10, " ");
+        esc.line(`${skuPart}${qtyPart}${totalPart}`);
+    });
+
+    esc.line("--------------------------------")
+       .alignRight()
+       .line(`Subtotal: Rs. ${Number(invoice.subtotal).toLocaleString("en-IN")}`);
+
+    if (invoice.discount) {
+        esc.line(`Discount: - Rs. ${Number(invoice.discount).toLocaleString("en-IN")}`);
+    }
+
+    if (invoice.gst_amount) {
+        esc.line(`GST (${invoice.gst_rate || 18}%): Rs. ${Number(invoice.gst_amount).toLocaleString("en-IN")}`);
+    }
+
+    esc.line("--------------------------------")
+       .bold(true)
+       .line(`NET TOTAL: Rs. ${Number(invoice.total).toLocaleString("en-IN")}`)
+       .bold(false)
+       .line("--------------------------------")
+       .alignCenter()
+       .bold(true)
+       .line("*** THANK YOU FOR SHOPPING ***")
+       .bold(false)
+       .line("Goods once sold can be exchanged")
+       .line("within 7 days with original bill.")
+       .line("--------------------------------")
+       .feed(4)
+       .cut();
+
+    return esc.build();
+}
+
+// Generate TSPL Direct Command Bytes for 58mm Label Mode (Model 632-L58P)
+function build58mmTsplLabel(product, store) {
+    const barcodeVal = product.barcode || product.sku || "8901234567890";
+    const tsplCommands = 
+        `SIZE 54 mm, 38 mm\r\n` +
+        `GAP 2 mm, 0 mm\r\n` +
+        `DIRECTION 1\r\n` +
+        `CLS\r\n` +
+        `TEXT 200, 20, "3", 0, 1, 1, "${store.store_name || "INDRITA FABRICS"}"\r\n` +
+        `BARCODE 40, 60, "128", 55, 1, 0, 2, 2, "${barcodeVal}"\r\n` +
+        `TEXT 200, 145, "2", 0, 1, 1, "${product.name}"\r\n` +
+        `TEXT 200, 175, "2", 0, 1, 1, "SKU: ${product.sku}"\r\n` +
+        `TEXT 200, 210, "3", 0, 1, 1, "Rs. ${product.price}"\r\n` +
+        `PRINT 1\r\n`;
+
+    return new TextEncoder().encode(tsplCommands);
+}
+
+// Execute Direct Print Bill & Settle Invoice
+async function executeDirectPrintAndSettle(paymentMethod = "CASH") {
     const totals = calculateBillTotals();
     const invoicePayload = {
         customer_name: state.selectedCustomer ? state.selectedCustomer.name : "Walk-in Customer",
@@ -951,6 +1163,9 @@ async function executePrintBillAndSettle(paymentMethod = "CASH") {
     };
 
     try {
+        window.showToast("Sending bill to DEV 2IN1 Printer...");
+        
+        // Save invoice in DB
         const res = await fetch("/api/billing/invoices", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -962,22 +1177,89 @@ async function executePrintBillAndSettle(paymentMethod = "CASH") {
             savedInvoice = await res.json();
         }
 
-        print58mmThermalReceipt(savedInvoice);
+        // Build ESC/POS bytes
+        const receiptBytes = build58mmEscPosReceipt(savedInvoice, state.storeSettings);
 
+        // Send directly to Bluetooth Printer
+        try {
+            await sendRawBytesToPrinter(receiptBytes);
+            window.showToast(`Bill #${savedInvoice.id || "PAID"} printed directly on DEV 2IN1!`);
+        } catch (bleErr) {
+            console.warn("Direct Bluetooth print notice:", bleErr);
+            // Fallback: render HTML receipt in DOM
+            print58mmThermalReceiptFallback(savedInvoice);
+        }
+
+        // Reset Cart
         state.cart = [];
         state.selectedCustomer = null;
         document.getElementById("current-customer-label").textContent = "Customer (Optional)";
         renderCart();
-
-        window.showToast(`Invoice #${savedInvoice.id || "PAID"} generated & sent to printer!`);
         await loadProducts();
     } catch (e) {
-        console.error("Invoice generation error:", e);
-        print58mmThermalReceipt(invoicePayload);
+        console.error("Print bill error:", e);
+        window.showToast("Error processing bill: " + e.message);
     }
 }
 
-function print58mmThermalReceipt(invoice) {
+// Execute Direct 58mm Label Print for DEV 2IN1 Printer
+async function executePrint58mmLabelDirect(product, copies = 1) {
+    try {
+        window.showToast(`Printing ${copies} barcode label(s)...`);
+        
+        for (let i = 0; i < copies; i++) {
+            const labelBytes = build58mmTsplLabel(product, state.storeSettings);
+            try {
+                await sendRawBytesToPrinter(labelBytes);
+            } catch (bleErr) {
+                // If Bluetooth not paired, fallback to visual print
+                print58mmHtmlLabelFallback(product, copies);
+                return;
+            }
+        }
+        window.showToast(`Printed ${copies} label(s) on DEV 2IN1!`);
+    } catch (e) {
+        console.error("Label print error:", e);
+    }
+}
+
+async function executeTestPrint58mmReceipt() {
+    const testInvoice = {
+        id: "TEST-0001",
+        customer_name: "Test Customer",
+        customer_phone: "9876543210",
+        subtotal: 8950,
+        discount: 0,
+        gst_rate: 18,
+        gst_amount: 1611,
+        total: 10561,
+        payment_method: "CASH",
+        items: [
+            { id: "p1", name: "Kanchipuram Silk Saree", sku: "KS00123", price: 8950, qty: 1 }
+        ]
+    };
+
+    try {
+        const bytes = build58mmEscPosReceipt(testInvoice, state.storeSettings);
+        await sendRawBytesToPrinter(bytes);
+        window.showToast("Test 58mm receipt printed successfully!");
+    } catch (e) {
+        window.showToast("Bluetooth not paired. Click 'Pair Bluetooth' to connect DEV 2IN1 printer.");
+    }
+}
+
+async function executeTestPrint58mmLabel() {
+    const testProduct = {
+        id: "test",
+        name: "Kanchipuram Silk Saree",
+        sku: "KS00123",
+        barcode: "8901234567890",
+        price: 8950
+    };
+    await executePrint58mmLabelDirect(testProduct, 1);
+}
+
+function print58mmThermalReceiptFallback(invoice) {
     const store = state.storeSettings;
     const items = invoice.items || [];
     const dateStr = new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
@@ -1017,7 +1299,7 @@ function print58mmThermalReceipt(invoice) {
                     <div style="font-weight:600;">${it.name}</div>
                     <div style="display:flex; justify-content:space-between; color:#333; font-size:9px;">
                         <span>#${it.sku || ""}</span>
-                        <span>${it.qty} x ${Number(it.price).toLocaleString("en-IN")}</span>
+                        <span>${it.qty} x ${Number(it.price)}</span>
                         <span>₹ ${(it.qty * it.price).toLocaleString("en-IN")}</span>
                     </div>
                 </div>
@@ -1058,7 +1340,7 @@ function print58mmThermalReceipt(invoice) {
     }, 150);
 }
 
-function executePrint58mmLabel(product, copies = 1) {
+function print58mmHtmlLabelFallback(product, copies = 1) {
     const store = state.storeSettings;
     const barcodeVal = product.barcode || product.sku || "8901234567890";
     const printContainer = document.getElementById("thermal-print-container");
@@ -1097,37 +1379,10 @@ function executePrint58mmLabel(product, copies = 1) {
             }
         }
         window.print();
-        window.showToast(`Printed ${copies} label(s) for ${product.name}`);
     }, 100);
 }
 
-function executeTestPrint58mmReceipt() {
-    print58mmThermalReceipt({
-        id: "TEST-0001",
-        customer_name: "Test Customer",
-        customer_phone: "9876543210",
-        subtotal: 8950,
-        discount: 0,
-        gst_rate: 18,
-        gst_amount: 1611,
-        total: 10561,
-        payment_method: "CASH",
-        items: [
-            { id: "p1", name: "Kanchipuram Silk Saree", sku: "KS001", price: 8950, qty: 1 }
-        ]
-    });
-}
-
-function executeTestPrint58mmLabel() {
-    executePrint58mmLabel({
-        id: "test",
-        name: "Kanchipuram Silk Saree",
-        sku: "KS00123",
-        barcode: "8901234567890",
-        price: 8950
-    }, 1);
-}
-
+// --- REPORTS & BILL HISTORY SCREEN ---
 async function loadReportsData() {
     try {
         const res = await fetch("/api/billing/reports");
@@ -1173,8 +1428,13 @@ window.reprintInvoice = async (invoiceId) => {
             const invoices = await res.json();
             const inv = invoices.find(i => i.id === invoiceId);
             if (inv) {
-                print58mmThermalReceipt(inv);
-                window.showToast(`Reprinting invoice #${invoiceId}`);
+                const bytes = build58mmEscPosReceipt(inv, state.storeSettings);
+                try {
+                    await sendRawBytesToPrinter(bytes);
+                    window.showToast(`Reprinted invoice #${invoiceId} on DEV 2IN1!`);
+                } catch (e) {
+                    print58mmThermalReceiptFallback(inv);
+                }
             }
         }
     } catch (e) {
