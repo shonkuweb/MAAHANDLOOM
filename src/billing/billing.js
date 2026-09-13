@@ -2022,13 +2022,6 @@ async function renderLabelToTspl(product, store, copies = 1) {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, 384, 200);
 
-    // Dashed outer border perfectly centered with snug inset
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 3]);
-    ctx.strokeRect(4, 4, 376, 192);
-    ctx.setLineDash([]);
-
     // Store Name Header (Top-centered, bold uppercase, snug at top)
     const storeTitle = (store?.store_name || "INDRITA FABRICS").trim().toUpperCase();
     ctx.fillStyle = "#000000";
@@ -2092,16 +2085,16 @@ async function renderLabelToTspl(product, store, copies = 1) {
     const data = imgData.data;
     const widthBytes = 48; // 384 / 8
 
-    // TSPL Hardware Configuration Header (Auto Gap Sensor Calibrated)
-    const tsplHeader = `SIZE 50 mm, 30 mm\r\nGAP 2 mm, 0\r\nDIRECTION 1\r\nREFERENCE 0,0\r\nCLS\r\nBITMAP 0,0,${widthBytes},${height},0,`;
+    // TSPL Hardware Configuration Header (DIRECTION 0 = Normal Orientation, Auto Gap Sensor)
+    const tsplHeader = `SIZE 50 mm, 30 mm\r\nGAP 2 mm, 0\r\nDIRECTION 0\r\nREFERENCE 0,0\r\nCLS\r\nBITMAP 0,0,${widthBytes},${height},0,`;
     const encoder = new TextEncoder();
     const headerBytes = encoder.encode(tsplHeader);
 
-    // 1-bit per pixel monochrome bitmap buffer
+    // TSPL 1-bit per pixel bitmap buffer: In TSPL BITMAP mode 0, Bit 1 = White, Bit 0 = Black dot
     const bitmapBytes = new Uint8Array(widthBytes * height);
     for (let y = 0; y < height; y++) {
         for (let xByte = 0; xByte < widthBytes; xByte++) {
-            let byteVal = 0;
+            let byteVal = 0xFF; // Default 1s for white background
             for (let bit = 0; bit < 8; bit++) {
                 const x = xByte * 8 + bit;
                 const idx = (y * 384 + x) * 4;
@@ -2110,8 +2103,8 @@ async function renderLabelToTspl(product, store, copies = 1) {
                 const b = data[idx + 2];
                 const a = data[idx + 3];
                 const brightness = (0.299 * r + 0.587 * g + 0.114 * b);
-                if (a > 50 && brightness < 170) {
-                    byteVal |= (0x80 >> bit);
+                if (a > 50 && brightness < 160) {
+                    byteVal &= ~(0x80 >> bit); // Clear bit to 0 for black dot
                 }
             }
             bitmapBytes[y * widthBytes + xByte] = byteVal;
