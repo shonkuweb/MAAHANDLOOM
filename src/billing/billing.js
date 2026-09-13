@@ -2352,24 +2352,24 @@ async function renderLabelToTspl(product, store, copies = 1) {
     // Store Name Header (Top-centered, bold uppercase, snug at top)
     const storeTitle = (store?.store_name || "INDRITA FABRICS").trim().toUpperCase();
     ctx.fillStyle = "#000000";
-    ctx.font = "bold 17px Arial, sans-serif";
+    ctx.font = "bold 16px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(storeTitle, 196, 16, 330);
+    ctx.fillText(storeTitle, 192, 15, 340);
 
     // Subtle horizontal divider under store name (with safe left/right margins)
     ctx.strokeStyle = "#CCCCCC";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(28, 30);
-    ctx.lineTo(364, 30);
+    ctx.moveTo(24, 28);
+    ctx.lineTo(360, 28);
     ctx.stroke();
 
-    // Render QR Code image (with generous 3.5mm / 28px safe left margin)
+    // Render QR Code image (centered horizontally in left column)
     const qrData = String(product.barcode || product.sku || product.id || "IF001");
     try {
         const qrDataUrl = await QRCode.toDataURL(qrData, {
-            width: 132,
+            width: 110,
             margin: 0,
             errorCorrectionLevel: "M"
         });
@@ -2379,28 +2379,37 @@ async function renderLabelToTspl(product, store, copies = 1) {
             qrImg.onerror = reject;
             qrImg.src = qrDataUrl;
         });
-        ctx.drawImage(qrImg, 28, 42, 132, 132);
+        ctx.drawImage(qrImg, 24, 34, 110, 110);
     } catch (e) {
         console.warn("QR Code render error on canvas:", e);
     }
 
-    // Right Column Info (centered horizontally in right safe area)
-    ctx.fillStyle = "#000000";
-    ctx.textAlign = "center";
+    // Product Name (Printed cleanly under the QR code)
+    const prodName = (product.name || "").trim().substring(0, 18);
+    if (prodName) {
+        ctx.fillStyle = "#111111";
+        ctx.font = "bold 13px Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(prodName, 79, 168, 125);
+    }
+
+    // Right Column Info (SKU and Price placed towards the right edge with safe margin)
+    ctx.textAlign = "right";
     ctx.textBaseline = "middle";
 
-    // SKU (Font size: 16px bold / ~2mm height)
-    ctx.font = "bold 16px Arial, sans-serif";
+    // SKU (Font size: 15px bold, right-aligned)
+    ctx.font = "bold 15px Arial, sans-serif";
     ctx.fillStyle = "#222222";
     const rawSku = (product.sku || "IF001").trim();
     const skuText = rawSku.toUpperCase().startsWith("SKU") ? rawSku : `SKU: ${rawSku}`;
-    ctx.fillText(skuText, 272, 72, 180);
+    ctx.fillText(skuText, 358, 62, 195);
 
-    // Price (Font size: 32px bold / ~4mm height)
-    ctx.font = "bold 32px Arial, sans-serif";
+    // Price (Font size: 34px bold, positioned safely at edge without getting cut)
+    ctx.font = "bold 34px Arial, sans-serif";
     ctx.fillStyle = "#000000";
     const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
-    ctx.fillText(priceText, 272, 130, 180);
+    ctx.fillText(priceText, 358, 136, 195);
 
     // Build TSPL 2-IN-1 Label Packet
     const height = canvas.height;
@@ -2459,34 +2468,27 @@ async function renderLabelToEscPosRaster(product, store) {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, 384, 200);
 
-    // Dashed outer border perfectly centered with snug inset
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 3]);
-    ctx.strokeRect(4, 4, 376, 192);
-    ctx.setLineDash([]);
-
     // Store Name Header (Top-centered, bold uppercase, snug at top)
     const storeTitle = (store?.store_name || "INDRITA FABRICS").trim().toUpperCase();
     ctx.fillStyle = "#000000";
-    ctx.font = "bold 17px Arial, sans-serif";
+    ctx.font = "bold 16px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(storeTitle, 192, 16, 360);
+    ctx.fillText(storeTitle, 192, 15, 340);
 
     // Subtle horizontal divider under store name
     ctx.strokeStyle = "#CCCCCC";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(14, 30);
-    ctx.lineTo(370, 30);
+    ctx.moveTo(24, 28);
+    ctx.lineTo(360, 28);
     ctx.stroke();
 
-    // Render QR Code image (centered vertically in left column)
+    // Render QR Code image (centered horizontally in left column)
     const qrData = String(product.barcode || product.sku || product.id || "IF001");
     try {
         const qrDataUrl = await QRCode.toDataURL(qrData, {
-            width: 140,
+            width: 110,
             margin: 0,
             errorCorrectionLevel: "M"
         });
@@ -2496,28 +2498,37 @@ async function renderLabelToEscPosRaster(product, store) {
             qrImg.onerror = reject;
             qrImg.src = qrDataUrl;
         });
-        ctx.drawImage(qrImg, 14, 38, 140, 140);
+        ctx.drawImage(qrImg, 24, 34, 110, 110);
     } catch (e) {
         console.warn("QR Code render error on canvas:", e);
     }
 
-    // Right Column Info (centered horizontally in right safe area)
-    ctx.fillStyle = "#000000";
-    ctx.textAlign = "center";
+    // Product Name (Printed cleanly under the QR code)
+    const prodName = (product.name || "").trim().substring(0, 18);
+    if (prodName) {
+        ctx.fillStyle = "#111111";
+        ctx.font = "bold 13px Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(prodName, 79, 168, 125);
+    }
+
+    // Right Column Info (SKU and Price placed towards the right edge with safe margin)
+    ctx.textAlign = "right";
     ctx.textBaseline = "middle";
 
-    // SKU (Font size: 16px bold)
-    ctx.font = "bold 16px Arial, sans-serif";
+    // SKU (Font size: 15px bold)
+    ctx.font = "bold 15px Arial, sans-serif";
     ctx.fillStyle = "#222222";
     const rawSku = (product.sku || "IF001").trim();
     const skuText = rawSku.toUpperCase().startsWith("SKU") ? rawSku : `SKU: ${rawSku}`;
-    ctx.fillText(skuText, 272, 72, 180);
+    ctx.fillText(skuText, 358, 62, 195);
 
-    // Price (Font size: 32px bold)
-    ctx.font = "bold 32px Arial, sans-serif";
+    // Price (Font size: 34px bold, edge safe)
+    ctx.font = "bold 34px Arial, sans-serif";
     ctx.fillStyle = "#000000";
     const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
-    ctx.fillText(priceText, 272, 130, 180);
+    ctx.fillText(priceText, 358, 136, 195);
 
     // Convert Canvas to ESC/POS Raster Bytes (GS v 0)
     const height = canvas.height;
@@ -2830,8 +2841,11 @@ async function print50x30mmHtmlLabelFallback(productOrList, copies = 1) {
                     <div class="print-label-50x30">
                         <div class="print-label-store">${escapeHtml(storeName)}</div>
                         <div class="print-label-body">
-                            <div class="print-label-qr-wrap">
-                                <canvas id="${canvasId}" width="130" height="130"></canvas>
+                            <div class="print-label-left-col">
+                                <div class="print-label-qr-wrap">
+                                    <canvas id="${canvasId}" width="110" height="110"></canvas>
+                                </div>
+                                <div class="print-label-name">${escapeHtml(prod.name || "")}</div>
                             </div>
                             <div class="print-label-info">
                                 <div class="print-label-sku">${escapeHtml(displaySku)}</div>

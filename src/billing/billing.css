@@ -2628,51 +2628,54 @@ input:checked + .switch-slider:before {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 12px;
   margin-top: 4px;
 }
 
 .label-mockup-qr-col {
-  width: 96px;
-  height: 96px;
+  width: 100px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
 .label-mockup-qr-col canvas {
-  width: 96px !important;
-  height: 96px !important;
+  width: 90px !important;
+  height: 90px !important;
   display: block;
+}
+
+.label-mockup-name {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0A192F;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  text-align: center;
+  margin-top: 4px;
 }
 
 .label-mockup-info-col {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  align-items: flex-end;
+  justify-content: space-around;
+  text-align: right;
   min-width: 0;
-}
-
-.label-mockup-name {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 21px;
-  font-weight: 900;
-  color: #0A192F;
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 145px;
+  height: 90px;
 }
 
 .label-mockup-sku {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #334155;
   margin-top: 0;
@@ -2681,10 +2684,10 @@ input:checked + .switch-slider:before {
 
 .label-mockup-price {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 900;
-  color: #7A0C16;
-  margin-top: 8px;
+  color: #000000;
+  margin-top: 4px;
   line-height: 1;
   letter-spacing: -0.5px;
 }
@@ -2992,16 +2995,25 @@ input:checked + .switch-slider:before {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   width: 100%;
   flex: 1;
   gap: 1.5mm;
   margin: auto 0;
 }
 
+.print-label-left-col {
+  width: 16mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .print-label-qr-wrap {
-  width: 18mm;
-  height: 18mm;
+  width: 15mm;
+  height: 15mm;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3009,48 +3021,51 @@ input:checked + .switch-slider:before {
 }
 
 .print-label-qr-wrap canvas {
-  width: 18mm !important;
-  height: 18mm !important;
+  width: 15mm !important;
+  height: 15mm !important;
   display: block;
+}
+
+.print-label-name {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-size: 5.5pt;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.1;
+  max-width: 17mm;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  margin-top: 0.5mm;
 }
 
 .print-label-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  align-items: flex-end;
+  justify-content: space-around;
+  text-align: right;
   min-width: 0;
-}
-
-.print-label-name {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 8pt;
-  font-weight: 900;
-  color: #000000;
-  line-height: 1.15;
-  max-width: 28mm;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding-right: 0.5mm;
 }
 
 .print-label-sku {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 8.5pt;
+  font-size: 7.5pt;
   font-weight: 700;
-  color: #1E293B;
+  color: #222222;
   margin-top: 0;
   line-height: 1;
 }
 
 .print-label-price {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 13.5pt;
+  font-size: 14pt;
   font-weight: 900;
   color: #000000;
-  margin-top: 2.5mm;
+  margin-top: 1.5mm;
   line-height: 1;
 }
 
