@@ -445,9 +445,14 @@ function renderCart() {
         return;
     }
 
-    container.innerHTML = state.cart.map(item => `
+    container.innerHTML = state.cart.map(item => {
+        const imgHtml = item.image_url
+            ? `<img class="cart-item-img" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" onerror="this.outerHTML='<div class=\\\'cart-item-img-placeholder\\\'><svg width=\\\'20\\\' height=\\\'20\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'none\\\' stroke=\\\'#94A3B8\\\' stroke-width=\\\'2\\\' stroke-linecap=\\\'round\\\' stroke-linejoin=\\\'round\\\'><rect x=\\\'3\\\' y=\\\'3\\\' width=\\\'18\\\' height=\\\'18\\\' rx=\\\'2\\\'/><circle cx=\\\'8.5\\\' cy=\\\'8.5\\\' r=\\\'1.5\\\'/><path d=\\\'M21 15l-5-5L5 21\\\'/></svg></div>'">`
+            : `<div class="cart-item-img-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>`;
+
+        return `
         <div class="cart-item-card">
-            <img class="cart-item-img" src="${item.image_url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80'}" alt="${item.name}">
+            ${imgHtml}
             <div class="cart-item-details">
                 <div class="cart-item-title">${item.name}</div>
                 <div class="cart-item-meta">
@@ -467,7 +472,8 @@ function renderCart() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
         </div>
-    `).join("");
+        `;
+    }).join("");
 
     calculateBillTotals();
 }
@@ -730,7 +736,9 @@ function renderCatalog() {
     container.innerHTML = state.filteredProducts.map(p => {
         const catBadgeClass = getBadgeClass(p.category || p.subcategory);
         const subBadgeClass = getBadgeClass(p.subcategory);
-        const imgUrl = p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
+        const imgHtml = p.image_url
+            ? `<img class="prod-thumb-img" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}" onerror="this.outerHTML='<div class=\\\'prod-thumb-placeholder\\\'><svg width=\\\'22\\\' height=\\\'22\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'none\\\' stroke=\\\'#94A3B8\\\' stroke-width=\\\'2\\\' stroke-linecap=\\\'round\\\' stroke-linejoin=\\\'round\\\'><rect x=\\\'3\\\' y=\\\'3\\\' width=\\\'18\\\' height=\\\'18\\\' rx=\\\'2\\\'/><circle cx=\\\'8.5\\\' cy=\\\'8.5\\\' r=\\\'1.5\\\'/><path d=\\\'M21 15l-5-5L5 21\\\'/></svg></div>'">`
+            : `<div class="prod-thumb-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>`;
         const isSelected = state.selectedProductIds.has(p.id);
 
         return `
@@ -741,7 +749,7 @@ function renderCatalog() {
                     <span class="custom-prod-checkbox"></span>
                 </label>
 
-                <img class="prod-thumb-img" src="${imgUrl}" alt="${escapeHtml(p.name)}" onerror="this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80'">
+                ${imgHtml}
                 
                 <div class="prod-info-block">
                     <div class="prod-title">${escapeHtml(p.name)}</div>
@@ -1198,9 +1206,9 @@ async function submitAddProduct() {
     }
 
     try {
-        let image_url = previewImg?.dataset?.r2Url || previewImg?.src || "";
-        if (!image_url || image_url.startsWith("data:") || image_url === window.location.href) {
-            image_url = "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
+        let image_url = previewImg?.dataset?.r2Url || "";
+        if (!image_url && previewImg?.src && !previewImg.src.startsWith("data:") && previewImg.src !== window.location.href && previewImg.style.display !== "none") {
+            image_url = previewImg.src;
         }
 
         const isUpdate = Boolean(editId);
@@ -1682,7 +1690,15 @@ function updateScannerBottomSheet(product) {
     const sheet = document.getElementById("scanner-bottom-sheet");
     if (sheet) sheet.style.display = "block";
     const imgEl = document.getElementById("scanned-item-img");
-    if (imgEl) imgEl.src = product.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80";
+    if (imgEl) {
+        if (product.image_url) {
+            imgEl.src = product.image_url;
+            imgEl.style.display = "block";
+        } else {
+            imgEl.src = "";
+            imgEl.style.display = "none";
+        }
+    }
     document.getElementById("scanned-item-name").textContent = product.name;
     document.getElementById("scanned-item-sku").textContent = `SKU: ${product.sku}`;
     document.getElementById("scanned-item-price").textContent = `₹ ${(product.price).toLocaleString("en-IN")}`;
@@ -2059,23 +2075,18 @@ async function renderLabelToTspl(product, store, copies = 1) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Product Name
-    ctx.font = "bold 21px Arial, sans-serif";
-    const prodName = (product.name || "Test").substring(0, 16);
-    ctx.fillText(prodName, 272, 64, 180);
-
-    // SKU
-    ctx.font = "bold 14px Arial, sans-serif";
-    ctx.fillStyle = "#333333";
+    // SKU (Font size: 16px bold / ~2mm height)
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.fillStyle = "#222222";
     const rawSku = (product.sku || "IF001").trim();
     const skuText = rawSku.toUpperCase().startsWith("SKU") ? rawSku : `SKU: ${rawSku}`;
-    ctx.fillText(skuText, 272, 104, 180);
+    ctx.fillText(skuText, 272, 72, 180);
 
-    // Price
-    ctx.font = "bold 28px Arial, sans-serif";
+    // Price (Font size: 32px bold / ~4mm height)
+    ctx.font = "bold 32px Arial, sans-serif";
     ctx.fillStyle = "#000000";
     const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
-    ctx.fillText(priceText, 272, 150, 180);
+    ctx.fillText(priceText, 272, 130, 180);
 
     // Build TSPL 2-IN-1 Label Packet
     const height = canvas.height;
@@ -2176,27 +2187,23 @@ async function renderLabelToEscPosRaster(product, store) {
         console.warn("QR Code render error on canvas:", e);
     }
 
-    // Right Column Info (centered horizontally in right half)
+    // Right Column Info (centered horizontally in right safe area)
     ctx.fillStyle = "#000000";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Product Name
-    ctx.font = "bold 22px Arial, sans-serif";
-    const prodName = (product.name || "Test").substring(0, 16);
-    ctx.fillText(prodName, 266, 62, 200);
+    // SKU (Font size: 16px bold)
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.fillStyle = "#222222";
+    const rawSku = (product.sku || "IF001").trim();
+    const skuText = rawSku.toUpperCase().startsWith("SKU") ? rawSku : `SKU: ${rawSku}`;
+    ctx.fillText(skuText, 272, 72, 180);
 
-    // SKU
-    ctx.font = "bold 14px Arial, sans-serif";
-    ctx.fillStyle = "#333333";
-    const skuText = `SKU: ${product.sku || "IF001"}`;
-    ctx.fillText(skuText, 266, 102, 200);
-
-    // Price
-    ctx.font = "bold 28px Arial, sans-serif";
+    // Price (Font size: 32px bold)
+    ctx.font = "bold 32px Arial, sans-serif";
     ctx.fillStyle = "#000000";
     const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
-    ctx.fillText(priceText, 266, 150, 200);
+    ctx.fillText(priceText, 272, 130, 180);
 
     // Convert Canvas to ESC/POS Raster Bytes (GS v 0)
     const height = canvas.height;
@@ -2435,7 +2442,6 @@ async function print50x30mmHtmlLabelFallback(productOrList, copies = 1) {
                                 <canvas id="${canvasId}" width="130" height="130"></canvas>
                             </div>
                             <div class="print-label-info">
-                                <div class="print-label-name">${escapeHtml(prod.name || "Test")}</div>
                                 <div class="print-label-sku">${escapeHtml(displaySku)}</div>
                                 <div class="print-label-price">₹ ${Number(prod.price || 0).toLocaleString("en-IN")}</div>
                             </div>
