@@ -1356,7 +1356,8 @@ function updateLabelModalPreview(product) {
 
     if (storeEl) storeEl.textContent = (state.storeSettings?.store_name || "INDRITA FABRICS").toUpperCase();
     if (nameEl) nameEl.textContent = product.name || "Product";
-    if (skuEl) skuEl.textContent = `SKU: ${product.sku || "IF001"}`;
+    const rawSku = (product.sku || "IF001").trim();
+    if (skuEl) skuEl.textContent = rawSku.toUpperCase().startsWith("SKU") ? rawSku : `SKU: ${rawSku}`;
     if (priceEl) priceEl.textContent = `₹ ${(product.price || 0).toLocaleString("en-IN")}`;
 
     const qrData = String(product.barcode || product.sku || product.id || "IF001");
@@ -2066,7 +2067,8 @@ async function renderLabelToTspl(product, store, copies = 1) {
     // SKU
     ctx.font = "bold 14px Arial, sans-serif";
     ctx.fillStyle = "#333333";
-    const skuText = `SKU: ${product.sku || "IF001"}`;
+    const rawSku = (product.sku || "IF001").trim();
+    const skuText = rawSku.toUpperCase().startsWith("SKU") ? rawSku : `SKU: ${rawSku}`;
     ctx.fillText(skuText, 272, 104, 180);
 
     // Price
@@ -2422,6 +2424,8 @@ async function print50x30mmHtmlLabelFallback(productOrList, copies = 1) {
         const qrData = String(prod.barcode || prod.sku || prod.id || "IF001");
         for (let c = 0; c < copies; c++) {
             const canvasId = `print-label-qr-${idx}`;
+            const rawSku = (prod.sku || "IF001").trim();
+            const displaySku = rawSku.toUpperCase().startsWith("SKU") ? rawSku : `SKU: ${rawSku}`;
             labelsHtml += `
                 <div class="print-label-50x30-wrapper">
                     <div class="print-label-50x30">
@@ -2432,7 +2436,7 @@ async function print50x30mmHtmlLabelFallback(productOrList, copies = 1) {
                             </div>
                             <div class="print-label-info">
                                 <div class="print-label-name">${escapeHtml(prod.name || "Test")}</div>
-                                <div class="print-label-sku">SKU: ${escapeHtml(prod.sku || "IF001")}</div>
+                                <div class="print-label-sku">${escapeHtml(displaySku)}</div>
                                 <div class="print-label-price">₹ ${Number(prod.price || 0).toLocaleString("en-IN")}</div>
                             </div>
                         </div>
