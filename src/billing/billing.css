@@ -1338,17 +1338,24 @@ input:checked + .switch-slider:before {
   cursor: pointer;
   position: relative;
   transition: all 0.2s var(--ease-apple);
+  z-index: 1;
 }
 
 .product-row-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card);
+  z-index: 2;
 }
 
 .product-row-card.selected {
   border-color: #10B981;
   background: #F0FDF4;
   box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15);
+}
+
+.product-row-card.menu-open,
+.product-row-card:has(.prod-action-dropdown[style*="display: flex"]) {
+  z-index: 100 !important;
 }
 
 /* Custom Checkbox for Multi-Select */
@@ -1509,15 +1516,14 @@ input:checked + .switch-slider:before {
 .prod-action-dropdown {
   position: absolute;
   right: 0;
-  top: 100%;
-  margin-top: 4px;
+  top: calc(100% + 4px);
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 14px;
-  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.2), 0 4px 12px -2px rgba(0, 0, 0, 0.1);
   padding: 6px;
-  min-width: 145px;
-  z-index: 80;
+  min-width: 155px;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -2530,19 +2536,19 @@ input:checked + .switch-slider:before {
 
 .label-mockup-sku {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: #526079;
-  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #334155;
+  margin-top: 0;
   letter-spacing: 0.2px;
 }
 
 .label-mockup-price {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 900;
   color: #065F46;
-  margin-top: 6px;
+  margin-top: 8px;
   line-height: 1;
   letter-spacing: -0.5px;
 }
@@ -2758,19 +2764,19 @@ input:checked + .switch-slider:before {
 
 .print-label-sku {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 6pt;
-  font-weight: 600;
-  color: #334155;
-  margin-top: 0.5mm;
+  font-size: 8.5pt;
+  font-weight: 700;
+  color: #1E293B;
+  margin-top: 0;
   line-height: 1;
 }
 
 .print-label-price {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  font-size: 10.5pt;
+  font-size: 13.5pt;
   font-weight: 900;
   color: #000000;
-  margin-top: 1mm;
+  margin-top: 2.5mm;
   line-height: 1;
 }
 

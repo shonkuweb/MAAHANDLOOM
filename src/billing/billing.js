@@ -875,18 +875,23 @@ async function handleBulkDeleteProducts() {
 window.toggleProductActionMenu = (id, event) => {
     if (event) event.stopPropagation();
     const currentMenu = document.getElementById(`prod-menu-${id}`);
+    const card = document.getElementById(`prod-card-${id}`);
     const isCurrentlyOpen = currentMenu && currentMenu.style.display === "flex";
 
     closeAllProductMenus();
 
     if (currentMenu && !isCurrentlyOpen) {
         currentMenu.style.display = "flex";
+        if (card) card.classList.add("menu-open");
     }
 };
 
 window.closeAllProductMenus = () => {
     document.querySelectorAll(".prod-action-dropdown").forEach(menu => {
         menu.style.display = "none";
+    });
+    document.querySelectorAll(".product-row-card.menu-open").forEach(card => {
+        card.classList.remove("menu-open");
     });
 };
 
