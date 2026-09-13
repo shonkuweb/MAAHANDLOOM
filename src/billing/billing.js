@@ -279,17 +279,8 @@ async function loadCategories() {
         console.warn("Failed to load categories from API:", e);
     }
 
-    if (!state.categories || state.categories.length === 0) {
-        state.categories = [
-            "Sarees",
-            "Cotton Saree",
-            "Silk Saree",
-            "Handloom Saree",
-            "Fabrics",
-            "Suits",
-            "Dupattas",
-            "Kurtis"
-        ];
+    if (!state.categories) {
+        state.categories = [];
     }
 
     // Merge any categories from products
@@ -548,7 +539,7 @@ function populateCategoryDropdown(selectedVal = "") {
     if (!select) return;
 
     const currentVal = selectedVal || select.value;
-    const cats = state.categories && state.categories.length > 0 ? state.categories : ["Sarees", "Fabrics"];
+    const cats = state.categories || [];
 
     let optionsHtml = `<option value="" disabled ${!currentVal ? "selected" : ""}>-- Select Category --</option>`;
     cats.forEach(c => {
@@ -1191,7 +1182,8 @@ async function submitAddProduct() {
     const name = document.getElementById("input-prod-name").value.trim();
     const sku = document.getElementById("input-prod-sku").value.trim();
     const barcode = sku;
-    const category = (document.getElementById("input-prod-category")?.value || "General").trim();
+    const catSelect = document.getElementById("input-prod-category");
+    const category = (catSelect?.value || "").trim();
     const subcategory = "";
     const rawPrice = document.getElementById("input-prod-price").value;
     const price = Number(rawPrice);
@@ -1202,6 +1194,12 @@ async function submitAddProduct() {
 
     if (!name || !sku || !rawPrice || isNaN(price) || price < 0) {
         window.showToast("Please fill in Name, SKU, and a valid Price (*)");
+        return;
+    }
+
+    if (!category || category === "__ADD_NEW__") {
+        window.showToast("Please select a category (*)");
+        catSelect?.focus();
         return;
     }
 

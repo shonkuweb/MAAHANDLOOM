@@ -108,32 +108,7 @@ export function createBillingRouter(db) {
                 )
             `);
 
-            // Seed default categories if empty
-            try {
-                const existingCats = await runQuery("SELECT COUNT(*) as count FROM billing_categories");
-                const catCount = existingCats[0]?.count || existingCats[0]?.COUNT || 0;
-                if (parseInt(catCount, 10) === 0) {
-                    const defaultCategories = [
-                        "Sarees",
-                        "Cotton Saree",
-                        "Silk Saree",
-                        "Handloom Saree",
-                        "Fabrics",
-                        "Suits",
-                        "Dupattas",
-                        "Kurtis"
-                    ];
-                    for (const catName of defaultCategories) {
-                        const catId = "cat_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
-                        await runQuery("INSERT INTO billing_categories (id, name) VALUES (?, ?)", [catId, catName]);
-                    }
-                    console.log("[BILLING] Default categories initialized.");
-                }
-            } catch (catErr) {
-                console.warn("[BILLING] Category seeding note:", catErr.message);
-            }
-
-            // NOTE: Do NOT seed any fake products. The catalog starts 100% clean and real.
+            // NOTE: Do NOT seed any hardcoded categories or fake products. The catalog starts 100% clean.
 
             // Seed initial settings if empty
             const existingSettings = await runQuery("SELECT COUNT(*) as count FROM billing_settings");
