@@ -2011,6 +2011,127 @@ function build58mmEscPosReceipt(invoice, store) {
     return esc.build();
 }
 
+// Render 50mm x 30mm label using Native TSPL (TSC Label Mode) with auto gap calibration
+async function renderLabelToTspl(product, store, copies = 1) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 384; // Standard 58mm / 203 DPI thermal head width (48 bytes per row)
+    canvas.height = 200; // Calibrated for 50x30mm sticker printable area
+    const ctx = canvas.getContext("2d");
+
+    // Pure white background
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, 384, 200);
+
+    // Dashed outer border perfectly centered with snug inset
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    ctx.strokeRect(4, 4, 376, 192);
+    ctx.setLineDash([]);
+
+    // Store Name Header (Top-centered, bold uppercase, snug at top)
+    const storeTitle = (store?.store_name || "INDRITA FABRICS").trim().toUpperCase();
+    ctx.fillStyle = "#000000";
+    ctx.font = "bold 17px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(storeTitle, 192, 16, 360);
+
+    // Subtle horizontal divider under store name
+    ctx.strokeStyle = "#CCCCCC";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(14, 30);
+    ctx.lineTo(370, 30);
+    ctx.stroke();
+
+    // Render QR Code image (centered vertically in left column)
+    const qrData = String(product.barcode || product.sku || product.id || "IF001");
+    try {
+        const qrDataUrl = await QRCode.toDataURL(qrData, {
+            width: 140,
+            margin: 0,
+            errorCorrectionLevel: "M"
+        });
+        const qrImg = new Image();
+        await new Promise((resolve, reject) => {
+            qrImg.onload = resolve;
+            qrImg.onerror = reject;
+            qrImg.src = qrDataUrl;
+        });
+        ctx.drawImage(qrImg, 14, 38, 140, 140);
+    } catch (e) {
+        console.warn("QR Code render error on canvas:", e);
+    }
+
+    // Right Column Info (centered horizontally in right half)
+    ctx.fillStyle = "#000000";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Product Name
+    ctx.font = "bold 22px Arial, sans-serif";
+    const prodName = (product.name || "Test").substring(0, 16);
+    ctx.fillText(prodName, 266, 62, 200);
+
+    // SKU
+    ctx.font = "bold 14px Arial, sans-serif";
+    ctx.fillStyle = "#333333";
+    const skuText = `SKU: ${product.sku || "IF001"}`;
+    ctx.fillText(skuText, 266, 102, 200);
+
+    // Price
+    ctx.font = "bold 28px Arial, sans-serif";
+    ctx.fillStyle = "#000000";
+    const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
+    ctx.fillText(priceText, 266, 150, 200);
+
+    // Build TSPL 2-IN-1 Label Packet
+    const height = canvas.height;
+    const imgData = ctx.getImageData(0, 0, 384, height);
+    const data = imgData.data;
+    const widthBytes = 48; // 384 / 8
+
+    // TSPL Hardware Configuration Header (Auto Gap Sensor Calibrated)
+    const tsplHeader = `SIZE 50 mm, 30 mm\r\nGAP 2 mm, 0\r\nDIRECTION 1\r\nREFERENCE 0,0\r\nCLS\r\nBITMAP 0,0,${widthBytes},${height},0,`;
+    const encoder = new TextEncoder();
+    const headerBytes = encoder.encode(tsplHeader);
+
+    // 1-bit per pixel monochrome bitmap buffer
+    const bitmapBytes = new Uint8Array(widthBytes * height);
+    for (let y = 0; y < height; y++) {
+        for (let xByte = 0; xByte < widthBytes; xByte++) {
+            let byteVal = 0;
+            for (let bit = 0; bit < 8; bit++) {
+                const x = xByte * 8 + bit;
+                const idx = (y * 384 + x) * 4;
+                const r = data[idx];
+                const g = data[idx + 1];
+                const b = data[idx + 2];
+                const a = data[idx + 3];
+                const brightness = (0.299 * r + 0.587 * g + 0.114 * b);
+                if (a > 50 && brightness < 170) {
+                    byteVal |= (0x80 >> bit);
+                }
+            }
+            bitmapBytes[y * widthBytes + xByte] = byteVal;
+        }
+    }
+
+    // TSPL Print & Feed to Next Sticker Gap Command
+    const tsplFooter = `\r\nPRINT ${copies},1\r\n`;
+    const footerBytes = encoder.encode(tsplFooter);
+
+    // Combine Header + Bitmap Data + Footer
+    const totalLength = headerBytes.length + bitmapBytes.length + footerBytes.length;
+    const resultBytes = new Uint8Array(totalLength);
+    resultBytes.set(headerBytes, 0);
+    resultBytes.set(bitmapBytes, headerBytes.length);
+    resultBytes.set(footerBytes, headerBytes.length + bitmapBytes.length);
+
+    return resultBytes;
+}
+
 // Render 50mm x 30mm label onto an offscreen canvas and convert to standard ESC/POS raster bitmap bytes
 async function renderLabelToEscPosRaster(product, store) {
     const canvas = document.createElement("canvas");
@@ -2186,29 +2307,27 @@ async function executeDirectPrintAndSettle(paymentMethod = "CASH") {
     }
 }
 
-// Execute Direct 50mm x 30mm Graphic Label Print for DEV 2IN1 Printer
+// Execute Direct 50mm x 30mm TSPL Native Label Print for DEV 2IN1 Printer
 async function executePrint50x30mmLabelDirect(productOrList, copies = 1) {
     const products = Array.isArray(productOrList) ? productOrList : [productOrList];
     const totalLabels = products.length * copies;
 
     try {
-        window.showToast(`Printing ${totalLabels} graphic label(s)...`);
+        window.showToast(`Printing ${totalLabels} TSPL label(s) with Auto-Gap...`);
         
         for (const prod of products) {
-            for (let i = 0; i < copies; i++) {
-                const labelBytes = await renderLabelToEscPosRaster(prod, state.storeSettings);
-                try {
-                    await sendRawBytesToPrinter(labelBytes);
-                } catch (bleErr) {
-                    // If Bluetooth not paired, fallback to visual browser print
-                    await print50x30mmHtmlLabelFallback(productOrList, copies);
-                    return;
-                }
+            const labelBytes = await renderLabelToTspl(prod, state.storeSettings, copies);
+            try {
+                await sendRawBytesToPrinter(labelBytes);
+            } catch (bleErr) {
+                // If Bluetooth not paired, fallback to visual browser print
+                await print50x30mmHtmlLabelFallback(productOrList, copies);
+                return;
             }
         }
-        window.showToast(`Printed ${totalLabels} label(s) on DEV 2IN1!`);
+        window.showToast(`Printed ${totalLabels} TSPL label(s) on DEV 2IN1!`);
     } catch (e) {
-        console.error("Label print error:", e);
+        console.error("TSPL label print error:", e);
         await print50x30mmHtmlLabelFallback(productOrList, copies);
     }
 }
