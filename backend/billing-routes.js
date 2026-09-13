@@ -97,6 +97,7 @@ export function createBillingRouter(db) {
                     id INTEGER PRIMARY KEY,
                     store_name TEXT DEFAULT 'Indrita Fabrics',
                     tagline TEXT DEFAULT 'indritafabrics.com',
+                    website TEXT DEFAULT 'www.indritafabrics.com',
                     address TEXT DEFAULT 'Chand para Station, Nearest Mar on Chader Hotel.\nSector 4, Commercial Complex\nKolkata, West Bengal 743245',
                     phone TEXT DEFAULT '+91 6295175749',
                     gst_number TEXT DEFAULT 'Nil',
@@ -110,7 +111,12 @@ export function createBillingRouter(db) {
                 )
             `);
 
-            // Safe migration for upi_id column if table already existed
+            // Safe migration for columns if table already existed
+            try {
+                await runQuery("ALTER TABLE billing_settings ADD COLUMN website TEXT DEFAULT 'www.indritafabrics.com'");
+            } catch (e) {
+                // Column may already exist
+            }
             try {
                 await runQuery("ALTER TABLE billing_settings ADD COLUMN upi_id TEXT DEFAULT 'indritafabrics@upi'");
             } catch (e) {
@@ -129,10 +135,11 @@ export function createBillingRouter(db) {
             const sCount = existingSettings[0]?.count || existingSettings[0]?.COUNT || 0;
             if (parseInt(sCount, 10) === 0) {
                 await runQuery(
-                    "INSERT INTO billing_settings (id, store_name, tagline, address, phone, gst_number, upi_id, receipt_footer, printer_model, printer_paper_width, printer_dpi, default_gst_rate) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO billing_settings (id, store_name, tagline, website, address, phone, gst_number, upi_id, receipt_footer, printer_model, printer_paper_width, printer_dpi, default_gst_rate) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         "Indrita Fabrics",
                         "indritafabrics.com",
+                        "www.indritafabrics.com",
                         "Chand para Station, Nearest Mar on Chader Hotel.\nSector 4, Commercial Complex\nKolkata, West Bengal 743245",
                         "+91 6295175749",
                         "Nil",
@@ -473,6 +480,7 @@ export function createBillingRouter(db) {
             res.json(rows[0] || {
                 store_name: "Indrita Fabrics",
                 tagline: "indritafabrics.com",
+                website: "www.indritafabrics.com",
                 address: "Chand para Station, Nearest Mar on Chader Hotel.\nSector 4, Commercial Complex\nKolkata, West Bengal 743245",
                 phone: "+91 6295175749",
                 gst_number: "Nil",
@@ -493,6 +501,7 @@ export function createBillingRouter(db) {
             const {
                 store_name,
                 tagline,
+                website,
                 address,
                 phone,
                 gst_number,
@@ -508,6 +517,7 @@ export function createBillingRouter(db) {
                 `UPDATE billing_settings SET 
                     store_name = ?, 
                     tagline = ?, 
+                    website = ?,
                     address = ?, 
                     phone = ?, 
                     gst_number = ?, 
@@ -522,6 +532,7 @@ export function createBillingRouter(db) {
                 [
                     store_name !== undefined ? store_name.trim() : "Indrita Fabrics",
                     tagline !== undefined ? tagline.trim() : "",
+                    website !== undefined ? website.trim() : "www.indritafabrics.com",
                     address !== undefined ? address.trim() : "",
                     phone !== undefined ? phone.trim() : "",
                     gst_number !== undefined ? gst_number.trim() : "",

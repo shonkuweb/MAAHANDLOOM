@@ -212,16 +212,30 @@ async function loadStoreSettings() {
     }
 }
 
+function formatReceiptWebsite(website, fallback = "www.indritafabrics.com") {
+    let web = (website || "").trim();
+    if (!web) return fallback;
+    if (!web.includes(".")) {
+        return fallback;
+    }
+    web = web.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+    if (!web.startsWith("www.") && web.split(".").length === 2) {
+        web = `www.${web}`;
+    }
+    return web;
+}
+
 function updateHeaderBranding() {
     const titleEl = document.getElementById("header-store-name");
     const tagEl = document.getElementById("header-tagline");
     if (titleEl) titleEl.textContent = state.storeSettings.store_name || "Indrita Fabrics";
-    if (tagEl) tagEl.textContent = state.storeSettings.tagline || "indritafabrics.com";
+    if (tagEl) tagEl.textContent = state.storeSettings.tagline || "Tradition in Every Drape";
 }
 
 function updateReceiptLivePreview() {
     const s = state.storeSettings || {};
     const nameInput = document.getElementById("setting-store-name");
+    const webInput = document.getElementById("setting-store-website");
     const tagInput = document.getElementById("setting-store-tagline");
     const phoneInput = document.getElementById("setting-store-phone");
     const gstInput = document.getElementById("setting-store-gst");
@@ -229,6 +243,7 @@ function updateReceiptLivePreview() {
     const footerInput = document.getElementById("setting-receipt-footer");
 
     const sName = (nameInput ? nameInput.value.trim() : "") || s.store_name || "Indrita Fabrics";
+    const sWeb = (webInput ? webInput.value.trim() : "") || (s.website !== undefined ? s.website : "www.indritafabrics.com");
     const sTag = (tagInput ? tagInput.value.trim() : "") || (s.tagline !== undefined ? s.tagline : "indritafabrics.com");
     const sPhone = (phoneInput ? phoneInput.value.trim() : "") || (s.phone !== undefined ? s.phone : "+91 6295175749");
     const sGst = (gstInput ? gstInput.value.trim().toUpperCase() : "") || (s.gst_number !== undefined ? s.gst_number : "Nil");
@@ -255,6 +270,7 @@ function updateReceiptLivePreview() {
 function syncMoreTabInputs() {
     const s = state.storeSettings || {};
     const nameInput = document.getElementById("setting-store-name");
+    const webInput = document.getElementById("setting-store-website");
     const tagInput = document.getElementById("setting-store-tagline");
     const phoneInput = document.getElementById("setting-store-phone");
     const gstInput = document.getElementById("setting-store-gst");
@@ -264,7 +280,8 @@ function syncMoreTabInputs() {
     const gstRateSelect = document.getElementById("setting-default-gst");
 
     if (nameInput) nameInput.value = s.store_name || "Indrita Fabrics";
-    if (tagInput) tagInput.value = s.tagline !== undefined ? s.tagline : "indritafabrics.com";
+    if (webInput) webInput.value = s.website !== undefined ? s.website : "www.indritafabrics.com";
+    if (tagInput) tagInput.value = s.tagline !== undefined ? s.tagline : "Tradition in Every Drape";
     if (phoneInput) phoneInput.value = s.phone !== undefined ? s.phone : "+91 6295175749";
     if (gstInput) gstInput.value = s.gst_number !== undefined ? s.gst_number : "Nil";
     if (upiInput) upiInput.value = s.upi_id !== undefined ? s.upi_id : "indritafabrics@upi";
@@ -1305,9 +1322,7 @@ function renderReviewUpiQr(grandTotal) {
         upiIdDisplay.textContent = `UPI: ${upiId}`;
     }
     if (upiWebDisplay) {
-        const rawWeb = (state.storeSettings?.tagline || state.storeSettings?.website || "www.indritafabrics.com").trim();
-        const displayWeb = rawWeb.startsWith("http") ? rawWeb.replace(/^https?:\/\//, '') : (rawWeb.startsWith("www.") ? rawWeb : `www.${rawWeb}`);
-        upiWebDisplay.textContent = displayWeb;
+        upiWebDisplay.textContent = formatReceiptWebsite(state.storeSettings?.website, "www.indritafabrics.com");
     }
 
     // Standard NPCI UPI URI Scheme: upi://pay?pa=...&pn=...&am=...&cu=INR&tn=...
@@ -2291,8 +2306,7 @@ async function build58mmEscPosReceipt(invoice, store) {
 
         // Under QR Code: UPI ID and Website
         esc.bold(true).line(`UPI: ${upiId}`).bold(false);
-        const rawWeb = (store.tagline || store.website || "www.indritafabrics.com").trim();
-        const displayWeb = rawWeb.startsWith("http") ? rawWeb.replace(/^https?:\/\//, '') : (rawWeb.startsWith("www.") ? rawWeb : `www.${rawWeb}`);
+        const displayWeb = formatReceiptWebsite(store.website, "www.indritafabrics.com");
         esc.line(displayWeb);
         esc.line();
     }
@@ -2753,10 +2767,7 @@ async function print58mmThermalReceiptFallback(invoice) {
                     <canvas id="receipt-fallback-upi-qr" width="280" height="280"></canvas>
                 </div>
                 <div class="receipt-upi-id-under">UPI: ${escapeHtml((store.upi_id || "indritafabrics@upi").trim())}</div>
-                <div class="receipt-upi-web-under">${escapeHtml((() => {
-                    const rawWeb = (store.tagline || store.website || "www.indritafabrics.com").trim();
-                    return rawWeb.startsWith("http") ? rawWeb.replace(/^https?:\/\//, '') : (rawWeb.startsWith("www.") ? rawWeb : `www.${rawWeb}`);
-                })())}</div>
+                <div class="receipt-upi-web-under">${escapeHtml(formatReceiptWebsite(store.website, "www.indritafabrics.com"))}</div>
             </div>` : ""}
 
             ${(store.receipt_footer || "").trim() ? `
@@ -2946,6 +2957,7 @@ function setupMoreSettingsHandlers() {
     document.getElementById("btn-save-store-settings")?.addEventListener("click", async () => {
         const store_name = document.getElementById("setting-store-name")?.value.trim() || "Indrita Fabrics";
         const tagline = document.getElementById("setting-store-tagline")?.value.trim() || "";
+        const website = document.getElementById("setting-store-website")?.value.trim() || "www.indritafabrics.com";
         const phone = document.getElementById("setting-store-phone")?.value.trim() || "";
         const gst_number = document.getElementById("setting-store-gst")?.value.trim().toUpperCase() || "";
         const upi_id = document.getElementById("setting-store-upi")?.value.trim() || "indritafabrics@upi";
@@ -2960,6 +2972,7 @@ function setupMoreSettingsHandlers() {
                 body: JSON.stringify({
                     store_name,
                     tagline,
+                    website,
                     phone,
                     gst_number,
                     upi_id,
