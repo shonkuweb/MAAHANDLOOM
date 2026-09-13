@@ -456,14 +456,14 @@
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                     <span>Store Name</span>
                                 </label>
-                                <input type="text" id="setting-store-name" class="field-input" value="Indrita Fabrics" placeholder="Store Name">
+                                <input type="text" id="setting-store-name" class="field-input live-receipt-input" value="Indrita Fabrics" placeholder="Store Name">
                             </div>
                             <div class="form-field-group">
                                 <label class="field-label">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                                    <span>Tagline / Header</span>
+                                    <span>Website / Tagline (Printed below Store Name)</span>
                                 </label>
-                                <input type="text" id="setting-store-tagline" class="field-input" value="Tradition in Every Drape" placeholder="Store Tagline">
+                                <input type="text" id="setting-store-tagline" class="field-input live-receipt-input" value="indritafabrics.com" placeholder="e.g. indritafabrics.com or Tradition in Every Drape">
                             </div>
                         </div>
 
@@ -471,34 +471,49 @@
                             <div class="form-field-group">
                                 <label class="field-label">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                    <span>Phone Number</span>
+                                    <span>Phone / Tel (Printed on Receipts)</span>
                                 </label>
-                                <input type="text" id="setting-store-phone" class="field-input" value="+91 9876543210" placeholder="+91 9876543210">
+                                <input type="text" id="setting-store-phone" class="field-input live-receipt-input" value="+91 6295175749" placeholder="+91 6295175749">
                             </div>
                             <div class="form-field-group">
                                 <label class="field-label">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>
-                                    <span>GSTIN / Tax ID</span>
+                                    <span>GSTIN / Tax ID (or 'Nil')</span>
                                 </label>
-                                <input type="text" id="setting-store-gst" class="field-input" value="19AAAAA0000A1Z5" placeholder="19AAAAA0000A1Z5" style="text-transform: uppercase;">
+                                <input type="text" id="setting-store-gst" class="field-input live-receipt-input" value="Nil" placeholder="e.g. 19AAAAA0000A1Z5 or Nil" style="text-transform: uppercase;">
                             </div>
                         </div>
 
-                        <div class="form-field-group">
-                            <label class="field-label">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                                <span>UPI ID / VPA (For Instant Payment QR)</span>
-                            </label>
-                            <input type="text" id="setting-store-upi" class="field-input" value="indritafabrics@upi" placeholder="e.g. merchant@upi or 9876543210@paytm">
-                            <div style="font-size: 11px; color: #64748B; margin-top: 4px;">Dynamic amount QR code is automatically generated during billing review when UPI mode is selected.</div>
+                        <div class="form-grid-2">
+                            <div class="form-field-group">
+                                <label class="field-label">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                    <span>UPI ID / VPA (For Instant Payment QR)</span>
+                                </label>
+                                <input type="text" id="setting-store-upi" class="field-input live-receipt-input" value="indritafabrics@upi" placeholder="e.g. merchant@upi or 9876543210@paytm">
+                                <div style="font-size: 11px; color: #64748B; margin-top: 4px;">Dynamic amount QR code is automatically generated on review & receipts when UPI mode is selected.</div>
+                            </div>
+                            <div class="form-field-group">
+                                <label class="field-label">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    <span>Default GST Rate (%)</span>
+                                </label>
+                                <select id="setting-default-gst" class="field-input live-receipt-input" style="height: 42px;">
+                                    <option value="0">0% (Exempt)</option>
+                                    <option value="5">5% (Fabrics / Kurtis / Sarees)</option>
+                                    <option value="12">12% (Standard)</option>
+                                    <option value="18" selected>18% (Standard GST)</option>
+                                    <option value="28">28% (Luxury)</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="form-field-group">
                             <label class="field-label">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                <span>Store Address (Printed on Receipts)</span>
+                                <span>Store Address (Supports Multiple Lines on Receipts)</span>
                             </label>
-                            <input type="text" id="setting-store-address" class="field-input" value="Main Road, Fabric Market, Kolkata - 700001" placeholder="Store Address">
+                            <textarea id="setting-store-address" class="field-input live-receipt-input" rows="3" style="resize: vertical; font-family: inherit; font-size: 13px; line-height: 1.4; padding: 10px;" placeholder="Chand para Station, Nearest Mar on Chader Hotel.&#10;Sector 4, Commercial Complex&#10;Kolkata, West Bengal 743245"></textarea>
                         </div>
 
                         <div class="form-field-group">
@@ -506,7 +521,7 @@
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                                 <span>Receipt Footer Note</span>
                             </label>
-                            <input type="text" id="setting-receipt-footer" class="field-input" value="Thank you for shopping with us! • Goods once sold can be exchanged within 7 days." placeholder="Receipt Footer Message">
+                            <input type="text" id="setting-receipt-footer" class="field-input live-receipt-input" value="Thank you for shopping with us! • Goods once sold can be exchanged within 7 days." placeholder="Receipt Footer Message">
                         </div>
 
                         <div class="settings-action-row">

@@ -101,6 +101,7 @@ export function createBillingRouter(db) {
                     phone TEXT DEFAULT '+91 6295175749',
                     gst_number TEXT DEFAULT 'Nil',
                     upi_id TEXT DEFAULT 'indritafabrics@upi',
+                    receipt_footer TEXT DEFAULT 'Thank you for shopping with us!',
                     printer_model TEXT DEFAULT 'DEV 2IN1 632-L58P',
                     printer_paper_width INTEGER DEFAULT 58,
                     printer_dpi INTEGER DEFAULT 203,
@@ -115,6 +116,11 @@ export function createBillingRouter(db) {
             } catch (e) {
                 // Column may already exist
             }
+            try {
+                await runQuery("ALTER TABLE billing_settings ADD COLUMN receipt_footer TEXT DEFAULT 'Thank you for shopping with us!'");
+            } catch (e) {
+                // Column may already exist
+            }
 
             // NOTE: Do NOT seed any hardcoded categories or fake products. The catalog starts 100% clean.
 
@@ -123,7 +129,7 @@ export function createBillingRouter(db) {
             const sCount = existingSettings[0]?.count || existingSettings[0]?.COUNT || 0;
             if (parseInt(sCount, 10) === 0) {
                 await runQuery(
-                    "INSERT INTO billing_settings (id, store_name, tagline, address, phone, gst_number, upi_id, printer_model, printer_paper_width, printer_dpi, default_gst_rate) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO billing_settings (id, store_name, tagline, address, phone, gst_number, upi_id, receipt_footer, printer_model, printer_paper_width, printer_dpi, default_gst_rate) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         "Indrita Fabrics",
                         "indritafabrics.com",
@@ -131,6 +137,7 @@ export function createBillingRouter(db) {
                         "+91 6295175749",
                         "Nil",
                         "indritafabrics@upi",
+                        "Thank you for shopping with us!",
                         "DEV 2IN1 632-L58P",
                         58,
                         203,
@@ -465,11 +472,12 @@ export function createBillingRouter(db) {
             const rows = await runQuery("SELECT * FROM billing_settings WHERE id = 1");
             res.json(rows[0] || {
                 store_name: "Indrita Fabrics",
-                tagline: "Tradition in Every Drape",
-                address: "Kolkata, West Bengal, India",
-                phone: "+91 9876543210",
-                gst_number: "19AAAAA0000A1Z5",
+                tagline: "indritafabrics.com",
+                address: "Chand para Station, Nearest Mar on Chader Hotel.\nSector 4, Commercial Complex\nKolkata, West Bengal 743245",
+                phone: "+91 6295175749",
+                gst_number: "Nil",
                 upi_id: "indritafabrics@upi",
+                receipt_footer: "Thank you for shopping with us!",
                 printer_model: "DEV 2IN1 632-L58P",
                 printer_paper_width: 58,
                 printer_dpi: 203,
@@ -489,6 +497,7 @@ export function createBillingRouter(db) {
                 phone,
                 gst_number,
                 upi_id,
+                receipt_footer,
                 printer_model,
                 printer_paper_width,
                 printer_dpi,
@@ -503,6 +512,7 @@ export function createBillingRouter(db) {
                     phone = ?, 
                     gst_number = ?, 
                     upi_id = ?,
+                    receipt_footer = ?,
                     printer_model = ?, 
                     printer_paper_width = ?, 
                     printer_dpi = ?, 
@@ -510,16 +520,17 @@ export function createBillingRouter(db) {
                     updated_at = CURRENT_TIMESTAMP 
                 WHERE id = 1`,
                 [
-                    store_name || "Indrita Fabrics",
-                    tagline || "Tradition in Every Drape",
-                    address || "",
-                    phone || "",
-                    gst_number || "",
-                    upi_id || "indritafabrics@upi",
+                    store_name !== undefined ? store_name.trim() : "Indrita Fabrics",
+                    tagline !== undefined ? tagline.trim() : "",
+                    address !== undefined ? address.trim() : "",
+                    phone !== undefined ? phone.trim() : "",
+                    gst_number !== undefined ? gst_number.trim() : "",
+                    upi_id !== undefined ? upi_id.trim() : "indritafabrics@upi",
+                    receipt_footer !== undefined ? receipt_footer.trim() : "Thank you for shopping with us!",
                     printer_model || "DEV 2IN1 632-L58P",
                     Number(printer_paper_width || 58),
                     Number(printer_dpi || 203),
-                    Number(default_gst_rate || 18),
+                    Number(default_gst_rate !== undefined ? default_gst_rate : 18),
                 ]
             );
 

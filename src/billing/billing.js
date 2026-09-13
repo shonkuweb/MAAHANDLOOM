@@ -216,7 +216,7 @@ function updateHeaderBranding() {
     const titleEl = document.getElementById("header-store-name");
     const tagEl = document.getElementById("header-tagline");
     if (titleEl) titleEl.textContent = state.storeSettings.store_name || "Indrita Fabrics";
-    if (tagEl) tagEl.textContent = state.storeSettings.tagline || "Tradition in Every Drape";
+    if (tagEl) tagEl.textContent = state.storeSettings.tagline || "indritafabrics.com";
 }
 
 function updateReceiptLivePreview() {
@@ -229,11 +229,11 @@ function updateReceiptLivePreview() {
     const footerInput = document.getElementById("setting-receipt-footer");
 
     const sName = (nameInput ? nameInput.value.trim() : "") || s.store_name || "Indrita Fabrics";
-    const sTag = (tagInput ? tagInput.value.trim() : "") || s.tagline || "Tradition in Every Drape";
-    const sPhone = (phoneInput ? phoneInput.value.trim() : "") || s.phone || "+91 9876543210";
-    const sGst = (gstInput ? gstInput.value.trim().toUpperCase() : "") || s.gst_number || "19AAAAA0000A1Z5";
-    const sAddr = (addrInput ? addrInput.value.trim() : "") || s.address || "Main Road, Fabric Market, Kolkata - 700001";
-    const sFooter = (footerInput ? footerInput.value.trim() : "") || "Thank you for shopping with us! • Goods once sold can be exchanged within 7 days.";
+    const sTag = (tagInput ? tagInput.value.trim() : "") || (s.tagline !== undefined ? s.tagline : "indritafabrics.com");
+    const sPhone = (phoneInput ? phoneInput.value.trim() : "") || (s.phone !== undefined ? s.phone : "+91 6295175749");
+    const sGst = (gstInput ? gstInput.value.trim().toUpperCase() : "") || (s.gst_number !== undefined ? s.gst_number : "Nil");
+    const sAddr = (addrInput ? addrInput.value.trim() : "") || (s.address !== undefined ? s.address : "");
+    const sFooter = (footerInput ? footerInput.value.trim() : "") || (s.receipt_footer !== undefined ? s.receipt_footer : "");
 
     const pStore = document.getElementById("preview-receipt-store");
     const pTag = document.getElementById("preview-receipt-tagline");
@@ -244,28 +244,32 @@ function updateReceiptLivePreview() {
 
     if (pStore) pStore.textContent = sName;
     if (pTag) pTag.textContent = sTag;
-    if (pAddr) pAddr.textContent = sAddr;
-    if (pPhone) pPhone.textContent = sPhone ? `Ph: ${sPhone}` : "";
+    if (pAddr) {
+        pAddr.innerHTML = sAddr ? sAddr.split('\n').map(l => escapeHtml(l)).join('<br>') : "";
+    }
+    if (pPhone) pPhone.textContent = sPhone ? `Tel: ${sPhone}` : "";
     if (pGst) pGst.textContent = sGst ? `GSTIN: ${sGst}` : "";
     if (pFooter) pFooter.textContent = sFooter;
 }
 
 function syncMoreTabInputs() {
-    const s = state.storeSettings;
+    const s = state.storeSettings || {};
     const nameInput = document.getElementById("setting-store-name");
     const tagInput = document.getElementById("setting-store-tagline");
     const phoneInput = document.getElementById("setting-store-phone");
     const gstInput = document.getElementById("setting-store-gst");
     const upiInput = document.getElementById("setting-store-upi");
     const addrInput = document.getElementById("setting-store-address");
+    const footerInput = document.getElementById("setting-receipt-footer");
     const gstRateSelect = document.getElementById("setting-default-gst");
 
     if (nameInput) nameInput.value = s.store_name || "Indrita Fabrics";
-    if (tagInput) tagInput.value = s.tagline || "Tradition in Every Drape";
-    if (phoneInput) phoneInput.value = s.phone || "";
-    if (gstInput) gstInput.value = s.gst_number || "";
-    if (upiInput) upiInput.value = s.upi_id || "indritafabrics@upi";
-    if (addrInput) addrInput.value = s.address || "";
+    if (tagInput) tagInput.value = s.tagline !== undefined ? s.tagline : "indritafabrics.com";
+    if (phoneInput) phoneInput.value = s.phone !== undefined ? s.phone : "+91 6295175749";
+    if (gstInput) gstInput.value = s.gst_number !== undefined ? s.gst_number : "Nil";
+    if (upiInput) upiInput.value = s.upi_id !== undefined ? s.upi_id : "indritafabrics@upi";
+    if (addrInput) addrInput.value = s.address !== undefined ? s.address : "Chand para Station, Nearest Mar on Chader Hotel.\nSector 4, Commercial Complex\nKolkata, West Bengal 743245";
+    if (footerInput) footerInput.value = s.receipt_footer !== undefined ? s.receipt_footer : "Thank you for shopping with us! • Goods once sold can be exchanged within 7 days.";
     if (gstRateSelect && s.default_gst_rate !== undefined) gstRateSelect.value = String(s.default_gst_rate);
 
     updateReceiptLivePreview();
@@ -2873,6 +2877,88 @@ async function loadReportsData() {
     } catch (e) {
         console.error("Reports load error:", e);
     }
+}
+
+// --- MORE TAB & SYSTEM SETTINGS CONTROLLER ---
+function setupMoreSettingsHandlers() {
+    // Real-time live receipt preview updates on every input
+    document.querySelectorAll(".live-receipt-input").forEach(input => {
+        input.addEventListener("input", updateReceiptLivePreview);
+    });
+
+    // Category Tabs Filtering in Settings
+    document.querySelectorAll("#settings-category-tabs .settings-nav-pill").forEach(pill => {
+        pill.addEventListener("click", () => {
+            document.querySelectorAll("#settings-category-tabs .settings-nav-pill").forEach(p => p.classList.remove("active"));
+            pill.classList.add("active");
+            const target = pill.getAttribute("data-target");
+            document.querySelectorAll(".settings-apple-card").forEach(card => {
+                const cat = card.getAttribute("data-category");
+                if (target === "all" || cat === target) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    });
+
+    // Save Store Profile
+    document.getElementById("btn-save-store-settings")?.addEventListener("click", async () => {
+        const store_name = document.getElementById("setting-store-name")?.value.trim() || "Indrita Fabrics";
+        const tagline = document.getElementById("setting-store-tagline")?.value.trim() || "";
+        const phone = document.getElementById("setting-store-phone")?.value.trim() || "";
+        const gst_number = document.getElementById("setting-store-gst")?.value.trim().toUpperCase() || "";
+        const upi_id = document.getElementById("setting-store-upi")?.value.trim() || "indritafabrics@upi";
+        const address = document.getElementById("setting-store-address")?.value.trim() || "";
+        const receipt_footer = document.getElementById("setting-receipt-footer")?.value.trim() || "Thank you for shopping with us!";
+        const default_gst_rate = Number(document.getElementById("setting-default-gst")?.value || 18);
+
+        try {
+            const res = await fetch("/api/billing/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    store_name,
+                    tagline,
+                    phone,
+                    gst_number,
+                    upi_id,
+                    address,
+                    receipt_footer,
+                    default_gst_rate,
+                    printer_model: "DEV 2IN1 632-L58P",
+                    printer_paper_width: 58,
+                    printer_dpi: 203
+                })
+            });
+
+            if (res.ok) {
+                const updated = await res.json();
+                state.storeSettings = { ...state.storeSettings, ...updated };
+                updateHeaderBranding();
+                updateReceiptLivePreview();
+                window.showToast("Store profile & settings saved successfully!");
+            } else {
+                const err = await res.json();
+                window.showToast("Failed to save settings: " + (err.error || "Server error"));
+            }
+        } catch (e) {
+            console.error("Save settings error:", e);
+            window.showToast("Failed to save settings");
+        }
+    });
+
+    // Hardware Pair & Config from Settings Screen
+    document.getElementById("btn-more-pair-printer")?.addEventListener("click", connectWebBluetoothPrinter);
+    document.getElementById("btn-open-printer-modal-from-settings")?.addEventListener("click", openPrinterSettingsModal);
+
+    // Test Audio Chime
+    document.getElementById("btn-test-beep-audio")?.addEventListener("click", () => {
+        playBeep();
+        window.showToast("Played barcode scanner chime 🔔");
+    });
+
     // Test Receipt Print
     document.getElementById("btn-test-receipt-print")?.addEventListener("click", async () => {
         const testInvoice = {
