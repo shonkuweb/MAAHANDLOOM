@@ -541,12 +541,12 @@ function populateCategoryDropdown(selectedVal = "") {
     const currentVal = selectedVal || select.value;
     const cats = state.categories || [];
 
-    let optionsHtml = `<option value="" disabled ${!currentVal ? "selected" : ""}>-- Select Category --</option>`;
+    const placeholder = cats.length === 0 ? "-- No Categories Available --" : "-- Select Category --";
+    let optionsHtml = `<option value="" disabled ${!currentVal ? "selected" : ""}>${placeholder}</option>`;
     cats.forEach(c => {
         const isSel = currentVal && currentVal.toLowerCase() === c.toLowerCase() ? "selected" : "";
         optionsHtml += `<option value="${escapeHtml(c)}" ${isSel}>${escapeHtml(c)}</option>`;
     });
-    optionsHtml += `<option value="__ADD_NEW__">+ Add New Category...</option>`;
     select.innerHTML = optionsHtml;
 }
 
@@ -581,9 +581,8 @@ function renderModalCategoriesList() {
 }
 
 function setupCategoryModalHandlers() {
-    // Open modal buttons
+    // Open modal buttons (from Products page header)
     document.getElementById("btn-open-manage-categories")?.addEventListener("click", openCategoryModal);
-    document.getElementById("btn-quick-add-category-link")?.addEventListener("click", openCategoryModal);
 
     // Close modal buttons
     document.getElementById("btn-close-category-modal")?.addEventListener("click", closeCategoryModal);
@@ -595,16 +594,6 @@ function setupCategoryModalHandlers() {
         if (e.key === "Enter") {
             e.preventDefault();
             handleAddCategorySubmit();
-        }
-    });
-
-    // Handle selecting "+ Add New Category..." from dropdown in Add Product modal
-    const catSelect = document.getElementById("input-prod-category");
-    catSelect?.addEventListener("change", (e) => {
-        if (e.target.value === "__ADD_NEW__") {
-            openCategoryModal();
-            // Reset to previous/empty selection temporarily until user adds
-            catSelect.value = "";
         }
     });
 }
@@ -2652,7 +2641,7 @@ function setupMoreSettingsHandlers() {
             name: "Test",
             sku: "IF001",
             barcode: "IF001",
-            category: "Sarees",
+            category: state.categories && state.categories.length > 0 ? state.categories[0] : "",
             price: 9900
         };
 

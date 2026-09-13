@@ -210,7 +210,10 @@ export function createBillingRouter(db) {
     router.delete("/categories/:id", async (req, res) => {
         try {
             const { id } = req.params;
-            await runQuery("DELETE FROM billing_categories WHERE id = ? OR name = ?", [id, id]);
+            const catRows = await runQuery("SELECT name FROM billing_categories WHERE id = ? OR LOWER(name) = LOWER(?)", [id, id]);
+            const catName = catRows[0]?.name || id;
+            await runQuery("DELETE FROM billing_categories WHERE id = ? OR LOWER(name) = LOWER(?)", [id, id]);
+            await runQuery("UPDATE billing_products SET category = '' WHERE LOWER(category) = LOWER(?)", [catName]);
             res.json({ success: true, message: "Category deleted" });
         } catch (err) {
             res.status(500).json({ error: err.message });
@@ -250,7 +253,7 @@ export function createBillingRouter(db) {
 
             await runQuery(
                 "INSERT INTO billing_products (id, name, sku, barcode, category, subcategory, price, stock, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                [id, name, sku, finalBarcode, category || "Others", subcategory || "", Number(price), Number(stock || 0), description || "", image_url || ""]
+                [id, name, sku, finalBarcode, category || "", subcategory || "", Number(price), Number(stock || 0), description || "", image_url || ""]
             );
 
             const created = await runQuery("SELECT * FROM billing_products WHERE id = ?", [id]);
@@ -1099,9 +1102,12 @@ export function createBillingRouter(db) {
     // --- CLEAR PRODUCTS OR INVOICES ---
     router.post("/clear-data", async (req, res) => {
         try {
-            const { target } = req.body; // 'products', 'invoices', 'all'
+            const { target } = req.body; // 'products', 'invoices', 'categories', 'all'
             if (target === 'products' || target === 'all') {
                 await runQuery("DELETE FROM billing_products");
+            }
+            if (target === 'categories' || target === 'all') {
+                await runQuery("DELETE FROM billing_categories");
             }
             if (target === 'invoices' || target === 'all') {
                 await runQuery("DELETE FROM billing_invoices");
