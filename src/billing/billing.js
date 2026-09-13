@@ -1310,7 +1310,7 @@ function renderReviewUpiQr(grandTotal) {
     const qrRenderer = window.QRCode || QRCode;
     if (qrRenderer && typeof qrRenderer.toCanvas === 'function') {
         qrRenderer.toCanvas(canvas, upiUri, {
-            width: 170,
+            width: 210,
             margin: 1,
             color: {
                 dark: "#0F5132",
@@ -2075,7 +2075,7 @@ function formatAddressLines(addrStr, maxLen = 32) {
 }
 
 // Helper: Render QR Code to centered 58mm ESC/POS 1-bit monochrome raster bitmap bytes
-async function generateQrRasterBytes(text, size = 180) {
+async function generateQrRasterBytes(text, size = 240) {
     try {
         const canvas = document.createElement("canvas");
         canvas.width = 384; // Standard 58mm / 203 DPI thermal head width (48 bytes per row)
@@ -2277,7 +2277,7 @@ async function build58mmEscPosReceipt(invoice, store) {
         const storeName = (store.store_name || "Indrita Fabrics").trim();
         const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeName)}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Bill Payment ' + storeName)}`;
 
-        const qrRaster = await generateQrRasterBytes(upiUri, 180);
+        const qrRaster = await generateQrRasterBytes(upiUri, 240);
         if (qrRaster && qrRaster.length > 0) {
             esc.raw(qrRaster);
         }
@@ -2732,7 +2732,7 @@ async function print58mmThermalReceiptFallback(invoice) {
             <div class="receipt-upi-qr-block">
                 <div class="receipt-upi-tag">SCAN TO PAY WITH ANY UPI APP:</div>
                 <div class="receipt-upi-canvas-wrap">
-                    <canvas id="receipt-fallback-upi-qr" width="180" height="180"></canvas>
+                    <canvas id="receipt-fallback-upi-qr" width="220" height="220"></canvas>
                 </div>
             </div>` : ""}
 
@@ -2754,7 +2754,7 @@ async function print58mmThermalReceiptFallback(invoice) {
             if (qrRenderer && typeof qrRenderer.toCanvas === 'function') {
                 try {
                     await qrRenderer.toCanvas(upiCanvas, upiUri, {
-                        width: 170,
+                        width: 200,
                         margin: 1,
                         color: { dark: "#000000", light: "#FFFFFF" }
                     });

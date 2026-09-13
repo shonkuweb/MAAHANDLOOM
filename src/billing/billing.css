@@ -2885,8 +2885,8 @@ input:checked + .switch-slider:before {
 }
 
 .receipt-upi-canvas-wrap canvas {
-  width: 140px !important;
-  height: 140px !important;
+  width: 175px !important;
+  height: 175px !important;
 }
 
 .receipt-footer-note {
