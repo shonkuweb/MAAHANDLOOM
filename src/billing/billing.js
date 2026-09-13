@@ -2011,7 +2011,14 @@ function build58mmEscPosReceipt(invoice, store) {
     return esc.build();
 }
 
-// Render 50mm x 30mm label using Native TSPL (TSC Label Mode) with auto gap calibration
+// =========================================================================
+// CRITICAL HARDWARE SPEC: DEV 2IN1 58MM TSPL LABEL PRINTER ENGINE
+// - Protocol: Native TSPL (TSC Label Mode) with auto-gap sensor
+// - Sticker Size: 50mm x 30mm (SIZE 50 mm, 30 mm; GAP 2 mm, 0)
+// - Orientation: DIRECTION 0 (Normal top-to-bottom right side up)
+// - Bit Polarity: TSPL mode 0 (0xFF = White background, 0x00 = Black burn)
+// - DO NOT CHANGE these hardware parameters in future updates without review.
+// =========================================================================
 async function renderLabelToTspl(product, store, copies = 1) {
     const canvas = document.createElement("canvas");
     canvas.width = 384; // Standard 58mm / 203 DPI thermal head width (48 bytes per row)
