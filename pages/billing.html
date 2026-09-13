@@ -243,35 +243,45 @@
                     <h2 class="screen-title">Products</h2>
                     <p class="screen-subtitle">Manage your product catalog</p>
                 </div>
-                <button id="btn-open-add-product" class="btn-add-product-green">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <span>Add Product</span>
-                </button>
+                <div class="catalog-header-actions">
+                    <button id="btn-open-manage-categories" class="btn-category-action" title="Manage & Add Categories">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                        <span>Add Category</span>
+                    </button>
+                    <button id="btn-open-add-product" class="btn-add-product-green">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Add Product</span>
+                    </button>
+                </div>
             </div>
 
-            <div class="products-top-bar">
+            <!-- Full-Width Dedicated Search Bar (Protected from meshing/squeezing) -->
+            <div class="products-search-tier">
                 <div class="search-input-wrapper">
                     <svg class="search-icon-inside" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="catalog-search-input" class="search-input-field" placeholder="Search by name, SKU, barcode...">
+                    <input type="text" id="catalog-search-input" class="search-input-field" placeholder="Search by name, SKU, price...">
+                    <button type="button" id="btn-clear-catalog-search" class="search-clear-btn" style="display:none;" title="Clear search">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
                 </div>
+            </div>
 
-                <!-- Bulk Selection Action Bar (Visible when multiple products are selected) -->
-                <div id="products-bulk-actions-bar" class="products-bulk-actions-bar" style="display: none;">
-                    <div class="bulk-selection-count">
-                        <span class="bulk-count-badge" id="bulk-selected-count">0</span>
-                        <span id="bulk-selected-text">selected</span>
-                        <button type="button" id="btn-bulk-deselect-all" class="btn-bulk-clear" title="Clear selection">Clear</button>
-                    </div>
-                    <div class="bulk-action-buttons">
-                        <button type="button" id="btn-bulk-print-labels" class="btn-bulk-action btn-bulk-print">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-                            <span>Print Label</span>
-                        </button>
-                        <button type="button" id="btn-bulk-delete-products" class="btn-bulk-action btn-bulk-delete">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                            <span>Delete Products</span>
-                        </button>
-                    </div>
+            <!-- Bulk Selection Action Banner (Separate tier, doesn't distort search input) -->
+            <div id="products-bulk-actions-bar" class="products-bulk-actions-bar" style="display: none;">
+                <div class="bulk-selection-count">
+                    <span class="bulk-count-badge" id="bulk-selected-count">0</span>
+                    <span id="bulk-selected-text">products selected</span>
+                    <button type="button" id="btn-bulk-deselect-all" class="btn-bulk-clear" title="Clear selection">Clear</button>
+                </div>
+                <div class="bulk-action-buttons">
+                    <button type="button" id="btn-bulk-print-labels" class="btn-bulk-action btn-bulk-print">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                        <span>Print Label</span>
+                    </button>
+                    <button type="button" id="btn-bulk-delete-products" class="btn-bulk-action btn-bulk-delete">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        <span>Delete</span>
+                    </button>
                 </div>
             </div>
 
@@ -420,11 +430,7 @@
             <div class="settings-hero-header">
                 <div class="settings-hero-text">
                     <h2 class="settings-hero-title">Settings & System</h2>
-                    <p class="settings-hero-subtitle">Store branding, thermal hardware station, POS rules & data backups</p>
-                </div>
-                <div class="settings-quick-status-pill" id="settings-quick-hardware-pill">
-                    <span class="status-indicator-dot"></span>
-                    <span id="settings-quick-hardware-status">Printer Ready</span>
+                    <p class="settings-hero-subtitle">Store branding, printable invoice reports & catalog management</p>
                 </div>
             </div>
 
@@ -432,10 +438,8 @@
             <div class="settings-nav-pills" id="settings-category-tabs">
                 <button type="button" class="settings-nav-pill active" data-target="all">All Settings</button>
                 <button type="button" class="settings-nav-pill" data-target="store">Store Profile</button>
-                <button type="button" class="settings-nav-pill" data-target="hardware">Printer & Hardware</button>
-                <button type="button" class="settings-nav-pill" data-target="pos">POS & Invoicing</button>
-                <button type="button" class="settings-nav-pill" data-target="backup">Data & Export</button>
-                <button type="button" class="settings-nav-pill" data-target="shortcuts">Shortcuts & Diagnostics</button>
+                <button type="button" class="settings-nav-pill" data-target="backup">Data & Reports</button>
+                <button type="button" class="settings-nav-pill" data-target="portals">Portals</button>
             </div>
 
             <!-- SECTION 1: STORE PROFILE & TAX INVOICING -->
@@ -452,272 +456,85 @@
                 </div>
 
                 <div class="settings-card-body">
-                    <div class="store-profile-layout">
-                        <div class="store-form-col">
-                            <div class="form-grid-2">
-                                <div class="form-field-group">
-                                    <label class="field-label">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                        <span>Store Name</span>
-                                    </label>
-                                    <input type="text" id="setting-store-name" class="field-input live-receipt-input" value="Indrita Fabrics" placeholder="Store Name">
-                                </div>
-                                <div class="form-field-group">
-                                    <label class="field-label">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                                        <span>Tagline / Header</span>
-                                    </label>
-                                    <input type="text" id="setting-store-tagline" class="field-input live-receipt-input" value="Tradition in Every Drape" placeholder="Store Tagline">
-                                </div>
-                            </div>
-
-                            <div class="form-grid-2">
-                                <div class="form-field-group">
-                                    <label class="field-label">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                        <span>Phone Number</span>
-                                    </label>
-                                    <input type="text" id="setting-store-phone" class="field-input live-receipt-input" value="+91 9876543210" placeholder="+91 9876543210">
-                                </div>
-                                <div class="form-field-group">
-                                    <label class="field-label">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>
-                                        <span>GSTIN / Tax ID</span>
-                                    </label>
-                                    <input type="text" id="setting-store-gst" class="field-input live-receipt-input" value="19AAAAA0000A1Z5" placeholder="19AAAAA0000A1Z5" style="text-transform: uppercase;">
-                                </div>
-                            </div>
-
+                    <div class="store-form-col" style="width: 100%; max-width: 760px;">
+                        <div class="form-grid-2">
                             <div class="form-field-group">
                                 <label class="field-label">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                    <span>Store Address (Printed on Receipts)</span>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    <span>Store Name</span>
                                 </label>
-                                <input type="text" id="setting-store-address" class="field-input live-receipt-input" value="Main Road, Fabric Market, Kolkata - 700001" placeholder="Store Address">
+                                <input type="text" id="setting-store-name" class="field-input" value="Indrita Fabrics" placeholder="Store Name">
                             </div>
-
                             <div class="form-field-group">
                                 <label class="field-label">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                    <span>Receipt Footer Note</span>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                    <span>Tagline / Header</span>
                                 </label>
-                                <input type="text" id="setting-receipt-footer" class="field-input live-receipt-input" value="Thank you for shopping with us! • Goods once sold can be exchanged within 7 days." placeholder="Receipt Footer Message">
-                            </div>
-
-                            <div class="settings-action-row">
-                                <button type="button" id="btn-save-store-settings" class="btn-apple-primary">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                    <span>Save Store Profile</span>
-                                </button>
+                                <input type="text" id="setting-store-tagline" class="field-input" value="Tradition in Every Drape" placeholder="Store Tagline">
                             </div>
                         </div>
 
-                        <!-- LIVE 58mm THERMAL RECEIPT REALTIME PREVIEW -->
-                        <div class="live-receipt-preview-wrapper">
-                            <div class="live-receipt-badge">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                <span>Live 58mm Receipt Preview</span>
+                        <div class="form-grid-2">
+                            <div class="form-field-group">
+                                <label class="field-label">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                    <span>Phone Number</span>
+                                </label>
+                                <input type="text" id="setting-store-phone" class="field-input" value="+91 9876543210" placeholder="+91 9876543210">
                             </div>
-                            <div class="thermal-tape-paper">
-                                <div class="thermal-tape-header">
-                                    <div class="thermal-tape-store" id="preview-receipt-store">Indrita Fabrics</div>
-                                    <div class="thermal-tape-tagline" id="preview-receipt-tagline">Tradition in Every Drape</div>
-                                    <div class="thermal-tape-address" id="preview-receipt-address">Main Road, Fabric Market, Kolkata - 700001</div>
-                                    <div class="thermal-tape-phone" id="preview-receipt-phone">Ph: +91 9876543210</div>
-                                    <div class="thermal-tape-gst" id="preview-receipt-gst">GSTIN: 19AAAAA0000A1Z5</div>
-                                </div>
-                                <div class="thermal-tape-divider">--------------------------------</div>
-                                <div class="thermal-tape-meta">
-                                    <span>INV: IF-2026-1082</span>
-                                    <span>CASH</span>
-                                </div>
-                                <div class="thermal-tape-divider">--------------------------------</div>
-                                <div class="thermal-tape-items">
-                                    <div class="thermal-item-row">
-                                        <span>1x Banarasi Silk</span>
-                                        <span>₹ 8,950</span>
-                                    </div>
-                                    <div class="thermal-item-row">
-                                        <span>2x Chanderi Cotton</span>
-                                        <span>₹ 2,400</span>
-                                    </div>
-                                </div>
-                                <div class="thermal-tape-divider">--------------------------------</div>
-                                <div class="thermal-tape-totals">
-                                    <div class="thermal-total-row">
-                                        <span>Subtotal:</span>
-                                        <span>₹ 11,350</span>
-                                    </div>
-                                    <div class="thermal-total-row bold">
-                                        <span>NET TOTAL:</span>
-                                        <span>₹ 11,350</span>
-                                    </div>
-                                </div>
-                                <div class="thermal-tape-divider">--------------------------------</div>
-                                <div class="thermal-tape-footer" id="preview-receipt-footer">
-                                    Thank you for shopping with us! • Goods once sold can be exchanged within 7 days.
-                                </div>
-                                <div class="thermal-tape-cut"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 2: DEV 2IN1 THERMAL PRINTER HARDWARE STATION -->
-            <div class="settings-apple-card" data-category="hardware" id="card-setting-hardware">
-                <div class="settings-card-header">
-                    <div class="settings-icon-bubble bubble-blue">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-                    </div>
-                    <div class="settings-card-header-info">
-                        <div class="settings-card-title">DEV 2IN1 Hardware Station (632-L58P)</div>
-                        <div class="settings-card-desc">Dual Mode 58mm Thermal Receipt (ESC/POS) & Barcode Label (TSPL) Engine</div>
-                    </div>
-                    <span class="settings-badge-chip blue">203 DPI</span>
-                </div>
-
-                <div class="settings-card-body">
-                    <div class="hardware-station-grid">
-                        <div class="hardware-card-highlight">
-                            <div class="hw-highlight-top">
-                                <div class="hardware-status-badge online" id="more-printer-status-badge">
-                                    <span class="pulse-dot"></span>
-                                    <span id="more-printer-status-text">Web Bluetooth Ready</span>
-                                </div>
-                                <span class="hw-pill-feature">Direct Wireless</span>
-                            </div>
-                            <div class="hw-specs-grid">
-                                <div class="hw-spec-item">
-                                    <span class="hw-spec-label">Model</span>
-                                    <span class="hw-spec-val">DEV 2IN1 632-L58P</span>
-                                </div>
-                                <div class="hw-spec-item">
-                                    <span class="hw-spec-label">Paper Width</span>
-                                    <span class="hw-spec-val">58mm (48mm printable)</span>
-                                </div>
-                                <div class="hw-spec-item">
-                                    <span class="hw-spec-label">Resolution</span>
-                                    <span class="hw-spec-val">203 DPI (8 dots/mm)</span>
-                                </div>
-                                <div class="hw-spec-item">
-                                    <span class="hw-spec-label">Protocols</span>
-                                    <span class="hw-spec-val">ESC/POS + TSPL Direct</span>
-                                </div>
+                            <div class="form-field-group">
+                                <label class="field-label">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>
+                                    <span>GSTIN / Tax ID</span>
+                                </label>
+                                <input type="text" id="setting-store-gst" class="field-input" value="19AAAAA0000A1Z5" placeholder="19AAAAA0000A1Z5" style="text-transform: uppercase;">
                             </div>
                         </div>
 
-                        <div class="hardware-controls-panel">
-                            <div class="hw-actions-group">
-                                <button type="button" id="btn-more-pair-printer" class="btn-apple-primary hw-action-btn">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29z"/></svg>
-                                    <span>Pair Bluetooth Printer</span>
-                                </button>
-                                <button type="button" id="btn-test-receipt-print" class="btn-apple-secondary hw-action-btn">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
-                                    <span>Print Test Receipt</span>
-                                </button>
-                                <button type="button" id="btn-test-label-print" class="btn-apple-secondary hw-action-btn">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
-                                    <span>Print Test Label</span>
-                                </button>
-                                <button type="button" id="btn-open-printer-modal-from-settings" class="btn-apple-secondary hw-action-btn">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                                    <span>Printer Modal Settings</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 3: POS & BILLING PREFERENCES -->
-            <div class="settings-apple-card" data-category="pos" id="card-setting-pos">
-                <div class="settings-card-header">
-                    <div class="settings-icon-bubble bubble-purple">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    </div>
-                    <div class="settings-card-header-info">
-                        <div class="settings-card-title">POS & Workflow Preferences</div>
-                        <div class="settings-card-desc">Tax calculation rules, scanner audio and cashier automation</div>
-                    </div>
-                    <span class="settings-badge-chip purple">Rules</span>
-                </div>
-
-                <div class="settings-card-body">
-                    <div class="settings-toggle-row">
-                        <div class="toggle-text-group">
-                            <div class="toggle-title">Default GST Tax Rate</div>
-                            <div class="toggle-desc">Automatically selected when generating a new retail bill</div>
-                        </div>
-                        <select id="setting-default-gst" class="field-input" style="width: 140px; font-weight: 700; color: #0F5132;">
-                            <option value="0">0% (Nil / Exempt)</option>
-                            <option value="5">5% (Fabrics)</option>
-                            <option value="12">12% (Standard)</option>
-                            <option value="18" selected>18% (Readymade)</option>
-                            <option value="28">28% (Luxury)</option>
-                        </select>
-                    </div>
-
-                    <div class="settings-toggle-row">
-                        <div class="toggle-text-group">
-                            <div class="toggle-title">Audio Chime on Barcode Scan</div>
-                            <div class="toggle-desc">Synthesized confirmation tone when scanner or camera detects a barcode</div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <button type="button" id="btn-test-beep-audio" class="btn-mini-action" title="Test scan chime">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                                <span>Test Chime</span>
-                            </button>
-                            <label class="custom-switch">
-                                <input type="checkbox" id="setting-sound-beep" checked>
-                                <span class="switch-slider"></span>
+                        <div class="form-field-group">
+                            <label class="field-label">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>Store Address (Printed on Receipts)</span>
                             </label>
+                            <input type="text" id="setting-store-address" class="field-input" value="Main Road, Fabric Market, Kolkata - 700001" placeholder="Store Address">
                         </div>
-                    </div>
 
-                    <div class="settings-toggle-row">
-                        <div class="toggle-text-group">
-                            <div class="toggle-title">Auto-Generate Product Barcode</div>
-                            <div class="toggle-desc">Automatically compute standardized EAN-13 barcodes when SKU is entered</div>
+                        <div class="form-field-group">
+                            <label class="field-label">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <span>Receipt Footer Note</span>
+                            </label>
+                            <input type="text" id="setting-receipt-footer" class="field-input" value="Thank you for shopping with us! • Goods once sold can be exchanged within 7 days." placeholder="Receipt Footer Message">
                         </div>
-                        <label class="custom-switch">
-                            <input type="checkbox" id="setting-auto-barcode" checked>
-                            <span class="switch-slider"></span>
-                        </label>
-                    </div>
 
-                    <div class="settings-toggle-row">
-                        <div class="toggle-text-group">
-                            <div class="toggle-title">Auto-Prompt Label Print after Product Add</div>
-                            <div class="toggle-desc">Automatically open 58mm barcode sticker dialog whenever a product is saved</div>
+                        <div class="settings-action-row">
+                            <button type="button" id="btn-save-store-settings" class="btn-apple-primary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Save Store Profile</span>
+                            </button>
                         </div>
-                        <label class="custom-switch">
-                            <input type="checkbox" id="setting-auto-print-label" checked>
-                            <span class="switch-slider"></span>
-                        </label>
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 4: DATA BACKUP & EXPORT -->
+            <!-- SECTION 2: DATA BACKUP & PDF EXPORTS (NO CSV) -->
             <div class="settings-apple-card" data-category="backup" id="card-setting-backup">
                 <div class="settings-card-header">
                     <div class="settings-icon-bubble bubble-pink">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </div>
                     <div class="settings-card-header-info">
-                        <div class="settings-card-title">Data Backup & Export Hub</div>
-                        <div class="settings-card-desc">Download executive reports, accounting CSVs & manage catalog datasets</div>
+                        <div class="settings-card-title">Reports & Data Management</div>
+                        <div class="settings-card-desc">Download PDF executive reports & manage catalog datasets</div>
                     </div>
-                    <span class="settings-badge-chip pink">Sync & Backup</span>
+                    <span class="settings-badge-chip pink">PDF Reports</span>
                 </div>
 
                 <div class="settings-card-body">
-                    <div class="export-cards-grid">
+                    <div class="export-cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
                         <div class="export-hub-card pdf-invoices" id="btn-export-invoices-pdf">
                             <div class="export-hub-icon">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
                             </div>
                             <div class="export-hub-meta">
                                 <div class="export-hub-title">Invoices Master (PDF)</div>
@@ -732,32 +549,10 @@
                             </div>
                             <div class="export-hub-meta">
                                 <div class="export-hub-title">Catalog Inventory (PDF)</div>
-                                <div class="export-hub-desc">Stock inventory valuation list with prices & barcodes</div>
+                                <div class="export-hub-desc">Stock inventory valuation list with prices & SKU details</div>
                             </div>
                             <span class="export-format-badge">PDF A4</span>
                         </div>
-
-                        <a href="/api/billing/export/invoices-csv" class="export-hub-card csv-invoices" download>
-                            <div class="export-hub-icon">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            </div>
-                            <div class="export-hub-meta">
-                                <div class="export-hub-title">Invoices Spreadsheet (CSV)</div>
-                                <div class="export-hub-desc">Compatible with MS Excel, Google Sheets, Tally & Zoho</div>
-                            </div>
-                            <span class="export-format-badge csv">CSV / XLSX</span>
-                        </a>
-
-                        <a href="/api/billing/export/products-csv" class="export-hub-card csv-products" download>
-                            <div class="export-hub-icon">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            </div>
-                            <div class="export-hub-meta">
-                                <div class="export-hub-title">Products Master (CSV)</div>
-                                <div class="export-hub-desc">Full backup of product SKUs, prices, categories & stock</div>
-                            </div>
-                            <span class="export-format-badge csv">CSV / XLSX</span>
-                        </a>
                     </div>
 
                     <!-- DANGER ZONE -->
@@ -793,66 +588,8 @@
                 </div>
             </div>
 
-            <!-- SECTION 5: KEYBOARD SHORTCUTS & SYSTEM DIAGNOSTICS -->
-            <div class="settings-apple-card" data-category="shortcuts" id="card-setting-shortcuts">
-                <div class="settings-card-header">
-                    <div class="settings-icon-bubble bubble-dark">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M6 16h12"/></svg>
-                    </div>
-                    <div class="settings-card-header-info">
-                        <div class="settings-card-title">POS Keyboard Shortcuts & Station Diagnostics</div>
-                        <div class="settings-card-desc">High-speed counter productivity keys & browser capability checklist</div>
-                    </div>
-                    <span class="settings-badge-chip dark">Pro Hotkeys</span>
-                </div>
-
-                <div class="settings-card-body">
-                    <div class="shortcuts-grid">
-                        <div class="shortcut-item">
-                            <span class="shortcut-badge">F2</span>
-                            <span class="shortcut-desc">Open New Bill Screen</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-badge">F3</span>
-                            <span class="shortcut-desc">Focus Search / Barcode Input</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-badge">F4</span>
-                            <span class="shortcut-desc">Add Product Dialog</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-badge">F9</span>
-                            <span class="shortcut-desc">Review & Settle Bill</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-badge">Ctrl + P</span>
-                            <span class="shortcut-desc">Direct Thermal Print</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-badge">Esc</span>
-                            <span class="shortcut-desc">Dismiss Active Modal</span>
-                        </div>
-                    </div>
-
-                    <div class="diagnostics-bar">
-                        <div class="diag-item">
-                            <span class="diag-label">Web Bluetooth API:</span>
-                            <span class="diag-val" id="diag-bluetooth-status">Checking...</span>
-                        </div>
-                        <div class="diag-item">
-                            <span class="diag-label">Thermal Engine:</span>
-                            <span class="diag-val">DEV 2IN1 58mm (203 DPI)</span>
-                        </div>
-                        <div class="diag-item">
-                            <span class="diag-label">Engine Mode:</span>
-                            <span class="diag-val">Offline-First Direct BLE</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 6: QUICK PORTALS -->
-            <div class="settings-apple-card" data-category="shortcuts">
+            <!-- SECTION 3: QUICK PORTALS -->
+            <div class="settings-apple-card" data-category="portals" id="card-setting-portals">
                 <div class="settings-card-header">
                     <div class="settings-icon-bubble bubble-dark">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -864,12 +601,12 @@
                 </div>
 
                 <div class="settings-card-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <a href="/admin" class="btn-apple-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <a href="/admin" class="btn-apple-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 16px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                             <span>Store Admin Panel</span>
                         </a>
-                        <a href="/" target="_blank" class="btn-apple-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <a href="/" target="_blank" class="btn-apple-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 16px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                             <span>View Online Store</span>
                         </a>
@@ -878,8 +615,8 @@
             </div>
 
             <div class="more-footer-badge">
-                <div style="font-weight: 700; color: var(--text-primary);">Indrita Fabrics • POS Terminal Pro</div>
-                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">DEV 2IN1 ESC/POS (58mm) & TSPL (203 DPI) Direct Bluetooth Engine</div>
+                <div style="font-weight: 700; color: var(--text-primary);">Indrita Fabrics • POS System</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Offline-Ready Fast Retail Billing & Inventory Management</div>
             </div>
         </main>
 
@@ -952,6 +689,45 @@
             </button>
         </nav>
 
+        <!-- MANAGE & ADD CATEGORIES MODAL -->
+        <div id="modal-categories" class="modal-backdrop">
+            <div class="modal-window modal-window-sm">
+                <div class="modal-header-top">
+                    <div>
+                        <div class="modal-head-title">Product Categories</div>
+                        <div class="modal-head-sub">Add or delete categories for your catalog</div>
+                    </div>
+                    <button class="modal-close-icon" id="btn-close-category-modal">&times;</button>
+                </div>
+
+                <div class="modal-body-form">
+                    <!-- Quick Add Category Form Row -->
+                    <div class="category-add-row">
+                        <input type="text" id="input-new-category-name" class="field-input" placeholder="e.g. Silk Sarees, Cotton..." autocomplete="off">
+                        <button type="button" id="btn-submit-new-category" class="btn-category-add-submit">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Add</span>
+                        </button>
+                    </div>
+
+                    <!-- Existing Categories List -->
+                    <div class="category-list-section">
+                        <div class="category-list-heading">
+                            <span>Available Categories</span>
+                            <span id="categories-count-badge" class="cat-count-badge">0</span>
+                        </div>
+                        <div id="modal-categories-list" class="modal-categories-scroll">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer-btns">
+                    <button type="button" id="btn-done-categories" class="btn-modal-cancel" style="grid-column: span 2;">Done</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ADD PRODUCT MODAL -->
         <div id="modal-add-product" class="modal-backdrop">
             <div class="modal-window">
@@ -989,25 +765,15 @@
                             <input type="text" id="input-prod-sku" class="field-input" placeholder="e.g. KS001" required>
                         </div>
                         <div class="form-field-group">
-                            <label class="field-label">Barcode (Optional)</label>
-                            <div style="display:flex; gap:4px;">
-                                <input type="text" id="input-prod-barcode" class="field-input" placeholder="Scan or enter barcode">
-                                <button type="button" id="btn-autogen-barcode" title="Generate Barcode" style="background:#F1F5F9; border:1px solid #CBD5E1; border-radius:6px; padding:0 8px; cursor:pointer;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
-                                </button>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                                <label class="field-label" style="margin-bottom:0;">Category <span class="req">*</span></label>
+                                <button type="button" id="btn-quick-add-category-link" class="quick-add-cat-btn" title="Create new category">+ Add Category</button>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="form-grid-2">
-                        <div class="form-field-group">
-                            <label class="field-label">Category <span class="req">*</span></label>
-                            <input type="text" id="input-prod-category" list="category-datalist" class="field-input" placeholder="e.g. Sarees, Fabrics, Kurtis..." required>
-                            <datalist id="category-datalist"></datalist>
-                        </div>
-                        <div class="form-field-group">
-                            <label class="field-label">Sub Category (Optional)</label>
-                            <input type="text" id="input-prod-subcategory" class="field-input" placeholder="e.g. Kanchipuram">
+                            <div class="select-wrapper">
+                                <select id="input-prod-category" class="field-input select-category-dropdown" required>
+                                    <option value="" disabled selected>-- Select Category --</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -1018,16 +784,8 @@
                         </div>
                         <div class="form-field-group">
                             <label class="field-label">Stock (Optional)</label>
-                            <input type="number" id="input-prod-stock" class="field-input" placeholder="0" min="0" value="10">
+                            <input type="number" id="input-prod-stock" class="field-input" placeholder="10" min="0" value="10">
                         </div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label class="field-label">Description (Optional)</label>
-                            <span id="desc-char-count" style="font-size: 10px; color: #94A3B8;">0/200</span>
-                        </div>
-                        <textarea id="input-prod-desc" class="field-input" rows="2" maxlength="200" placeholder="Add product details (fabric, work, length, etc.)"></textarea>
                     </div>
 
                     <div class="toggle-label-card">

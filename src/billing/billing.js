@@ -8,6 +8,7 @@ const state = {
     products: [],
     filteredProducts: [],
     selectedProductIds: new Set(),
+    categories: [],
     customers: [],
     filteredCustomers: [],
     cart: [],
@@ -90,12 +91,14 @@ async function initApp() {
     setupNavigation();
     setupCartHandlers();
     setupCatalogHandlers();
+    setupCategoryModalHandlers();
     setupModalHandlers();
     setupPrinterControls();
     setupScannerTools();
     setupMoreSettingsHandlers();
     
     await loadStoreSettings();
+    await loadCategories();
     await loadProducts();
     await loadReportsData();
     await loadCustomers();
@@ -265,12 +268,50 @@ function syncMoreTabInputs() {
     updateReceiptLivePreview();
 }
 
+async function loadCategories() {
+    try {
+        const res = await fetch("/api/billing/categories");
+        if (res.ok) {
+            const data = await res.json();
+            state.categories = (data || []).map(c => typeof c === "string" ? c : c.name).filter(Boolean);
+        }
+    } catch (e) {
+        console.warn("Failed to load categories from API:", e);
+    }
+
+    if (!state.categories || state.categories.length === 0) {
+        state.categories = [
+            "Sarees",
+            "Cotton Saree",
+            "Silk Saree",
+            "Handloom Saree",
+            "Fabrics",
+            "Suits",
+            "Dupattas",
+            "Kurtis"
+        ];
+    }
+
+    // Merge any categories from products
+    if (state.products && state.products.length > 0) {
+        state.products.forEach(p => {
+            if (p.category && !state.categories.some(c => c.toLowerCase() === p.category.toLowerCase())) {
+                state.categories.push(p.category);
+            }
+        });
+    }
+
+    renderCategoryChips();
+    populateCategoryDropdown();
+    renderModalCategoriesList();
+}
+
 async function loadProducts() {
     try {
         const res = await fetch("/api/billing/products");
         if (res.ok) {
             state.products = await res.json();
-            renderCategoryChips();
+            await loadCategories();
             filterCatalog();
         }
     } catch (e) {
@@ -456,8 +497,21 @@ window.removeCartItem = (id) => removeCartItem(id);
 // --- PRODUCTS CATALOG SCREEN ---
 function setupCatalogHandlers() {
     const searchInput = document.getElementById("catalog-search-input");
+    const clearBtn = document.getElementById("btn-clear-catalog-search");
+
     searchInput?.addEventListener("input", (e) => {
         state.searchQuery = e.target.value.toLowerCase().trim();
+        if (clearBtn) clearBtn.style.display = state.searchQuery ? "flex" : "none";
+        filterCatalog();
+    });
+
+    clearBtn?.addEventListener("click", () => {
+        if (searchInput) {
+            searchInput.value = "";
+            searchInput.focus();
+        }
+        state.searchQuery = "";
+        clearBtn.style.display = "none";
         filterCatalog();
     });
 
@@ -468,7 +522,9 @@ function renderCategoryChips() {
     const container = document.getElementById("catalog-category-chips");
     if (!container) return;
 
-    const categories = Array.from(new Set(state.products.map(p => p.category).filter(Boolean)));
+    const categories = state.categories && state.categories.length > 0
+        ? state.categories
+        : Array.from(new Set(state.products.map(p => p.category).filter(Boolean)));
     
     let html = `<button class="cat-chip ${state.currentCategory === 'All' ? 'active' : ''}" data-cat="All">All</button>`;
     categories.forEach(cat => {
@@ -485,13 +541,159 @@ function renderCategoryChips() {
             filterCatalog();
         });
     });
-
-    // Populate category datalist for Add Product modal
-    const datalist = document.getElementById("category-datalist");
-    if (datalist) {
-        datalist.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}"></option>`).join("");
-    }
 }
+
+function populateCategoryDropdown(selectedVal = "") {
+    const select = document.getElementById("input-prod-category");
+    if (!select) return;
+
+    const currentVal = selectedVal || select.value;
+    const cats = state.categories && state.categories.length > 0 ? state.categories : ["Sarees", "Fabrics"];
+
+    let optionsHtml = `<option value="" disabled ${!currentVal ? "selected" : ""}>-- Select Category --</option>`;
+    cats.forEach(c => {
+        const isSel = currentVal && currentVal.toLowerCase() === c.toLowerCase() ? "selected" : "";
+        optionsHtml += `<option value="${escapeHtml(c)}" ${isSel}>${escapeHtml(c)}</option>`;
+    });
+    optionsHtml += `<option value="__ADD_NEW__">+ Add New Category...</option>`;
+    select.innerHTML = optionsHtml;
+}
+
+function renderModalCategoriesList() {
+    const container = document.getElementById("modal-categories-list");
+    const countBadge = document.getElementById("categories-count-badge");
+    if (!container) return;
+
+    const cats = state.categories || [];
+    if (countBadge) countBadge.textContent = cats.length;
+
+    if (cats.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding: 20px 10px; color: #94A3B8; font-size: 12px;">
+                No categories added yet. Type a name above to create one.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = cats.map(cat => `
+        <div class="category-item-row">
+            <div class="cat-item-left">
+                <span class="cat-bullet-dot"></span>
+                <span class="cat-item-name">${escapeHtml(cat)}</span>
+            </div>
+            <button type="button" class="btn-cat-delete" title="Delete category" onclick="window.handleDeleteCategory('${escapeHtml(cat)}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </button>
+        </div>
+    `).join("");
+}
+
+function setupCategoryModalHandlers() {
+    // Open modal buttons
+    document.getElementById("btn-open-manage-categories")?.addEventListener("click", openCategoryModal);
+    document.getElementById("btn-quick-add-category-link")?.addEventListener("click", openCategoryModal);
+
+    // Close modal buttons
+    document.getElementById("btn-close-category-modal")?.addEventListener("click", closeCategoryModal);
+    document.getElementById("btn-done-categories")?.addEventListener("click", closeCategoryModal);
+
+    // Add category trigger
+    document.getElementById("btn-submit-new-category")?.addEventListener("click", handleAddCategorySubmit);
+    document.getElementById("input-new-category-name")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddCategorySubmit();
+        }
+    });
+
+    // Handle selecting "+ Add New Category..." from dropdown in Add Product modal
+    const catSelect = document.getElementById("input-prod-category");
+    catSelect?.addEventListener("change", (e) => {
+        if (e.target.value === "__ADD_NEW__") {
+            openCategoryModal();
+            // Reset to previous/empty selection temporarily until user adds
+            catSelect.value = "";
+        }
+    });
+}
+
+function openCategoryModal() {
+    const modal = document.getElementById("modal-categories");
+    const input = document.getElementById("input-new-category-name");
+    if (input) input.value = "";
+    renderModalCategoriesList();
+    modal?.classList.add("active");
+    setTimeout(() => input?.focus(), 150);
+}
+window.openCategoryModal = openCategoryModal;
+
+function closeCategoryModal() {
+    document.getElementById("modal-categories")?.classList.remove("active");
+}
+window.closeCategoryModal = closeCategoryModal;
+
+async function handleAddCategorySubmit() {
+    const input = document.getElementById("input-new-category-name");
+    const name = input?.value.trim();
+    if (!name) {
+        window.showToast("Please enter a category name");
+        input?.focus();
+        return;
+    }
+
+    // Check if category already exists in state
+    if (state.categories.some(c => c.toLowerCase() === name.toLowerCase())) {
+        window.showToast(`Category "${name}" already exists`);
+        populateCategoryDropdown(name);
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/billing/categories", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            const addedName = data.name || name;
+            state.categories.push(addedName);
+        } else {
+            state.categories.push(name);
+        }
+    } catch (e) {
+        state.categories.push(name);
+    }
+
+    if (input) input.value = "";
+    renderCategoryChips();
+    renderModalCategoriesList();
+    populateCategoryDropdown(name);
+    window.showToast(`Category "${name}" added!`);
+}
+
+window.handleDeleteCategory = async (catName) => {
+    if (!confirm(`Are you sure you want to delete category "${catName}"?`)) return;
+
+    try {
+        await fetch(`/api/billing/categories/${encodeURIComponent(catName)}`, {
+            method: "DELETE"
+        });
+    } catch (e) {}
+
+    state.categories = state.categories.filter(c => c.toLowerCase() !== catName.toLowerCase());
+    if (state.currentCategory.toLowerCase() === catName.toLowerCase()) {
+        state.currentCategory = "All";
+    }
+
+    renderCategoryChips();
+    renderModalCategoriesList();
+    populateCategoryDropdown();
+    filterCatalog();
+    window.showToast(`Category "${catName}" removed`);
+};
 
 function filterCatalog() {
     let list = [...state.products];
@@ -752,13 +954,10 @@ function openEditProductModal(product) {
 
     document.getElementById("input-prod-name").value = product.name || "";
     document.getElementById("input-prod-sku").value = product.sku || "";
-    document.getElementById("input-prod-barcode").value = product.barcode || "";
-    document.getElementById("input-prod-category").value = product.category || "";
-    document.getElementById("input-prod-subcategory").value = product.subcategory || "";
     document.getElementById("input-prod-price").value = product.price || "";
-    document.getElementById("input-prod-stock").value = product.stock || 0;
-    document.getElementById("input-prod-desc").value = product.description || "";
-    document.getElementById("desc-char-count").textContent = `${(product.description || "").length}/200`;
+    document.getElementById("input-prod-stock").value = product.stock !== undefined ? product.stock : 10;
+
+    populateCategoryDropdown(product.category || "");
 
     const previewImg = document.getElementById("r2-photo-preview");
     const placeholder = document.getElementById("r2-photo-placeholder");
@@ -774,7 +973,6 @@ function openEditProductModal(product) {
         if (placeholder) placeholder.style.display = "flex";
     }
 
-    renderCategoryChips();
     modal?.classList.add("active");
 }
 window.openEditProductModal = openEditProductModal;
@@ -827,16 +1025,6 @@ function setupModalHandlers() {
     document.getElementById("form-product-details")?.addEventListener("submit", (e) => {
         e.preventDefault();
         submitAddProduct();
-    });
-
-    document.getElementById("input-prod-desc")?.addEventListener("input", (e) => {
-        const count = e.target.value.length;
-        document.getElementById("desc-char-count").textContent = `${count}/200`;
-    });
-
-    document.getElementById("btn-autogen-barcode")?.addEventListener("click", () => {
-        const generated = "890" + Date.now().toString().slice(-10);
-        document.getElementById("input-prod-barcode").value = generated;
     });
 
     const photoBox = document.getElementById("r2-photo-box-trigger");
@@ -977,11 +1165,17 @@ function openAddProductModal() {
         previewImg.removeAttribute("data-r2-url");
         previewImg.src = "";
     }
-    document.getElementById("r2-photo-placeholder").style.display = "flex";
-    document.getElementById("desc-char-count").textContent = "0/200";
+    const placeholder = document.getElementById("r2-photo-placeholder");
+    if (placeholder) placeholder.style.display = "flex";
     
-    // Refresh category datalist
-    renderCategoryChips();
+    // Auto-generate a clean SKU if empty
+    const skuField = document.getElementById("input-prod-sku");
+    if (skuField) {
+        skuField.value = "SKU-" + Math.floor(100000 + Math.random() * 900000);
+    }
+
+    // Populate category dropdown
+    populateCategoryDropdown();
     
     modal?.classList.add("active");
 }
@@ -996,15 +1190,15 @@ async function submitAddProduct() {
     const editId = document.getElementById("input-product-id").value.trim();
     const name = document.getElementById("input-prod-name").value.trim();
     const sku = document.getElementById("input-prod-sku").value.trim();
-    const barcode = document.getElementById("input-prod-barcode").value.trim() || sku;
+    const barcode = sku;
     const category = (document.getElementById("input-prod-category")?.value || "General").trim();
-    const subcategory = document.getElementById("input-prod-subcategory").value.trim();
+    const subcategory = "";
     const rawPrice = document.getElementById("input-prod-price").value;
     const price = Number(rawPrice);
     const stock = Number(document.getElementById("input-prod-stock").value || 0);
-    const description = document.getElementById("input-prod-desc").value.trim();
+    const description = "";
     const previewImg = document.getElementById("r2-photo-preview");
-    const shouldPrintLabel = document.getElementById("toggle-print-label-after-add").checked;
+    const shouldPrintLabel = document.getElementById("toggle-print-label-after-add")?.checked;
 
     if (!name || !sku || !rawPrice || isNaN(price) || price < 0) {
         window.showToast("Please fill in Name, SKU, and a valid Price (*)");
@@ -1830,25 +2024,34 @@ async function renderLabelToEscPosRaster(product, store) {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, 384, 200);
 
-    // Dashed outer border perfectly centered with symmetric 6px inset
+    // Dashed outer border perfectly centered with snug inset
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 3]);
-    ctx.strokeRect(6, 6, 372, 188);
+    ctx.strokeRect(4, 4, 376, 192);
     ctx.setLineDash([]);
 
-    // Store Name Header (Top-centered, bold uppercase)
+    // Store Name Header (Top-centered, bold uppercase, snug at top)
+    const storeTitle = (store?.store_name || "INDRITA FABRICS").trim().toUpperCase();
     ctx.fillStyle = "#000000";
-    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.font = "bold 17px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText((store?.store_name || "INDRITA FABRICS").toUpperCase(), 192, 22);
+    ctx.fillText(storeTitle, 192, 16, 360);
+
+    // Subtle horizontal divider under store name
+    ctx.strokeStyle = "#CCCCCC";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(14, 30);
+    ctx.lineTo(370, 30);
+    ctx.stroke();
 
     // Render QR Code image (centered vertically in left column)
     const qrData = String(product.barcode || product.sku || product.id || "IF001");
     try {
         const qrDataUrl = await QRCode.toDataURL(qrData, {
-            width: 130,
+            width: 140,
             margin: 0,
             errorCorrectionLevel: "M"
         });
@@ -1858,12 +2061,12 @@ async function renderLabelToEscPosRaster(product, store) {
             qrImg.onerror = reject;
             qrImg.src = qrDataUrl;
         });
-        ctx.drawImage(qrImg, 16, 49, 130, 130);
+        ctx.drawImage(qrImg, 14, 38, 140, 140);
     } catch (e) {
         console.warn("QR Code render error on canvas:", e);
     }
 
-    // Right Column Info (centered horizontally and vertically in right half)
+    // Right Column Info (centered horizontally in right half)
     ctx.fillStyle = "#000000";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -1871,19 +2074,19 @@ async function renderLabelToEscPosRaster(product, store) {
     // Product Name
     ctx.font = "bold 22px Arial, sans-serif";
     const prodName = (product.name || "Test").substring(0, 16);
-    ctx.fillText(prodName, 264, 68, 200);
+    ctx.fillText(prodName, 266, 62, 200);
 
     // SKU
     ctx.font = "bold 14px Arial, sans-serif";
     ctx.fillStyle = "#333333";
     const skuText = `SKU: ${product.sku || "IF001"}`;
-    ctx.fillText(skuText, 264, 112, 200);
+    ctx.fillText(skuText, 266, 102, 200);
 
     // Price
     ctx.font = "bold 28px Arial, sans-serif";
     ctx.fillStyle = "#000000";
     const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
-    ctx.fillText(priceText, 264, 158, 200);
+    ctx.fillText(priceText, 266, 150, 200);
 
     // Convert Canvas to ESC/POS Raster Bytes (GS v 0)
     const height = canvas.height;
@@ -1925,9 +2128,6 @@ async function renderLabelToEscPosRaster(product, store) {
             rasterBytes.push(byteVal);
         }
     }
-
-    // Single line feed at the end for clean gap transition
-    rasterBytes.push(0x1B, 0x64, 0x01);
 
     return new Uint8Array(rasterBytes);
 }

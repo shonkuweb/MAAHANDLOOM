@@ -56,6 +56,14 @@ export function createBillingRouter(db) {
             `);
 
             await runQuery(`
+                CREATE TABLE IF NOT EXISTS billing_categories (
+                    id TEXT PRIMARY KEY,
+                    name TEXT UNIQUE NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            await runQuery(`
                 CREATE TABLE IF NOT EXISTS billing_invoices (
                     id TEXT PRIMARY KEY,
                     customer_name TEXT,
@@ -99,6 +107,31 @@ export function createBillingRouter(db) {
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
+
+            // Seed default categories if empty
+            try {
+                const existingCats = await runQuery("SELECT COUNT(*) as count FROM billing_categories");
+                const catCount = existingCats[0]?.count || existingCats[0]?.COUNT || 0;
+                if (parseInt(catCount, 10) === 0) {
+                    const defaultCategories = [
+                        "Sarees",
+                        "Cotton Saree",
+                        "Silk Saree",
+                        "Handloom Saree",
+                        "Fabrics",
+                        "Suits",
+                        "Dupattas",
+                        "Kurtis"
+                    ];
+                    for (const catName of defaultCategories) {
+                        const catId = "cat_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+                        await runQuery("INSERT INTO billing_categories (id, name) VALUES (?, ?)", [catId, catName]);
+                    }
+                    console.log("[BILLING] Default categories initialized.");
+                }
+            } catch (catErr) {
+                console.warn("[BILLING] Category seeding note:", catErr.message);
+            }
 
             // NOTE: Do NOT seed any fake products. The catalog starts 100% clean and real.
 
@@ -152,6 +185,60 @@ export function createBillingRouter(db) {
         } catch (err) {
             console.error("R2 Upload Route Error:", err);
             res.status(500).json({ error: "Failed to upload image to Cloudflare R2: " + err.message });
+        }
+    });
+
+    // --- CATEGORIES API ---
+    router.get("/categories", async (req, res) => {
+        try {
+            const rows = await runQuery("SELECT * FROM billing_categories ORDER BY name ASC");
+            const prodCats = await runQuery("SELECT DISTINCT category FROM billing_products WHERE category IS NOT NULL AND category != ''");
+            const existingNames = new Set((rows || []).map((r) => (r.name || "").toLowerCase()));
+
+            const categories = [...(rows || [])];
+            for (const pc of prodCats || []) {
+                if (pc.category && !existingNames.has(pc.category.toLowerCase())) {
+                    categories.push({
+                        id: "cat_prod_" + Buffer.from(pc.category).toString("hex").slice(0, 8),
+                        name: pc.category,
+                        created_at: new Date().toISOString()
+                    });
+                    existingNames.add(pc.category.toLowerCase());
+                }
+            }
+            res.json(categories);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    router.post("/categories", async (req, res) => {
+        try {
+            const { name } = req.body;
+            if (!name || !name.trim()) {
+                return res.status(400).json({ error: "Category name is required" });
+            }
+            const trimmed = name.trim();
+            const existing = await runQuery("SELECT * FROM billing_categories WHERE LOWER(name) = LOWER(?)", [trimmed]);
+            if (existing && existing.length > 0) {
+                return res.json(existing[0]);
+            }
+            const id = "cat_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+            await runQuery("INSERT INTO billing_categories (id, name) VALUES (?, ?)", [id, trimmed]);
+            const created = await runQuery("SELECT * FROM billing_categories WHERE id = ?", [id]);
+            res.status(201).json(created[0] || { id, name: trimmed });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    router.delete("/categories/:id", async (req, res) => {
+        try {
+            const { id } = req.params;
+            await runQuery("DELETE FROM billing_categories WHERE id = ? OR name = ?", [id, id]);
+            res.json({ success: true, message: "Category deleted" });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
         }
     });
 
