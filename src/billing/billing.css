@@ -2885,8 +2885,21 @@ input:checked + .switch-slider:before {
 }
 
 .receipt-upi-canvas-wrap canvas {
-  width: 175px !important;
-  height: 175px !important;
+  width: 195px !important;
+  height: 195px !important;
+}
+
+.receipt-upi-id-under {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.receipt-upi-web-under {
+  text-align: center;
+  font-size: 9.5px;
+  margin-top: 2px;
 }
 
 .receipt-footer-note {
@@ -2896,6 +2909,15 @@ input:checked + .switch-slider:before {
   margin-top: 8px;
   padding-top: 2px;
   word-break: break-word;
+}
+
+.receipt-developer-credit {
+  text-align: center;
+  font-size: 8.5px;
+  color: #333333;
+  margin-top: 6px;
+  padding-top: 2px;
+  letter-spacing: 0.3px;
 }
 
 /* 50mm x 30mm Exact Physical Label Output */

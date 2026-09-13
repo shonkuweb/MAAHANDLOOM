@@ -1296,12 +1296,18 @@ function renderReviewUpiQr(grandTotal) {
     const upiId = (state.storeSettings?.upi_id || "indritafabrics@upi").trim();
     const storeName = (state.storeSettings?.store_name || "Indrita Fabrics").trim();
     const formattedAmount = Number(grandTotal || 0).toFixed(2);
+    const upiWebDisplay = document.getElementById("review-upi-web-display");
 
     if (amountDisplay) {
         amountDisplay.textContent = `Pay ₹ ${grandTotal.toLocaleString("en-IN")}`;
     }
     if (upiIdDisplay) {
-        upiIdDisplay.textContent = `UPI ID: ${upiId}`;
+        upiIdDisplay.textContent = `UPI: ${upiId}`;
+    }
+    if (upiWebDisplay) {
+        const rawWeb = (state.storeSettings?.tagline || state.storeSettings?.website || "www.indritafabrics.com").trim();
+        const displayWeb = rawWeb.startsWith("http") ? rawWeb.replace(/^https?:\/\//, '') : (rawWeb.startsWith("www.") ? rawWeb : `www.${rawWeb}`);
+        upiWebDisplay.textContent = displayWeb;
     }
 
     // Standard NPCI UPI URI Scheme: upi://pay?pa=...&pn=...&am=...&cu=INR&tn=...
@@ -1310,7 +1316,7 @@ function renderReviewUpiQr(grandTotal) {
     const qrRenderer = window.QRCode || QRCode;
     if (qrRenderer && typeof qrRenderer.toCanvas === 'function') {
         qrRenderer.toCanvas(canvas, upiUri, {
-            width: 210,
+            width: 230,
             margin: 1,
             color: {
                 dark: "#0F5132",
@@ -2075,7 +2081,7 @@ function formatAddressLines(addrStr, maxLen = 32) {
 }
 
 // Helper: Render QR Code to centered 58mm ESC/POS 1-bit monochrome raster bitmap bytes
-async function generateQrRasterBytes(text, size = 240) {
+async function generateQrRasterBytes(text, size = 280) {
     try {
         const canvas = document.createElement("canvas");
         canvas.width = 384; // Standard 58mm / 203 DPI thermal head width (48 bytes per row)
@@ -2098,7 +2104,7 @@ async function generateQrRasterBytes(text, size = 240) {
             qrImg.src = qrDataUrl;
         });
 
-        const xOffset = Math.floor((384 - size) / 2);
+        const xOffset = Math.max(0, Math.floor((384 - size) / 2));
         ctx.drawImage(qrImg, xOffset, 8, size, size);
 
         const height = canvas.height;
@@ -2270,17 +2276,24 @@ async function build58mmEscPosReceipt(invoice, store) {
     if (payMode === "UPI" || payMode === "UPI / QR") {
         esc.alignCenter();
         esc.line();
-        esc.line("SCAN TO PAY WITH ANY UPI APP:");
+        esc.bold(true).line("SCAN TO PAY WITH ANY UPI APP:").bold(false);
         esc.line();
 
         const upiId = (store.upi_id || "indritafabrics@upi").trim();
         const storeName = (store.store_name || "Indrita Fabrics").trim();
         const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeName)}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Bill Payment ' + storeName)}`;
 
-        const qrRaster = await generateQrRasterBytes(upiUri, 240);
+        const qrRaster = await generateQrRasterBytes(upiUri, 280);
         if (qrRaster && qrRaster.length > 0) {
             esc.raw(qrRaster);
         }
+        esc.line();
+
+        // Under QR Code: UPI ID and Website
+        esc.bold(true).line(`UPI: ${upiId}`).bold(false);
+        const rawWeb = (store.tagline || store.website || "www.indritafabrics.com").trim();
+        const displayWeb = rawWeb.startsWith("http") ? rawWeb.replace(/^https?:\/\//, '') : (rawWeb.startsWith("www.") ? rawWeb : `www.${rawWeb}`);
+        esc.line(displayWeb);
         esc.line();
     }
 
@@ -2293,7 +2306,12 @@ async function build58mmEscPosReceipt(invoice, store) {
         footerLines.forEach(l => esc.line(l));
     }
 
-    // 14. Feed & Cut
+    // 14. Developer Credit under Footer Note
+    esc.alignCenter();
+    esc.line();
+    esc.line("Designed by ShonkuWEB");
+
+    // 15. Feed & Cut
     esc.feed(4).cut();
 
     return esc.build();
@@ -2732,14 +2750,21 @@ async function print58mmThermalReceiptFallback(invoice) {
             <div class="receipt-upi-qr-block">
                 <div class="receipt-upi-tag">SCAN TO PAY WITH ANY UPI APP:</div>
                 <div class="receipt-upi-canvas-wrap">
-                    <canvas id="receipt-fallback-upi-qr" width="220" height="220"></canvas>
+                    <canvas id="receipt-fallback-upi-qr" width="280" height="280"></canvas>
                 </div>
+                <div class="receipt-upi-id-under">UPI: ${escapeHtml((store.upi_id || "indritafabrics@upi").trim())}</div>
+                <div class="receipt-upi-web-under">${escapeHtml((() => {
+                    const rawWeb = (store.tagline || store.website || "www.indritafabrics.com").trim();
+                    return rawWeb.startsWith("http") ? rawWeb.replace(/^https?:\/\//, '') : (rawWeb.startsWith("www.") ? rawWeb : `www.${rawWeb}`);
+                })())}</div>
             </div>` : ""}
 
             ${(store.receipt_footer || "").trim() ? `
             <div class="receipt-footer-note">
                 ${formatAddressLines(store.receipt_footer, 32).map(l => `<div>${escapeHtml(l)}</div>`).join("")}
             </div>` : ""}
+
+            <div class="receipt-developer-credit">Designed by ShonkuWEB</div>
         </div>
     `;
 
@@ -2754,7 +2779,7 @@ async function print58mmThermalReceiptFallback(invoice) {
             if (qrRenderer && typeof qrRenderer.toCanvas === 'function') {
                 try {
                     await qrRenderer.toCanvas(upiCanvas, upiUri, {
-                        width: 200,
+                        width: 250,
                         margin: 1,
                         color: { dark: "#000000", light: "#FFFFFF" }
                     });
