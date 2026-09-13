@@ -1334,7 +1334,7 @@ function renderReviewUpiQr(grandTotal) {
             width: 230,
             margin: 1,
             color: {
-                dark: "#0F5132",
+                dark: "#000000",
                 light: "#FFFFFF"
             }
         }, (err) => {
@@ -1389,7 +1389,7 @@ function openReviewBillModal() {
                 <div style="font-weight:700; color:#1E293B;">${escapeHtml(item.name)}</div>
                 <div style="font-size:10px; color:#64748B;">Qty: ${item.qty} x ₹ ${item.price.toLocaleString("en-IN")}</div>
             </div>
-            <div style="font-weight:800; color:#0F5132;">₹ ${(item.qty * item.price).toLocaleString("en-IN")}</div>
+            <div style="font-weight:800; color:#7A0C16;">₹ ${(item.qty * item.price).toLocaleString("en-IN")}</div>
         </div>
     `).join("") + `
         <div style="margin-top:8px; font-size:12px;">
@@ -1402,7 +1402,7 @@ function openReviewBillModal() {
                 <span>GST (${state.gstRate}%):</span>
                 <span style="font-weight:700;">₹ ${totals.gstAmount.toLocaleString("en-IN")}</span>
             </div>` : ""}
-            <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:#0F5132; margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:#7A0C16; margin-top:8px;">
                 <span>Grand Total:</span>
                 <span>₹ ${totals.grandTotal.toLocaleString("en-IN")}</span>
             </div>
