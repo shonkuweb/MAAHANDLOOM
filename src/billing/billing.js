@@ -2284,7 +2284,16 @@ async function build58mmEscPosReceipt(invoice, store) {
         esc.line();
     }
 
-    // 13. Feed & Cut
+    // 13. Receipt Footer Note (Printed at bottom of receipt)
+    const footerMsg = (store.receipt_footer || "").trim();
+    if (footerMsg) {
+        esc.alignCenter();
+        esc.line();
+        const footerLines = formatAddressLines(footerMsg, 32);
+        footerLines.forEach(l => esc.line(l));
+    }
+
+    // 14. Feed & Cut
     esc.feed(4).cut();
 
     return esc.build();
@@ -2725,6 +2734,11 @@ async function print58mmThermalReceiptFallback(invoice) {
                 <div class="receipt-upi-canvas-wrap">
                     <canvas id="receipt-fallback-upi-qr" width="180" height="180"></canvas>
                 </div>
+            </div>` : ""}
+
+            ${(store.receipt_footer || "").trim() ? `
+            <div class="receipt-footer-note">
+                ${formatAddressLines(store.receipt_footer, 32).map(l => `<div>${escapeHtml(l)}</div>`).join("")}
             </div>` : ""}
         </div>
     `;
