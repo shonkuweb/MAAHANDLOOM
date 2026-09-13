@@ -100,6 +100,7 @@ export function createBillingRouter(db) {
                     address TEXT DEFAULT 'Kolkata, West Bengal, India',
                     phone TEXT DEFAULT '+91 9876543210',
                     gst_number TEXT DEFAULT '19AAAAA0000A1Z5',
+                    upi_id TEXT DEFAULT 'indritafabrics@upi',
                     printer_model TEXT DEFAULT 'DEV 2IN1 632-L58P',
                     printer_paper_width INTEGER DEFAULT 58,
                     printer_dpi INTEGER DEFAULT 203,
@@ -108,6 +109,13 @@ export function createBillingRouter(db) {
                 )
             `);
 
+            // Safe migration for upi_id column if table already existed
+            try {
+                await runQuery("ALTER TABLE billing_settings ADD COLUMN upi_id TEXT DEFAULT 'indritafabrics@upi'");
+            } catch (e) {
+                // Column may already exist
+            }
+
             // NOTE: Do NOT seed any hardcoded categories or fake products. The catalog starts 100% clean.
 
             // Seed initial settings if empty
@@ -115,13 +123,14 @@ export function createBillingRouter(db) {
             const sCount = existingSettings[0]?.count || existingSettings[0]?.COUNT || 0;
             if (parseInt(sCount, 10) === 0) {
                 await runQuery(
-                    "INSERT INTO billing_settings (id, store_name, tagline, address, phone, gst_number, printer_model, printer_paper_width, printer_dpi, default_gst_rate) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO billing_settings (id, store_name, tagline, address, phone, gst_number, upi_id, printer_model, printer_paper_width, printer_dpi, default_gst_rate) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         "Indrita Fabrics",
                         "Tradition in Every Drape",
                         "Main Road, Fabric Market, Kolkata - 700001",
                         "+91 9876543210",
                         "19AAAAA0000A1Z5",
+                        "indritafabrics@upi",
                         "DEV 2IN1 632-L58P",
                         58,
                         203,
@@ -460,6 +469,7 @@ export function createBillingRouter(db) {
                 address: "Kolkata, West Bengal, India",
                 phone: "+91 9876543210",
                 gst_number: "19AAAAA0000A1Z5",
+                upi_id: "indritafabrics@upi",
                 printer_model: "DEV 2IN1 632-L58P",
                 printer_paper_width: 58,
                 printer_dpi: 203,
@@ -478,6 +488,7 @@ export function createBillingRouter(db) {
                 address,
                 phone,
                 gst_number,
+                upi_id,
                 printer_model,
                 printer_paper_width,
                 printer_dpi,
@@ -491,6 +502,7 @@ export function createBillingRouter(db) {
                     address = ?, 
                     phone = ?, 
                     gst_number = ?, 
+                    upi_id = ?,
                     printer_model = ?, 
                     printer_paper_width = ?, 
                     printer_dpi = ?, 
@@ -503,6 +515,7 @@ export function createBillingRouter(db) {
                     address || "",
                     phone || "",
                     gst_number || "",
+                    upi_id || "indritafabrics@upi",
                     printer_model || "DEV 2IN1 632-L58P",
                     Number(printer_paper_width || 58),
                     Number(printer_dpi || 203),

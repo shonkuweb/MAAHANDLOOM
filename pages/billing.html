@@ -214,23 +214,16 @@
             </div>
 
             <div class="new-bill-bottom-actions">
-                <button id="btn-review-bill" class="btn-action-step1">
-                    <div class="step-num-pill">1</div>
-                    <div class="step-content">
-                        <div class="step-title">Review Bill</div>
-                        <div class="step-sub" id="btn-step1-sub">0 items • ₹ 0</div>
+                <button id="btn-print-bill-main" class="btn-action-primary-bill" type="button">
+                    <div class="action-btn-icon-wrap">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
                     </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F5132" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-                </button>
-
-                <button id="btn-print-bill-direct" class="btn-action-step2">
-                    <div class="step-num-pill">2</div>
                     <div class="step-content">
-                        <div class="step-title" style="display:flex; align-items:center; gap:4px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-                            <span>Print Bill</span>
-                        </div>
-                        <div class="step-sub">Print to Bluetooth Printer</div>
+                        <div class="step-title">Print Bill</div>
+                        <div class="step-sub" id="btn-print-bill-sub">0 items • ₹ 0</div>
+                    </div>
+                    <div class="action-btn-arrow">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
                     </div>
                 </button>
             </div>
@@ -489,6 +482,15 @@
                                 </label>
                                 <input type="text" id="setting-store-gst" class="field-input" value="19AAAAA0000A1Z5" placeholder="19AAAAA0000A1Z5" style="text-transform: uppercase;">
                             </div>
+                        </div>
+
+                        <div class="form-field-group">
+                            <label class="field-label">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                <span>UPI ID / VPA (For Instant Payment QR)</span>
+                            </label>
+                            <input type="text" id="setting-store-upi" class="field-input" value="indritafabrics@upi" placeholder="e.g. merchant@upi or 9876543210@paytm">
+                            <div style="font-size: 11px; color: #64748B; margin-top: 4px;">Dynamic amount QR code is automatically generated during billing review when UPI mode is selected.</div>
                         </div>
 
                         <div class="form-field-group">
@@ -841,7 +843,7 @@
                 <div class="modal-header-top">
                     <div>
                         <div class="modal-head-title">Review & Print Bill</div>
-                        <div class="modal-head-sub">Verify items and calculate payment</div>
+                        <div class="modal-head-sub">Verify items, choose payment mode & settle bill</div>
                     </div>
                     <button class="modal-close-icon" id="btn-close-review-modal">&times;</button>
                 </div>
@@ -849,13 +851,55 @@
                     <div id="review-bill-items-list" style="display:flex; flex-direction:column; gap:8px;"></div>
                     
                     <div class="summary-divider"></div>
-                    <div class="summary-row">
-                        <span>Payment Mode:</span>
-                        <select id="review-payment-mode" class="gst-select">
-                            <option value="CASH">CASH</option>
-                            <option value="UPI / QR">UPI / QR</option>
-                            <option value="CARD">CARD / POS</option>
-                        </select>
+
+                    <!-- Payment Mode Selection -->
+                    <div class="form-field-group" style="margin-bottom: 8px;">
+                        <label class="field-label" style="font-weight:700; color:#1E293B;">Payment Method</label>
+                        <div class="payment-method-selector-grid">
+                            <label class="payment-mode-radio-card active" id="pm-card-cash">
+                                <input type="radio" name="review-payment-mode-radio" value="CASH" checked>
+                                <span class="pm-icon">💵</span>
+                                <div class="pm-info">
+                                    <span class="pm-title">CASH</span>
+                                    <span class="pm-sub">Direct Cash</span>
+                                </div>
+                            </label>
+                            <label class="payment-mode-radio-card" id="pm-card-upi">
+                                <input type="radio" name="review-payment-mode-radio" value="UPI">
+                                <span class="pm-icon">📱</span>
+                                <div class="pm-info">
+                                    <span class="pm-title">UPI / QR</span>
+                                    <span class="pm-sub">Dynamic QR</span>
+                                </div>
+                            </label>
+                            <label class="payment-mode-radio-card" id="pm-card-card">
+                                <input type="radio" name="review-payment-mode-radio" value="CARD">
+                                <span class="pm-icon">💳</span>
+                                <div class="pm-info">
+                                    <span class="pm-title">CARD</span>
+                                    <span class="pm-sub">POS Machine</span>
+                                </div>
+                            </label>
+                        </div>
+                        <input type="hidden" id="review-payment-mode" value="CASH">
+                    </div>
+
+                    <!-- Dynamic UPI Amount QR Box (Rendered only when UPI mode is active) -->
+                    <div id="review-upi-qr-section" class="review-upi-qr-box" style="display: none;">
+                        <div class="upi-qr-header">
+                            <div class="upi-badge-chip">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01M12 12h.01"/></svg>
+                                <span>SCAN & PAY EXACT AMOUNT</span>
+                            </div>
+                        </div>
+                        <div class="upi-qr-canvas-wrap">
+                            <canvas id="review-upi-qr-canvas" width="180" height="180"></canvas>
+                        </div>
+                        <div class="upi-qr-meta">
+                            <div class="upi-amount-pill" id="review-upi-amount-display">Pay ₹ 0</div>
+                            <div class="upi-id-line" id="review-upi-id-display">UPI ID: indritafabrics@upi</div>
+                            <div class="upi-instruction-text">Scan with any UPI app (GPay, PhonePe, Paytm, BHIM) to pay instantly</div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer-btns">

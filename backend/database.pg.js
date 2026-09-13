@@ -181,12 +181,14 @@ function initDb() {
             address TEXT DEFAULT 'Kolkata, West Bengal, India',
             phone TEXT DEFAULT '+91 9876543210',
             gst_number TEXT DEFAULT '19AAAAA0000A1Z5',
+            upi_id TEXT DEFAULT 'indritafabrics@upi',
             printer_model TEXT DEFAULT 'DEV 2IN1 632-L58P',
             printer_paper_width INTEGER DEFAULT 58,
             printer_dpi INTEGER DEFAULT 203,
             default_gst_rate REAL DEFAULT 18,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`,
+        `ALTER TABLE billing_settings ADD COLUMN IF NOT EXISTS upi_id TEXT DEFAULT 'indritafabrics@upi';`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS colors TEXT;`,
         `ALTER TABLE products ADD COLUMN IF NOT EXISTS display_index INTEGER DEFAULT 999;`

@@ -983,95 +983,217 @@ input:checked + .switch-slider:before {
   letter-spacing: -0.5px;
 }
 
-/* Two-Step Action Bar */
+/* Single Primary Bill Print Action */
 .new-bill-bottom-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  display: block;
   margin-top: 16px;
 }
 
-.btn-action-step1 {
-  background: var(--primary-subtle);
-  border: 1.5px solid var(--primary-border);
+.btn-action-primary-bill {
+  width: 100%;
+  background: linear-gradient(135deg, #0F5132 0%, #157347 100%);
+  border: none;
   border-radius: var(--radius-lg);
-  padding: 12px 14px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+  color: white;
   cursor: pointer;
   text-align: left;
-  transition: all 0.15s var(--ease-apple);
+  box-shadow: 0 4px 14px rgba(15, 81, 50, 0.28);
+  transition: all 0.2s var(--ease-apple);
 }
 
-.btn-action-step1:hover {
-  background: #DCFCE7;
+.btn-action-primary-bill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 81, 50, 0.38);
 }
 
-.step-num-pill {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  font-size: 12px;
-  font-weight: 800;
+.btn-action-primary-bill:active {
+  transform: scale(0.98);
+}
+
+.action-btn-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: white;
 }
 
-.step-content {
+.btn-action-primary-bill .step-content {
   flex: 1;
 }
 
-.step-title {
-  font-size: 14px;
+.btn-action-primary-bill .step-title {
+  font-size: 16px;
   font-weight: 800;
-  color: var(--primary);
+  color: white;
+  letter-spacing: -0.01em;
 }
 
-.step-sub {
-  font-size: 11px;
-  color: #166534;
+.btn-action-primary-bill .step-sub {
+  font-size: 12px;
+  color: #A7F3D0;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.action-btn-arrow {
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+}
+
+/* Payment Mode Radio Grid */
+.payment-method-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.payment-mode-radio-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 10px 6px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background: #F8FAFC;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.payment-mode-radio-card input[type="radio"] {
+  display: none;
+}
+
+.payment-mode-radio-card .pm-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.payment-mode-radio-card .pm-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-mode-radio-card .pm-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.payment-mode-radio-card .pm-sub {
+  font-size: 9px;
+  color: #64748B;
   font-weight: 600;
 }
 
-.btn-action-step2 {
-  background: linear-gradient(135deg, #0F5132 0%, #157347 100%);
-  border: none;
-  border-radius: var(--radius-lg);
-  padding: 12px 14px;
+.payment-mode-radio-card:hover {
+  border-color: #94A3B8;
+  background: #F1F5F9;
+}
+
+.payment-mode-radio-card.active {
+  border-color: #0F5132;
+  background: #F0FDF4;
+  box-shadow: 0 0 0 2px rgba(15, 81, 50, 0.15);
+}
+
+.payment-mode-radio-card.active .pm-title {
+  color: #0F5132;
+}
+
+.payment-mode-radio-card.active .pm-sub {
+  color: #166534;
+}
+
+/* Review Bill UPI QR Box */
+.review-upi-qr-box {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  background: linear-gradient(180deg, #F0FDF4 0%, #DCFCE7 100%);
+  border: 1.5px solid #86EFAC;
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  animation: appleModalFadeIn 0.25s ease-out;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.upi-qr-header {
+  margin-bottom: 10px;
+}
+
+.upi-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0F5132;
   color: white;
-  cursor: pointer;
-  text-align: left;
-  box-shadow: var(--shadow-float);
-  transition: all 0.15s var(--ease-apple);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
-.btn-action-step2:hover {
-  transform: translateY(-1px);
+.upi-qr-canvas-wrap {
+  background: white;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(15, 81, 50, 0.12);
+  display: inline-flex;
+  margin-bottom: 10px;
 }
 
-.btn-action-step2:active {
-  transform: scale(0.97);
+.upi-qr-canvas-wrap canvas {
+  display: block;
+  max-width: 170px;
+  height: auto;
+  border-radius: 4px;
 }
 
-.btn-action-step2 .step-num-pill {
-  background: rgba(255, 255, 255, 0.2);
+.upi-qr-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.upi-amount-pill {
+  background: #0F5132;
   color: white;
+  font-size: 15px;
+  font-weight: 900;
+  padding: 4px 16px;
+  border-radius: 20px;
+  letter-spacing: -0.01em;
 }
 
-.btn-action-step2 .step-title {
-  color: white;
+.upi-id-line {
+  font-size: 11px;
+  font-weight: 700;
+  color: #166534;
 }
 
-.btn-action-step2 .step-sub {
-  color: #A7F3D0;
+.upi-instruction-text {
+  font-size: 10px;
+  color: #15803D;
+  max-width: 260px;
+  line-height: 1.3;
+  margin-top: 2px;
 }
 
 /* =========================================================================

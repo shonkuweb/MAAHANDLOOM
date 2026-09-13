@@ -24,6 +24,7 @@ const state = {
         phone: "+91 9876543210",
         address: "Main Road, Kolkata, WB - 700001",
         gst_number: "19AAAAA0000A1Z5",
+        upi_id: "indritafabrics@upi",
         printer_model: "DEV 2IN1 632-L58P",
         printer_paper_width: 58,
         printer_dpi: 203,
@@ -255,6 +256,7 @@ function syncMoreTabInputs() {
     const tagInput = document.getElementById("setting-store-tagline");
     const phoneInput = document.getElementById("setting-store-phone");
     const gstInput = document.getElementById("setting-store-gst");
+    const upiInput = document.getElementById("setting-store-upi");
     const addrInput = document.getElementById("setting-store-address");
     const gstRateSelect = document.getElementById("setting-default-gst");
 
@@ -262,6 +264,7 @@ function syncMoreTabInputs() {
     if (tagInput) tagInput.value = s.tagline || "Tradition in Every Drape";
     if (phoneInput) phoneInput.value = s.phone || "";
     if (gstInput) gstInput.value = s.gst_number || "";
+    if (upiInput) upiInput.value = s.upi_id || "indritafabrics@upi";
     if (addrInput) addrInput.value = s.address || "";
     if (gstRateSelect && s.default_gst_rate !== undefined) gstRateSelect.value = String(s.default_gst_rate);
 
@@ -328,16 +331,11 @@ function setupCartHandlers() {
     document.getElementById("btn-bill-scan")?.addEventListener("click", () => switchView("scan"));
     document.getElementById("btn-bill-search")?.addEventListener("click", () => switchView("products"));
     document.getElementById("btn-select-customer")?.addEventListener("click", openCustomerModal);
-    document.getElementById("btn-review-bill")?.addEventListener("click", openReviewBillModal);
 
-    // Direct Print Button
-    document.getElementById("btn-print-bill-direct")?.addEventListener("click", async () => {
-        if (!state.cart.length) {
-            window.showToast("Your bill is empty! Add products first.");
-            return;
-        }
-        await executeDirectPrintAndSettle("CASH");
-    });
+    // Primary Print Bill button (opens Review Bill modal by default)
+    document.getElementById("btn-print-bill-main")?.addEventListener("click", openReviewBillModal);
+    document.getElementById("btn-review-bill")?.addEventListener("click", openReviewBillModal);
+    document.getElementById("btn-print-bill-direct")?.addEventListener("click", openReviewBillModal);
 }
 
 function addToCart(product, qty = 1) {
@@ -408,6 +406,7 @@ function calculateBillTotals() {
     const summaryDisc = document.getElementById("summary-discount");
     const summaryGst = document.getElementById("summary-gst-amount");
     const summaryTotal = document.getElementById("summary-grand-total");
+    const printMainSub = document.getElementById("btn-print-bill-sub");
     const step1Sub = document.getElementById("btn-step1-sub");
     const scanDoneSub = document.getElementById("scan-done-items-sub");
     const homeSub = document.getElementById("home-cart-summary-sub");
@@ -417,6 +416,7 @@ function calculateBillTotals() {
     if (summaryDisc) summaryDisc.textContent = `- ₹ ${(state.discountAmount || 0).toLocaleString("en-IN")}`;
     if (summaryGst) summaryGst.textContent = `₹ ${state.gstAmount.toLocaleString("en-IN")}`;
     if (summaryTotal) summaryTotal.textContent = `₹ ${state.grandTotal.toLocaleString("en-IN")}`;
+    if (printMainSub) printMainSub.textContent = `${totalItems} item${totalItems === 1 ? '' : 's'} • ₹ ${state.grandTotal.toLocaleString("en-IN")}`;
     if (step1Sub) step1Sub.textContent = `${totalItems} item${totalItems === 1 ? '' : 's'} • ₹ ${state.grandTotal.toLocaleString("en-IN")}`;
     if (scanDoneSub) scanDoneSub.textContent = `Review Bill (${totalItems} items)`;
     if (homeSub) {
@@ -1102,7 +1102,7 @@ function setupModalHandlers() {
     document.getElementById("btn-close-review-modal")?.addEventListener("click", closeReviewBillModal);
     document.getElementById("btn-review-back")?.addEventListener("click", closeReviewBillModal);
     document.getElementById("btn-review-confirm-print")?.addEventListener("click", async () => {
-        const paymentMode = document.getElementById("review-payment-mode")?.value || "CASH";
+        const paymentMode = document.querySelector('input[name="review-payment-mode-radio"]:checked')?.value || document.getElementById("review-payment-mode")?.value || "CASH";
         closeReviewBillModal();
         await executeDirectPrintAndSettle(paymentMode);
     });
@@ -1281,9 +1281,77 @@ function closeCustomerModal() {
     document.getElementById("modal-customer")?.classList.remove("active");
 }
 
+function renderReviewUpiQr(grandTotal) {
+    const upiSection = document.getElementById("review-upi-qr-section");
+    const canvas = document.getElementById("review-upi-qr-canvas");
+    const amountDisplay = document.getElementById("review-upi-amount-display");
+    const upiIdDisplay = document.getElementById("review-upi-id-display");
+    
+    if (!upiSection || !canvas) return;
+
+    const upiId = (state.storeSettings?.upi_id || "indritafabrics@upi").trim();
+    const storeName = (state.storeSettings?.store_name || "Indrita Fabrics").trim();
+    const formattedAmount = Number(grandTotal || 0).toFixed(2);
+
+    if (amountDisplay) {
+        amountDisplay.textContent = `Pay ₹ ${grandTotal.toLocaleString("en-IN")}`;
+    }
+    if (upiIdDisplay) {
+        upiIdDisplay.textContent = `UPI ID: ${upiId}`;
+    }
+
+    // Standard NPCI UPI URI Scheme: upi://pay?pa=...&pn=...&am=...&cu=INR&tn=...
+    const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeName)}&am=${formattedAmount}&cu=INR&tn=${encodeURIComponent('Bill Payment ' + storeName)}`;
+
+    const qrRenderer = window.QRCode || QRCode;
+    if (qrRenderer && typeof qrRenderer.toCanvas === 'function') {
+        qrRenderer.toCanvas(canvas, upiUri, {
+            width: 170,
+            margin: 1,
+            color: {
+                dark: "#0F5132",
+                light: "#FFFFFF"
+            }
+        }, (err) => {
+            if (err) console.error("UPI QR code rendering error:", err);
+        });
+    }
+}
+
+function updatePaymentModeSelection(mode, grandTotal) {
+    const hiddenInput = document.getElementById("review-payment-mode");
+    if (hiddenInput) hiddenInput.value = mode;
+
+    const cards = {
+        CASH: document.getElementById("pm-card-cash"),
+        UPI: document.getElementById("pm-card-upi"),
+        CARD: document.getElementById("pm-card-card"),
+    };
+
+    Object.keys(cards).forEach(k => {
+        if (cards[k]) {
+            if (k === mode) {
+                cards[k].classList.add("active");
+                const radio = cards[k].querySelector("input[type='radio']");
+                if (radio) radio.checked = true;
+            } else {
+                cards[k].classList.remove("active");
+            }
+        }
+    });
+
+    const upiSection = document.getElementById("review-upi-qr-section");
+    if (mode === "UPI") {
+        if (upiSection) upiSection.style.display = "flex";
+        renderReviewUpiQr(grandTotal);
+    } else {
+        if (upiSection) upiSection.style.display = "none";
+    }
+}
+
 function openReviewBillModal() {
     if (!state.cart.length) {
-        window.showToast("Please add items to bill first");
+        window.showToast("Your bill is empty! Add products first.");
         return;
     }
     const modal = document.getElementById("modal-review-bill");
@@ -1293,7 +1361,7 @@ function openReviewBillModal() {
     container.innerHTML = state.cart.map(item => `
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid #F1F5F9;">
             <div>
-                <div style="font-weight:700; color:#1E293B;">${item.name}</div>
+                <div style="font-weight:700; color:#1E293B;">${escapeHtml(item.name)}</div>
                 <div style="font-size:10px; color:#64748B;">Qty: ${item.qty} x ₹ ${item.price.toLocaleString("en-IN")}</div>
             </div>
             <div style="font-weight:800; color:#0F5132;">₹ ${(item.qty * item.price).toLocaleString("en-IN")}</div>
@@ -1315,6 +1383,22 @@ function openReviewBillModal() {
             </div>
         </div>
     `;
+
+    // Bind payment mode card listeners
+    ['pm-card-cash', 'pm-card-upi', 'pm-card-card'].forEach(cardId => {
+        const card = document.getElementById(cardId);
+        if (card) {
+            card.onclick = () => {
+                const radio = card.querySelector('input[type="radio"]');
+                const val = radio?.value || "CASH";
+                updatePaymentModeSelection(val, totals.grandTotal);
+            };
+        }
+    });
+
+    // Default to Cash (or previous mode), ensuring Cash has no QR code
+    const initialMode = document.getElementById("review-payment-mode")?.value || "CASH";
+    updatePaymentModeSelection(initialMode, totals.grandTotal);
 
     modal?.classList.add("active");
 }
@@ -2573,6 +2657,7 @@ function setupMoreSettingsHandlers() {
         const tagline = document.getElementById("setting-store-tagline")?.value.trim() || "Tradition in Every Drape";
         const phone = document.getElementById("setting-store-phone")?.value.trim() || "";
         const gst_number = document.getElementById("setting-store-gst")?.value.trim().toUpperCase() || "";
+        const upi_id = document.getElementById("setting-store-upi")?.value.trim() || "indritafabrics@upi";
         const address = document.getElementById("setting-store-address")?.value.trim() || "";
         const default_gst_rate = Number(document.getElementById("setting-default-gst")?.value || 18);
 
@@ -2585,6 +2670,7 @@ function setupMoreSettingsHandlers() {
                     tagline,
                     phone,
                     gst_number,
+                    upi_id,
                     address,
                     default_gst_rate,
                     printer_model: "DEV 2IN1 632-L58P",
@@ -2598,7 +2684,7 @@ function setupMoreSettingsHandlers() {
                 state.storeSettings = { ...state.storeSettings, ...updated };
                 updateHeaderBranding();
                 updateReceiptLivePreview();
-                window.showToast("Store profile updated successfully!");
+                window.showToast("Store profile & UPI settings saved successfully!");
             }
         } catch (e) {
             console.error("Save settings error:", e);
