@@ -20,10 +20,10 @@ const state = {
     discountAmount: 0,
     storeSettings: {
         store_name: "Indrita Fabrics",
-        tagline: "Tradition in Every Drape",
-        phone: "+91 9876543210",
-        address: "Main Road, Kolkata, WB - 700001",
-        gst_number: "19AAAAA0000A1Z5",
+        tagline: "indritafabrics.com",
+        phone: "+91 6295175749",
+        address: "Chand para Station, Nearest Mar on Chader Hotel.\nSector 4, Commercial Complex\nKolkata, West Bengal 743245",
+        gst_number: "Nil",
         upi_id: "indritafabrics@upi",
         printer_model: "DEV 2IN1 632-L58P",
         printer_paper_width: 58,
@@ -1998,6 +1998,14 @@ class EscPosBuilder {
         this.bytes.push(0x1D, 0x21, 0x11); // Double width + double height
         return this;
     }
+    doubleHeight() {
+        this.bytes.push(0x1D, 0x21, 0x01);
+        return this;
+    }
+    doubleWidth() {
+        this.bytes.push(0x1D, 0x21, 0x10);
+        return this;
+    }
     normalSize() {
         this.bytes.push(0x1D, 0x21, 0x00);
         return this;
@@ -2022,86 +2030,258 @@ class EscPosBuilder {
         this.bytes.push(0x1D, 0x56, 0x42, 0x00);
         return this;
     }
+    raw(bytes) {
+        if (bytes && bytes.length) {
+            for (let i = 0; i < bytes.length; i++) {
+                this.bytes.push(bytes[i]);
+            }
+        }
+        return this;
+    }
     build() {
         return new Uint8Array(this.bytes);
     }
 }
 
-// Generate Raw 58mm ESC/POS Receipt Bytes (32 columns width for 58mm roll)
-function build58mmEscPosReceipt(invoice, store) {
+// Helper: Format multiline address for centered receipt printing
+function formatAddressLines(addrStr, maxLen = 32) {
+    if (!addrStr) return [];
+    const rawLines = addrStr.split(/\r?\n/);
+    const result = [];
+    rawLines.forEach(l => {
+        const trimmed = l.trim();
+        if (!trimmed) return;
+        if (trimmed.length <= maxLen) {
+            result.push(trimmed);
+        } else {
+            const words = trimmed.split(/\s+/);
+            let cur = "";
+            words.forEach(w => {
+                if ((cur ? cur + " " + w : w).length <= maxLen) {
+                    cur = (cur ? cur + " " + w : w);
+                } else {
+                    if (cur) result.push(cur);
+                    cur = w;
+                }
+            });
+            if (cur) result.push(cur);
+        }
+    });
+    return result;
+}
+
+// Helper: Render QR Code to centered 58mm ESC/POS 1-bit monochrome raster bitmap bytes
+async function generateQrRasterBytes(text, size = 180) {
+    try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 384; // Standard 58mm / 203 DPI thermal head width (48 bytes per row)
+        canvas.height = size + 16;
+        const ctx = canvas.getContext("2d");
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, 384, canvas.height);
+
+        const qrDataUrl = await QRCode.toDataURL(text, {
+            width: size,
+            margin: 1,
+            errorCorrectionLevel: "M"
+        });
+
+        const qrImg = new Image();
+        await new Promise((resolve, reject) => {
+            qrImg.onload = resolve;
+            qrImg.onerror = reject;
+            qrImg.src = qrDataUrl;
+        });
+
+        const xOffset = Math.floor((384 - size) / 2);
+        ctx.drawImage(qrImg, xOffset, 8, size, size);
+
+        const height = canvas.height;
+        const imgData = ctx.getImageData(0, 0, 384, height);
+        const data = imgData.data;
+        const widthBytes = 48; // 384 / 8
+        const rasterBytes = [];
+
+        // GS v 0 0 xL xH yL yH
+        rasterBytes.push(
+            0x1D, 0x76, 0x30, 0x00,
+            widthBytes & 0xFF,
+            (widthBytes >> 8) & 0xFF,
+            height & 0xFF,
+            (height >> 8) & 0xFF
+        );
+
+        for (let y = 0; y < height; y++) {
+            for (let xByte = 0; xByte < widthBytes; xByte++) {
+                let byteVal = 0;
+                for (let bit = 0; bit < 8; bit++) {
+                    const x = xByte * 8 + bit;
+                    const idx = (y * 384 + x) * 4;
+                    const r = data[idx];
+                    const g = data[idx + 1];
+                    const b = data[idx + 2];
+                    const a = data[idx + 3];
+                    const brightness = (0.299 * r + 0.587 * g + 0.114 * b);
+                    if (a > 50 && brightness < 160) {
+                        byteVal |= (0x80 >> bit);
+                    }
+                }
+                rasterBytes.push(byteVal);
+            }
+        }
+        return new Uint8Array(rasterBytes);
+    } catch (e) {
+        console.warn("Failed to generate QR raster bytes:", e);
+        return null;
+    }
+}
+
+// Generate Exact Raw 58mm ESC/POS Receipt Bytes matching user sample format
+async function build58mmEscPosReceipt(invoice, store) {
     const esc = new EscPosBuilder();
     const items = invoice.items || [];
-    const dateStr = new Date().toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" });
+    const now = invoice.created_at ? new Date(invoice.created_at) : new Date();
 
-    esc.init()
-       .alignCenter()
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const dateStr = `${day}/${month}/${year}`;
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+
+    let invNum = invoice.id || "1";
+    if (typeof invNum === "number" || /^\d+$/.test(String(invNum))) {
+        invNum = `#${year}${month}-${String(invNum).padStart(5, '0')}`;
+    } else if (!String(invNum).startsWith("#")) {
+        invNum = `#${invNum}`;
+    }
+
+    const payMode = (invoice.payment_method || "CASH").toUpperCase();
+
+    esc.init();
+
+    // 1. Header (Centered)
+    esc.alignCenter()
        .bold(true)
-       .doubleSize()
-       .line(store.store_name || "INDRITA FABRICS")
+       .doubleHeight()
+       .line(store.store_name || "Indrita Fabrics")
        .normalSize()
-       .line(store.tagline || "Tradition in Every Drape")
        .bold(false)
-       .line(store.address || "Kolkata, West Bengal")
-       .line(`Ph: ${store.phone || "+91 9876543210"}`);
+       .line(store.tagline || store.website || "indritafabrics.com");
 
-    if (store.gst_number) {
-        esc.line(`GSTIN: ${store.gst_number}`);
-    }
+    const addr = store.address || "Chand para Station, Nearest Mar on Chader Hotel.\nSector 4, Commercial Complex\nKolkata, West Bengal 743245";
+    const addrLines = formatAddressLines(addr, 32);
+    addrLines.forEach(l => esc.line(l));
 
-    esc.line("--------------------------------")
-       .alignLeft()
-       .line(`Bill No : ${invoice.id || "INV-0001"}`)
-       .line(`Date    : ${dateStr}`)
-       .line(`Customer: ${invoice.customer_name || "Walk-in Customer"}`);
+    esc.line(`Tel: ${store.phone || "+91 6295175749"}`);
+    esc.line(`GSTIN: ${store.gst_number || "Nil"}`);
+    esc.bold(true).line("*** TAX INVOICE ***").bold(false);
 
-    if (invoice.customer_phone) {
-        esc.line(`Phone   : ${invoice.customer_phone}`);
-    }
+    // 2. Dashed Divider
+    esc.line("--------------------------------");
 
-    esc.line(`Payment : ${invoice.payment_method || "CASH"}`)
-       .line("--------------------------------")
-       .bold(true)
-       .line("ITEM              QTY     AMOUNT")
-       .line("--------------------------------")
-       .bold(false);
+    // 3. Invoice Meta (2 rows, 32 chars wide)
+    esc.alignLeft();
+    const left1 = `Inv: ${invNum}`;
+    const right1 = dateStr;
+    const space1 = Math.max(1, 32 - left1.length - right1.length);
+    esc.line(left1 + " ".repeat(space1) + right1);
 
-    // 32 Characters wide row helper
+    const left2 = `Time: ${timeStr}`;
+    const right2 = `Pay: ${payMode}`;
+    const space2 = Math.max(1, 32 - left2.length - right2.length);
+    esc.line(left2 + " ".repeat(space2) + right2);
+
+    // 4. Dashed Divider
+    esc.line("--------------------------------");
+
+    // 5. Table Column Header
+    esc.bold(true);
+    esc.line("ITEM                 QTY  AMT(Rs)");
+    esc.line("--------------------------------");
+    esc.bold(false);
+
+    // 6. Items (Each formatted to 32 chars)
     items.forEach(it => {
-        const name = (it.name || "Item").substring(0, 32);
-        esc.bold(true).line(name).bold(false);
-
-        const skuPart = (`#${it.sku || ""}`).padEnd(12, " ");
-        const qtyPart = (`${it.qty} x ${Number(it.price)}`).padEnd(10, " ");
-        const totalPart = (`Rs.${Number(it.qty * it.price)}`).padStart(10, " ");
-        esc.line(`${skuPart}${qtyPart}${totalPart}`);
+        let name = (it.name || "Item").trim();
+        if (name.length > 17) {
+            name = name.substring(0, 16) + ".";
+        }
+        const namePart = name.padEnd(18, " ");
+        const qtyPart = String(it.qty || 1).padStart(4, " ");
+        const price = Number((it.qty || 1) * (it.price || 0)).toFixed(2);
+        const amtPart = price.padStart(10, " ");
+        esc.line(`${namePart}${qtyPart}${amtPart}`);
     });
 
-    esc.line("--------------------------------")
-       .alignRight()
-       .line(`Subtotal: Rs. ${Number(invoice.subtotal).toLocaleString("en-IN")}`);
+    // 7. Dashed Divider
+    esc.line("--------------------------------");
 
-    if (invoice.discount) {
-        esc.line(`Discount: - Rs. ${Number(invoice.discount).toLocaleString("en-IN")}`);
+    // 8. Calculations & Breakup
+    const subtotal = Number(invoice.subtotal || 0);
+    const gst = Number(invoice.gst_amount || 0);
+    const total = Number(invoice.total || (subtotal + gst));
+    const roundOff = (total - (subtotal + gst));
+
+    // Subtotal: Rs.XXX.XX
+    const subLabel = "Subtotal:";
+    const subVal = `Rs.${subtotal.toFixed(2)}`;
+    const subSpace = Math.max(1, 32 - subLabel.length - subVal.length);
+    esc.line(subLabel + " ".repeat(subSpace) + subVal);
+
+    // Taxes (GST): Rs.XX.XX
+    if (gst > 0 || invoice.gst_rate > 0) {
+        const gstLabel = "Taxes (GST):";
+        const gstVal = `Rs.${gst.toFixed(2)}`;
+        const gstSpace = Math.max(1, 32 - gstLabel.length - gstVal.length);
+        esc.line(gstLabel + " ".repeat(gstSpace) + gstVal);
     }
 
-    if (invoice.gst_amount) {
-        esc.line(`GST (${invoice.gst_rate || 18}%): Rs. ${Number(invoice.gst_amount).toLocaleString("en-IN")}`);
+    // Round Off: +0.XX / -0.XX
+    if (roundOff !== 0) {
+        const roLabel = "Round Off:";
+        const roVal = (roundOff > 0 ? "+" : "") + roundOff.toFixed(2);
+        const roSpace = Math.max(1, 32 - roLabel.length - roVal.length);
+        esc.line(roLabel + " ".repeat(roSpace) + roVal);
     }
 
-    esc.line("--------------------------------")
-       .bold(true)
-       .line(`NET TOTAL: Rs. ${Number(invoice.total).toLocaleString("en-IN")}`)
-       .bold(false)
-       .line("--------------------------------")
-       .alignCenter()
-       .bold(true)
-       .line("*** THANK YOU FOR SHOPPING ***")
-       .bold(false)
-       .line("Goods once sold can be exchanged")
-       .line("within 7 days with original bill.")
-       .line("--------------------------------")
-       .feed(4)
-       .cut();
+    // 9. Double Line Divider
+    esc.line("================================");
+
+    // 10. TOTAL DUE: Rs.XXX.XX
+    esc.bold(true);
+    const totalLabel = "TOTAL DUE:";
+    const totalVal = `Rs.${total.toFixed(2)}`;
+    const totalSpace = Math.max(1, 32 - totalLabel.length - totalVal.length);
+    esc.line(totalLabel + " ".repeat(totalSpace) + totalVal);
+    esc.bold(false);
+
+    // 11. Double Line Divider
+    esc.line("================================");
+
+    // 12. Dynamic UPI QR Code Section (Shown when payment is UPI)
+    if (payMode === "UPI" || payMode === "UPI / QR") {
+        esc.alignCenter();
+        esc.line();
+        esc.line("SCAN TO PAY WITH ANY UPI APP:");
+        esc.line();
+
+        const upiId = (store.upi_id || "indritafabrics@upi").trim();
+        const storeName = (store.store_name || "Indrita Fabrics").trim();
+        const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeName)}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Bill Payment ' + storeName)}`;
+
+        const qrRaster = await generateQrRasterBytes(upiUri, 180);
+        if (qrRaster && qrRaster.length > 0) {
+            esc.raw(qrRaster);
+        }
+        esc.line();
+    }
+
+    // 13. Feed & Cut
+    esc.feed(4).cut();
 
     return esc.build();
 }
@@ -2370,7 +2550,7 @@ async function executeDirectPrintAndSettle(paymentMethod = "CASH") {
         }
 
         // Build ESC/POS bytes
-        const receiptBytes = build58mmEscPosReceipt(savedInvoice, state.storeSettings);
+        const receiptBytes = await build58mmEscPosReceipt(savedInvoice, state.storeSettings);
 
         // Send directly to Bluetooth Printer
         try {
@@ -2379,7 +2559,7 @@ async function executeDirectPrintAndSettle(paymentMethod = "CASH") {
         } catch (bleErr) {
             console.warn("Direct Bluetooth print notice:", bleErr);
             // Fallback: render HTML receipt in DOM
-            print58mmThermalReceiptFallback(savedInvoice);
+            await print58mmThermalReceiptFallback(savedInvoice);
         }
 
         // Reset Cart
@@ -2420,11 +2600,37 @@ async function executePrint50x30mmLabelDirect(productOrList, copies = 1) {
 }
 const executePrint50x25mmLabelDirect = executePrint50x30mmLabelDirect;
 
-// Direct thermal receipt fallback renderer
-function print58mmThermalReceiptFallback(invoice) {
+// Direct exact 58mm thermal receipt fallback renderer matching user sample
+async function print58mmThermalReceiptFallback(invoice) {
     const store = state.storeSettings;
     const items = invoice.items || [];
-    const dateStr = new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+    const now = invoice.created_at ? new Date(invoice.created_at) : new Date();
+
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const dateStr = `${day}/${month}/${year}`;
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+
+    let invNum = invoice.id || "1";
+    if (typeof invNum === "number" || /^\d+$/.test(String(invNum))) {
+        invNum = `#${year}${month}-${String(invNum).padStart(5, '0')}`;
+    } else if (!String(invNum).startsWith("#")) {
+        invNum = `#${invNum}`;
+    }
+
+    const payMode = (invoice.payment_method || "CASH").toUpperCase();
+
+    const subtotal = Number(invoice.subtotal || 0);
+    const gst = Number(invoice.gst_amount || 0);
+    const total = Number(invoice.total || (subtotal + gst));
+    const roundOff = (total - (subtotal + gst));
+
+    const addr = store.address || "Chand para Station, Nearest Mar on Chader Hotel.\nSector 4, Commercial Complex\nKolkata, West Bengal 743245";
+    const addrLines = formatAddressLines(addr, 32);
 
     const printContainer = document.getElementById("thermal-print-container");
     if (!printContainer) return;
@@ -2433,70 +2639,113 @@ function print58mmThermalReceiptFallback(invoice) {
     printContainer.innerHTML = `
         <div class="print-receipt-58mm">
             <div class="receipt-header-center">
-                <div class="receipt-store-title">${store.store_name || "INDRITA FABRICS"}</div>
-                <div class="receipt-store-tag">${store.tagline || "Tradition in Every Drape"}</div>
-                <div style="font-size:9px; margin-top:2px;">${store.address || "Kolkata, WB"}</div>
-                <div style="font-size:9px;">Ph: ${store.phone || "+91 9876543210"}</div>
-                ${store.gst_number ? `<div style="font-size:9px;">GSTIN: ${store.gst_number}</div>` : ""}
+                <div class="receipt-store-title">${escapeHtml(store.store_name || "Indrita Fabrics")}</div>
+                <div class="receipt-store-web">${escapeHtml(store.tagline || store.website || "indritafabrics.com")}</div>
+                ${addrLines.map(l => `<div class="receipt-addr-line">${escapeHtml(l)}</div>`).join("")}
+                <div class="receipt-tel-line">Tel: ${escapeHtml(store.phone || "+91 6295175749")}</div>
+                <div class="receipt-gst-line">GSTIN: ${escapeHtml(store.gst_number || "Nil")}</div>
+                <div class="receipt-tax-title">*** TAX INVOICE ***</div>
             </div>
 
-            <div class="receipt-divider"></div>
-            <div style="font-size:9px;">
-                <div>Bill No: <b>${invoice.id || "INV-0001"}</b></div>
-                <div>Date: ${dateStr}</div>
-                <div>Customer: ${invoice.customer_name || "Walk-in Customer"}</div>
-                ${invoice.customer_phone ? `<div>Phone: ${invoice.customer_phone}</div>` : ""}
-                <div>Payment: <b>${invoice.payment_method || "CASH"}</b></div>
-            </div>
-            <div class="receipt-divider"></div>
+            <div class="receipt-divider-dashed"></div>
 
-            <div style="font-size:10px; font-weight:bold; display:flex; justify-content:space-between; margin-bottom:2px;">
-                <span style="flex:2;">ITEM</span>
-                <span style="flex:1; text-align:center;">QTY</span>
-                <span style="flex:1; text-align:right;">AMT</span>
-            </div>
-            <div class="receipt-divider"></div>
-
-            ${items.map(it => `
-                <div style="font-size:10px; margin-bottom:3px;">
-                    <div style="font-weight:600;">${it.name}</div>
-                    <div style="display:flex; justify-content:space-between; color:#333; font-size:9px;">
-                        <span>#${it.sku || ""}</span>
-                        <span>${it.qty} x ${Number(it.price)}</span>
-                        <span>₹ ${(it.qty * it.price).toLocaleString("en-IN")}</span>
-                    </div>
+            <div class="receipt-meta-grid">
+                <div class="receipt-meta-row">
+                    <span>Inv: ${escapeHtml(invNum)}</span>
+                    <span>${dateStr}</span>
                 </div>
-            `).join("")}
+                <div class="receipt-meta-row">
+                    <span>Time: ${timeStr}</span>
+                    <span>Pay: ${escapeHtml(payMode)}</span>
+                </div>
+            </div>
 
-            <div class="receipt-divider"></div>
-            <div class="receipt-table-row">
-                <span>Subtotal:</span>
-                <span>₹ ${Number(invoice.subtotal).toLocaleString("en-IN")}</span>
-            </div>
-            ${invoice.discount ? `
-            <div class="receipt-table-row">
-                <span>Discount:</span>
-                <span>- ₹ ${Number(invoice.discount).toLocaleString("en-IN")}</span>
-            </div>` : ""}
-            ${invoice.gst_amount ? `
-            <div class="receipt-table-row">
-                <span>GST (${invoice.gst_rate || 18}%):</span>
-                <span>₹ ${Number(invoice.gst_amount).toLocaleString("en-IN")}</span>
-            </div>` : ""}
-            <div class="receipt-divider"></div>
-            <div class="receipt-table-row receipt-total-bold">
-                <span>NET TOTAL:</span>
-                <span>₹ ${Number(invoice.total).toLocaleString("en-IN")}</span>
-            </div>
-            <div class="receipt-divider"></div>
+            <div class="receipt-divider-dashed"></div>
 
-            <div class="receipt-footer-center">
-                <div style="font-weight:bold; margin-bottom:3px;">*** THANK YOU FOR SHOPPING ***</div>
-                <div>Goods once sold can be exchanged within 7 days with original bill.</div>
-                <div style="margin-top:4px; font-size:8px;">DEV 2IN1 632-L58P • 203 DPI POS</div>
+            <div class="receipt-table-head">
+                <span class="col-item">ITEM</span>
+                <span class="col-qty">QTY</span>
+                <span class="col-amt">AMT(Rs)</span>
             </div>
+
+            <div class="receipt-divider-dashed"></div>
+
+            <div class="receipt-items-body">
+                ${items.map(it => {
+                    let name = (it.name || "Item").trim();
+                    if (name.length > 17) {
+                        name = name.substring(0, 16) + ".";
+                    }
+                    const linePrice = Number((it.qty || 1) * (it.price || 0)).toFixed(2);
+                    return `
+                        <div class="receipt-item-line">
+                            <span class="col-item">${escapeHtml(name)}</span>
+                            <span class="col-qty">${it.qty || 1}</span>
+                            <span class="col-amt">${linePrice}</span>
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+
+            <div class="receipt-divider-dashed"></div>
+
+            <div class="receipt-summary-block">
+                <div class="receipt-sum-row">
+                    <span>Subtotal:</span>
+                    <span>Rs.${subtotal.toFixed(2)}</span>
+                </div>
+                ${gst > 0 || invoice.gst_rate > 0 ? `
+                <div class="receipt-sum-row">
+                    <span>Taxes (GST):</span>
+                    <span>Rs.${gst.toFixed(2)}</span>
+                </div>` : ""}
+                ${roundOff !== 0 ? `
+                <div class="receipt-sum-row">
+                    <span>Round Off:</span>
+                    <span>${roundOff > 0 ? "+" : ""}${roundOff.toFixed(2)}</span>
+                </div>` : ""}
+            </div>
+
+            <div class="receipt-divider-double"></div>
+
+            <div class="receipt-total-due-row">
+                <span>TOTAL DUE:</span>
+                <span class="total-due-amt">Rs.${total.toFixed(2)}</span>
+            </div>
+
+            <div class="receipt-divider-double"></div>
+
+            ${payMode === "UPI" || payMode === "UPI / QR" ? `
+            <div class="receipt-upi-qr-block">
+                <div class="receipt-upi-tag">SCAN TO PAY WITH ANY UPI APP:</div>
+                <div class="receipt-upi-canvas-wrap">
+                    <canvas id="receipt-fallback-upi-qr" width="180" height="180"></canvas>
+                </div>
+            </div>` : ""}
         </div>
     `;
+
+    if (payMode === "UPI" || payMode === "UPI / QR") {
+        const upiCanvas = document.getElementById("receipt-fallback-upi-qr");
+        if (upiCanvas) {
+            const upiId = (store.upi_id || "indritafabrics@upi").trim();
+            const storeName = (store.store_name || "Indrita Fabrics").trim();
+            const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeName)}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Bill Payment ' + storeName)}`;
+
+            const qrRenderer = window.QRCode || QRCode;
+            if (qrRenderer && typeof qrRenderer.toCanvas === 'function') {
+                try {
+                    await qrRenderer.toCanvas(upiCanvas, upiUri, {
+                        width: 170,
+                        margin: 1,
+                        color: { dark: "#000000", light: "#FFFFFF" }
+                    });
+                } catch (e) {
+                    console.warn("HTML receipt QR render notice:", e);
+                }
+            }
+        }
+    }
 
     setTimeout(() => {
         window.print();
@@ -2548,24 +2797,44 @@ async function print50x30mmHtmlLabelFallback(productOrList, copies = 1) {
     // Render all QR codes on canvases
     for (const task of renderTasks) {
         const canvas = document.getElementById(task.canvasId);
-        if (canvas && QRCode) {
+        if (canvas) {
             try {
                 await QRCode.toCanvas(canvas, task.qrData, {
-                    width: 130,
+                    width: 120,
                     margin: 0,
-                    color: { dark: "#000000", light: "#ffffff" },
-                    errorCorrectionLevel: "M"
+                    color: { dark: "#000000", light: "#FFFFFF" }
                 });
             } catch (e) {
-                console.warn("QR canvas print error:", e);
+                console.warn("Label QR render error:", e);
             }
         }
     }
 
     setTimeout(() => {
         window.print();
-    }, 120);
+    }, 150);
 }
+
+window.reprintInvoice = async (invoiceId) => {
+    try {
+        const res = await fetch("/api/billing/invoices");
+        if (res.ok) {
+            const invoices = await res.json();
+            const inv = invoices.find(i => i.id === invoiceId);
+            if (inv) {
+                const bytes = await build58mmEscPosReceipt(inv, state.storeSettings);
+                try {
+                    await sendRawBytesToPrinter(bytes);
+                    window.showToast(`Reprinted invoice #${invoiceId} on DEV 2IN1!`);
+                } catch (e) {
+                    await print58mmThermalReceiptFallback(inv);
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Reprint error:", e);
+    }
+};
 
 // --- REPORTS & BILL HISTORY SCREEN ---
 async function loadReportsData() {
@@ -2604,104 +2873,6 @@ async function loadReportsData() {
     } catch (e) {
         console.error("Reports load error:", e);
     }
-}
-
-window.reprintInvoice = async (invoiceId) => {
-    try {
-        const res = await fetch("/api/billing/invoices");
-        if (res.ok) {
-            const invoices = await res.json();
-            const inv = invoices.find(i => i.id === invoiceId);
-            if (inv) {
-                const bytes = build58mmEscPosReceipt(inv, state.storeSettings);
-                try {
-                    await sendRawBytesToPrinter(bytes);
-                    window.showToast(`Reprinted invoice #${invoiceId} on DEV 2IN1!`);
-                } catch (e) {
-                    print58mmThermalReceiptFallback(inv);
-                }
-            }
-        }
-    } catch (e) {
-        console.error("Reprint error:", e);
-    }
-};
-
-// --- MORE TAB & SYSTEM SETTINGS CONTROLLER ---
-function setupMoreSettingsHandlers() {
-    // Real-time live receipt preview updates
-    document.querySelectorAll(".live-receipt-input").forEach(input => {
-        input.addEventListener("input", updateReceiptLivePreview);
-    });
-
-    // Category Tabs Filtering
-    document.querySelectorAll("#settings-category-tabs .settings-nav-pill").forEach(pill => {
-        pill.addEventListener("click", () => {
-            document.querySelectorAll("#settings-category-tabs .settings-nav-pill").forEach(p => p.classList.remove("active"));
-            pill.classList.add("active");
-            const target = pill.getAttribute("data-target");
-            document.querySelectorAll(".settings-apple-card").forEach(card => {
-                const cat = card.getAttribute("data-category");
-                if (target === "all" || cat === target) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
-            });
-        });
-    });
-
-    // Save Store Profile
-    document.getElementById("btn-save-store-settings")?.addEventListener("click", async () => {
-        const store_name = document.getElementById("setting-store-name")?.value.trim() || "Indrita Fabrics";
-        const tagline = document.getElementById("setting-store-tagline")?.value.trim() || "Tradition in Every Drape";
-        const phone = document.getElementById("setting-store-phone")?.value.trim() || "";
-        const gst_number = document.getElementById("setting-store-gst")?.value.trim().toUpperCase() || "";
-        const upi_id = document.getElementById("setting-store-upi")?.value.trim() || "indritafabrics@upi";
-        const address = document.getElementById("setting-store-address")?.value.trim() || "";
-        const default_gst_rate = Number(document.getElementById("setting-default-gst")?.value || 18);
-
-        try {
-            const res = await fetch("/api/billing/settings", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    store_name,
-                    tagline,
-                    phone,
-                    gst_number,
-                    upi_id,
-                    address,
-                    default_gst_rate,
-                    printer_model: "DEV 2IN1 632-L58P",
-                    printer_paper_width: 58,
-                    printer_dpi: 203
-                })
-            });
-
-            if (res.ok) {
-                const updated = await res.json();
-                state.storeSettings = { ...state.storeSettings, ...updated };
-                updateHeaderBranding();
-                updateReceiptLivePreview();
-                window.showToast("Store profile & UPI settings saved successfully!");
-            }
-        } catch (e) {
-            console.error("Save settings error:", e);
-            window.showToast("Failed to save settings");
-        }
-    });
-
-    // Hardware Pair & Config from Settings Screen
-    document.getElementById("btn-more-pair-printer")?.addEventListener("click", connectWebBluetoothPrinter);
-    document.getElementById("btn-open-printer-modal-from-settings")?.addEventListener("click", openPrinterSettingsModal);
-
-    // Test Audio Chime
-    document.getElementById("btn-test-beep-audio")?.addEventListener("click", () => {
-        playBeep();
-        window.showToast("Played barcode scanner chime 🔔");
-    });
-
     // Test Receipt Print
     document.getElementById("btn-test-receipt-print")?.addEventListener("click", async () => {
         const testInvoice = {
@@ -2722,16 +2893,16 @@ function setupMoreSettingsHandlers() {
 
         try {
             window.showToast("Sending test receipt to 58mm printer...");
-            const receiptBytes = build58mmEscPosReceipt(testInvoice, state.storeSettings);
+            const receiptBytes = await build58mmEscPosReceipt(testInvoice, state.storeSettings);
             if (state.printer.isConnected) {
                 await sendRawBytesToPrinter(receiptBytes);
                 window.showToast("Test receipt printed successfully!");
             } else {
-                print58mmThermalReceiptFallback(testInvoice);
+                await print58mmThermalReceiptFallback(testInvoice);
             }
         } catch (err) {
             console.error("Test print error:", err);
-            print58mmThermalReceiptFallback(testInvoice);
+            await print58mmThermalReceiptFallback(testInvoice);
         }
     });
 
