@@ -2024,21 +2024,21 @@ async function renderLabelToTspl(product, store, copies = 1) {
     ctx.font = "bold 17px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(storeTitle, 192, 16, 360);
+    ctx.fillText(storeTitle, 196, 16, 330);
 
-    // Subtle horizontal divider under store name
+    // Subtle horizontal divider under store name (with safe left/right margins)
     ctx.strokeStyle = "#CCCCCC";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(14, 30);
-    ctx.lineTo(370, 30);
+    ctx.moveTo(28, 30);
+    ctx.lineTo(364, 30);
     ctx.stroke();
 
-    // Render QR Code image (centered vertically in left column)
+    // Render QR Code image (with generous 3.5mm / 28px safe left margin)
     const qrData = String(product.barcode || product.sku || product.id || "IF001");
     try {
         const qrDataUrl = await QRCode.toDataURL(qrData, {
-            width: 140,
+            width: 132,
             margin: 0,
             errorCorrectionLevel: "M"
         });
@@ -2048,32 +2048,32 @@ async function renderLabelToTspl(product, store, copies = 1) {
             qrImg.onerror = reject;
             qrImg.src = qrDataUrl;
         });
-        ctx.drawImage(qrImg, 14, 38, 140, 140);
+        ctx.drawImage(qrImg, 28, 42, 132, 132);
     } catch (e) {
         console.warn("QR Code render error on canvas:", e);
     }
 
-    // Right Column Info (centered horizontally in right half)
+    // Right Column Info (centered horizontally in right safe area)
     ctx.fillStyle = "#000000";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
     // Product Name
-    ctx.font = "bold 22px Arial, sans-serif";
+    ctx.font = "bold 21px Arial, sans-serif";
     const prodName = (product.name || "Test").substring(0, 16);
-    ctx.fillText(prodName, 266, 62, 200);
+    ctx.fillText(prodName, 272, 64, 180);
 
     // SKU
     ctx.font = "bold 14px Arial, sans-serif";
     ctx.fillStyle = "#333333";
     const skuText = `SKU: ${product.sku || "IF001"}`;
-    ctx.fillText(skuText, 266, 102, 200);
+    ctx.fillText(skuText, 272, 104, 180);
 
     // Price
     ctx.font = "bold 28px Arial, sans-serif";
     ctx.fillStyle = "#000000";
     const priceText = `Rs. ${Number(product.price || 0).toLocaleString("en-IN")}`;
-    ctx.fillText(priceText, 266, 150, 200);
+    ctx.fillText(priceText, 272, 150, 180);
 
     // Build TSPL 2-IN-1 Label Packet
     const height = canvas.height;
